@@ -14,7 +14,7 @@ A profile can contribute:
 6. translator declarations
 7. CI fragments through `ci_and_test`
 8. ignore-directory hints that feed generated `.gitignore`, pre-commit
-   excludes, and the `gate --start` snapshot walk
+   excludes, and the `gate --open` snapshot walk
 
 Profiles do not directly turn policies on or off.
 Policy activation still lives in `policy_state`.
@@ -58,7 +58,7 @@ The rule is strict:
 That is why copied same-name shadow profiles should stay thin.
 Keep inherited values inherited from the other active profiles instead of
 restating them in the copied profile, and copy only the owned assets,
-translators, helpers, or tests that the shadow profile now replaces.
+translators, helpers, or tests that the shadow profile replaces.
 
 ## Custom Profiles As Governance Packs
 A custom profile is the normal way to package governance for one repository
@@ -102,7 +102,7 @@ Python `.venv` starting point:
 - expected paths and interpreters
 - required commands for the standard gate/runtime surface
 - manual guidance that uses `{current_python}` and `{managed_python}`
-- bootstrap-stage and start-stage bootstrap commands for lifecycle commands
+- bootstrap-stage and open-stage bootstrap commands for lifecycle commands
 
 The normal installed repository baseline keeps
 `policy_state.managed-environment: false`.
@@ -130,17 +130,17 @@ That same narrowing applies to mirrored test expectations and assertion
 coverage, so normal repositories keep DevCovenant internals out of scope
 while still enforcing `devcovenant/custom/**` and
 `tests/devcovenant/custom/**`.
-In this repository, the repo-owned `userproject` profile widens the same
+Repositories that own custom DevCovenant extensions can widen those same
 code-style policies, including `line-length-limit`, `name-clarity`,
 `docstring-and-comment-coverage`, `security-scanner`, and `no-raw-errors`,
-so they cover the full `devcovenant/**` tree and `tests/**` mirror instead of
-stopping at the custom shadow layer. The generated registry, bundled license
-dumps, and builtin test-blueprint verification tree stay out of that generic
-scan so the profile only governs repo-owned source and custom mirrors.
+so they cover the repository-owned extension tree instead of stopping at the
+custom shadow layer. Generated registries, bundled license dumps, and
+generated test-blueprint mirrors should stay out of that widened scan so the
+profile only governs source and custom mirrors.
 
 Profiles may also contribute `ignore_dirs` for disposable local outputs that
 should stay out of generated `.gitignore`, out of pre-commit's all-files
-scan, and out of the startup snapshot walk used by `gate --start`.
+scan, and out of the startup snapshot walk used by `gate --open`.
 Typical examples are temporary build directories, cache roots, declared
 environment folders, or other data trees that should not count as
 user-owned source files during the gate session snapshot.
@@ -337,7 +337,8 @@ Each run may declare:
 - `recording`
 
 Ordering is real behavior, not decorative metadata.
-- `after` and `before` may reference reserved anchors: `start`, `mid`, `end`
+- `after` and `before` may reference reserved anchors: `open`, `verify`,
+  `close`
 - `after` and `before` may also reference other declared run ids
 - DevCovenant validates those references
 - DevCovenant rejects cycles instead of silently keeping broken rules

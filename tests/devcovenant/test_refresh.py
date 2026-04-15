@@ -1413,7 +1413,7 @@ def _unit_test_refresh_preserves_existing_gate_status() -> None:
         expected_payload = {
             "session_id": "refresh-open-session",
             "session_state": "open",
-            "pre_commit_start_utc": "2026-03-01T10:00:00+00:00",
+            "pre_commit_open_utc": "2026-03-01T10:00:00+00:00",
         }
         gate_status_path.write_text(
             json.dumps(expected_payload, indent=2) + "\n",

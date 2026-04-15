@@ -10,9 +10,9 @@ from unittest.mock import call, patch
 from devcovenant import gate
 
 
-def _unit_test_run_dispatches_start_stage() -> None:
-    """run() should dispatch --start through run_pre_commit_gate."""
-    args = SimpleNamespace(start=True, end=False)
+def _unit_test_run_dispatches_open_stage() -> None:
+    """run() should dispatch --open through run_pre_commit_gate."""
+    args = SimpleNamespace(open=True, close=False)
     repo_root = Path("/repo")
     with patch(
         "devcovenant.core.execution.resolve_repo_root",
@@ -26,18 +26,18 @@ def _unit_test_run_dispatches_start_stage() -> None:
                 ) as gate_mock:
                     exit_code = gate.run(args)
     assert exit_code == 0
-    gate_mock.assert_called_once_with(repo_root, "start")
+    gate_mock.assert_called_once_with(repo_root, "open")
     step_mock.assert_has_calls(
         [
-            call("Running `start` pre-commit gate", "▶️"),
-            call(gate.START_GATE_REMINDER_MESSAGE, "•"),
+            call("Running `open` pre-commit gate", "▶️"),
+            call(gate.OPEN_GATE_REMINDER_MESSAGE, "•"),
         ]
     )
 
 
-def _unit_test_run_dispatches_end_stage() -> None:
-    """run() should dispatch --end through run_pre_commit_gate."""
-    args = SimpleNamespace(start=False, end=True)
+def _unit_test_run_dispatches_close_stage() -> None:
+    """run() should dispatch --close through run_pre_commit_gate."""
+    args = SimpleNamespace(open=False, close=True)
     repo_root = Path("/repo")
     with patch(
         "devcovenant.core.execution.resolve_repo_root",
@@ -51,12 +51,12 @@ def _unit_test_run_dispatches_end_stage() -> None:
                 ) as gate_mock:
                     exit_code = gate.run(args)
     assert exit_code == 0
-    gate_mock.assert_called_once_with(repo_root, "end")
+    gate_mock.assert_called_once_with(repo_root, "close")
 
 
-def _unit_test_run_dispatches_mid_stage() -> None:
-    """run() should dispatch --mid through run_pre_commit_gate."""
-    args = SimpleNamespace(start=False, mid=True, end=False, status=False)
+def _unit_test_run_dispatches_verify_stage() -> None:
+    """run() should dispatch --verify through run_pre_commit_gate."""
+    args = SimpleNamespace(open=False, verify=True, close=False, status=False)
     repo_root = Path("/repo")
     with patch(
         "devcovenant.core.execution.resolve_repo_root",
@@ -70,12 +70,12 @@ def _unit_test_run_dispatches_mid_stage() -> None:
                 ) as gate_mock:
                     exit_code = gate.run(args)
     assert exit_code == 0
-    gate_mock.assert_called_once_with(repo_root, "mid")
+    gate_mock.assert_called_once_with(repo_root, "verify")
 
 
 def _unit_test_run_dispatches_status_read_only() -> None:
     """run() should dispatch --status through the read-only status path."""
-    args = SimpleNamespace(start=False, end=False, status=True)
+    args = SimpleNamespace(open=False, close=False, status=True)
     repo_root = Path("/repo")
     with patch(
         "devcovenant.core.execution.resolve_repo_root",
@@ -96,7 +96,7 @@ def _unit_test_run_dispatches_status_read_only() -> None:
 
 def _unit_test_main_exits_with_run_exit_code() -> None:
     """main() should parse args and exit with run() return code."""
-    args = SimpleNamespace(start=False, end=False, status=True)
+    args = SimpleNamespace(open=False, close=False, status=True)
     with patch("devcovenant.gate._build_parser") as parser_factory:
         parser = parser_factory.return_value
         parser.parse_args.return_value = args
@@ -111,17 +111,17 @@ def _unit_test_main_exits_with_run_exit_code() -> None:
 class GeneratedUnittestCases(unittest.TestCase):
     """unittest wrappers for module-level tests."""
 
-    def test_run_dispatches_start_stage(self):
-        """Run test_run_dispatches_start_stage."""
-        _unit_test_run_dispatches_start_stage()
+    def test_run_dispatches_open_stage(self):
+        """Run test_run_dispatches_open_stage."""
+        _unit_test_run_dispatches_open_stage()
 
-    def test_run_dispatches_end_stage(self):
-        """Run test_run_dispatches_end_stage."""
-        _unit_test_run_dispatches_end_stage()
+    def test_run_dispatches_close_stage(self):
+        """Run test_run_dispatches_close_stage."""
+        _unit_test_run_dispatches_close_stage()
 
-    def test_run_dispatches_mid_stage(self):
-        """Run test_run_dispatches_mid_stage."""
-        _unit_test_run_dispatches_mid_stage()
+    def test_run_dispatches_verify_stage(self):
+        """Run test_run_dispatches_verify_stage."""
+        _unit_test_run_dispatches_verify_stage()
 
     def test_run_dispatches_status_read_only(self):
         """Run test_run_dispatches_status_read_only."""

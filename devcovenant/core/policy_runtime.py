@@ -114,7 +114,7 @@ def build_change_state(
         state.session_error = message
         return state
 
-    if stage == "start":
+    if stage == "open":
         try:
             current_paths = capture_current_snapshot_paths(repo_root)
         except ValueError as error:
@@ -129,7 +129,7 @@ def build_change_state(
             repo_root / path for path in filtered_paths
         ]
         state.session_valid = True
-        state.session_reason_code = "start_stage"
+        state.session_reason_code = "open_stage"
         state.session_paths = []
         state.session_error = ""
         return state
@@ -161,7 +161,7 @@ def build_change_state(
                 "unsupported_snapshot_style",
                 "Invalid gate status payload: "
                 f"`{field_name}` uses unsupported legacy snapshot rows. "
-                "Run `devcovenant gate --start` to record a fresh session.",
+                "Run `devcovenant gate --open` to record a fresh session.",
             )
             return None
         if style == "mixed":
@@ -169,7 +169,7 @@ def build_change_state(
                 "unsupported_snapshot_style",
                 "Invalid gate status payload: "
                 f"`{field_name}` mixes snapshot row formats. "
-                "Run `devcovenant gate --start` to record a fresh session.",
+                "Run `devcovenant gate --open` to record a fresh session.",
             )
             return None
         return style
@@ -179,7 +179,7 @@ def build_change_state(
         return _set_invalid(
             "missing_gate_status",
             f"Gate status file is missing: {gate_status_path.as_posix()}. "
-            "Run `devcovenant gate --start` first.",
+            "Run `devcovenant gate --open` first.",
         )
 
     try:
@@ -202,7 +202,7 @@ def build_change_state(
         return _set_invalid(
             "missing_session_id",
             "Gate status payload is missing `session_id`. "
-            "Run `devcovenant gate --start` first.",
+            "Run `devcovenant gate --open` first.",
         )
 
     session_state = str(payload.get("session_state", "")).strip().lower()
@@ -253,27 +253,27 @@ def build_change_state(
         }
 
     if session_state == "closed":
-        end_snapshot = _load_snapshot_field(
-            "session_end_snapshot",
-            missing_reason_code="missing_session_end_snapshot",
+        close_snapshot = _load_snapshot_field(
+            "session_close_snapshot",
+            missing_reason_code="missing_session_close_snapshot",
         )
-        if end_snapshot is None:
+        if close_snapshot is None:
             return state
-        end_style = _validate_snapshot_style(
-            end_snapshot,
-            field_name="session_end_snapshot",
+        close_style = _validate_snapshot_style(
+            close_snapshot,
+            field_name="session_close_snapshot",
         )
-        if end_style is None:
+        if close_style is None:
             return state
-        post_end_paths = diff_snapshot_paths(
-            end_snapshot,
+        post_close_paths = diff_snapshot_paths(
+            close_snapshot,
             current_snapshot,
         )
-        if post_end_paths:
+        if post_close_paths:
             _set_invalid(
-                "unsessioned_edits_after_end",
+                "unsessioned_edits_after_close",
                 "Detected edits after the previous `devcovenant gate "
-                "--end`. Run `devcovenant gate --start` to open a new "
+                "--close`. Run `devcovenant gate --open` to open a new "
                 "session.",
             )
             return state
@@ -283,15 +283,15 @@ def build_change_state(
         state.session_error = ""
         return state
 
-    start_snapshot = _load_snapshot_field(
-        "session_start_snapshot",
-        missing_reason_code="missing_session_start_snapshot",
+    open_snapshot = _load_snapshot_field(
+        "session_open_snapshot",
+        missing_reason_code="missing_session_open_snapshot",
     )
-    if start_snapshot is None:
+    if open_snapshot is None:
         return state
 
-    baseline_snapshot = start_snapshot
-    baseline_field_name = "session_start_snapshot"
+    baseline_snapshot = open_snapshot
+    baseline_field_name = "session_open_snapshot"
     if "session_baseline_snapshot" in payload:
         loaded_baseline = _load_snapshot_field(
             "session_baseline_snapshot",

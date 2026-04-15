@@ -134,11 +134,11 @@ def _managed_stage_for_command(
 ) -> str:
     """Resolve managed-environment stage for one CLI command invocation."""
     if command == "gate":
-        if "--end" in command_args:
-            return "end"
-        if "--start" in command_args:
-            return "start"
-        if "--mid" in command_args:
+        if "--close" in command_args:
+            return "close"
+        if "--open" in command_args:
+            return "open"
+        if "--verify" in command_args:
             return "managed"
         if "--status" in command_args:
             return "bootstrap"

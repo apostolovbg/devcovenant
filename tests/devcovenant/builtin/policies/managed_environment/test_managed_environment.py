@@ -190,7 +190,7 @@ def _unit_test_managed_commands_replace_manual_warning(
     checker.set_options(
         {
             "expected_paths": [".venv"],
-            "managed_commands": ["start=>python3 -m venv .venv"],
+            "managed_commands": ["open=>python3 -m venv .venv"],
         },
         {},
     )

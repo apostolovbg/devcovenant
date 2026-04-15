@@ -22,8 +22,8 @@
 # 3) set `install.config_reviewed: true`
 # 4) run `devcovenant deploy`
 # 5) prepare the repository's declared environment
-# 6) start normal work with
-#    `gate --start` -> `gate --mid` -> `run` -> `gate --end`
+# 6) open normal work with
+#    `gate --open` -> `gate --verify` -> `run` -> `gate --close`
 # -------------------------------------------------------------------
 
 # -------------------------------------------------------------------
@@ -1309,8 +1309,8 @@ autogen_metadata_overlays:
     managed_commands:
     - bootstrap=>{current_python} -m venv .venv
     - bootstrap=>{managed_python} -m pip install -r requirements.lock
-    - start=>{current_python} -m venv .venv
-    - start=>{managed_python} -m pip install -r requirements.lock
+    - open=>{current_python} -m venv .venv
+    - open=>{managed_python} -m pip install -r requirements.lock
     manual_commands:
     - '{current_python} -m venv .venv'
     - '{managed_python} -m pip install -r requirements.lock'

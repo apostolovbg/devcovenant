@@ -88,7 +88,7 @@ the registry is recording the dependency surface contract that generated them.
 The same tracked metadata can also capture stage-scoped managed-environment
 bootstrap commands, so registry diffs are the expected result when a
 repository's managed-environment stack changes how profiles such as
-`python_venv` can prepare `.venv` for `deploy`, `refresh`, or `gate --start`.
+`python_venv` can prepare `.venv` for `deploy`, `refresh`, or `gate --open`.
 When a proof repository activates one of those profiles through text-mode
 config edits, the edit should preserve the existing YAML list indentation
 instead of inventing a new block shape.
@@ -121,7 +121,7 @@ the artifact-proof bootstrap path is expected to refresh
 `devcovenant/registry/registry.yaml` alongside `.github/workflows/ci.yml`.
 The same tracked metadata can also capture managed-environment bootstrap
 commands and command search paths, so registry diffs are expected when a
-repository changes how `gate --start` prepares `.venv` or resolves required
+repository changes how `gate --open` prepares `.venv` or resolves required
 commands inside a bench, container, or other declared managed environment.
 That is why `devcovenant/registry/registry.yaml` can change when one declared
 surface moves, when a repository-specific custom profile overrides

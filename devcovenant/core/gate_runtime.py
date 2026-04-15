@@ -128,14 +128,14 @@ def _gate_status_summary_lines(repo_root: Path) -> list[str]:
     if last_stage:
         lines.append(f"Last Stage: {last_stage}")
 
-    session_start = _status_time_token(
-        payload, "session_start_utc"
-    ) or _status_time_token(payload, "pre_commit_start_utc")
-    if session_start:
-        lines.append(f"Session Start: {session_start}")
-    session_end = _status_time_token(payload, "session_end_utc")
-    if session_end:
-        lines.append(f"Session End: {session_end}")
+    session_open = _status_time_token(
+        payload, "session_open_utc"
+    ) or _status_time_token(payload, "pre_commit_open_utc")
+    if session_open:
+        lines.append(f"Session Open: {session_open}")
+    session_close = _status_time_token(payload, "session_close_utc")
+    if session_close:
+        lines.append(f"Session Close: {session_close}")
     last_workflow_run = _latest_workflow_run_utc(payload, workflow_payload)
     if last_workflow_run:
         lines.append(f"Last Workflow Run: {last_workflow_run}")
@@ -233,13 +233,13 @@ def _stage_epochs(
 
     return [
         (
-            "start",
+            "open",
             max(
-                _status_epoch(payload, "pre_commit_start_epoch"),
-                _anchor_epoch(workflow_payload, "start"),
+                _status_epoch(payload, "pre_commit_open_epoch"),
+                _anchor_epoch(workflow_payload, "open"),
             ),
         ),
-        ("mid", _anchor_epoch(workflow_payload, "mid")),
+        ("verify", _anchor_epoch(workflow_payload, "verify")),
         (
             "run",
             max(
@@ -248,10 +248,10 @@ def _stage_epochs(
             ),
         ),
         (
-            "end",
+            "close",
             max(
-                _status_epoch(payload, "pre_commit_end_epoch"),
-                _anchor_epoch(workflow_payload, "end"),
+                _status_epoch(payload, "pre_commit_close_epoch"),
+                _anchor_epoch(workflow_payload, "close"),
             ),
         ),
     ]
@@ -790,8 +790,8 @@ SESSION_SNAPSHOT_BULKY_KEYS = (
     "document_exemption_baseline",
     "last_run_snapshot",
     "session_baseline_snapshot",
-    "session_end_snapshot",
-    "session_start_snapshot",
+    "session_close_snapshot",
+    "session_open_snapshot",
     "run_events",
 )
 
@@ -1012,25 +1012,25 @@ def snapshot_row_style(snapshot: dict[str, str]) -> str:
 
 def session_delta_paths(
     repo_root: Path,
-    start_snapshot: dict[str, str],
+    open_snapshot: dict[str, str],
     current_snapshot: dict[str, str],
     *,
-    session_start_epoch: float | None = None,
+    session_open_epoch: float | None = None,
 ) -> set[str]:
     """
     Return session delta paths using shared snapshot comparison semantics.
     """
-    start_style = snapshot_row_style(start_snapshot)
-    if start_style == "unsupported_legacy":
+    open_style = snapshot_row_style(open_snapshot)
+    if open_style == "unsupported_legacy":
         raise ValueError(
             "Invalid gate status payload: legacy snapshot rows are no longer "
-            "supported. Run `devcovenant gate --start` to record a fresh "
+            "supported. Run `devcovenant gate --open` to record a fresh "
             "session with the current snapshot format."
         )
-    if start_style == "mixed":
+    if open_style == "mixed":
         raise ValueError(
             "Invalid gate status payload: mixed snapshot row formats are not "
-            "supported. Run `devcovenant gate --start` to record a fresh "
+            "supported. Run `devcovenant gate --open` to record a fresh "
             "session with the current snapshot format."
         )
     current_style = snapshot_row_style(current_snapshot)
@@ -1039,7 +1039,7 @@ def session_delta_paths(
             "Invalid current snapshot state: unsupported snapshot row format "
             "encountered during session comparison."
         )
-    return changed_numstat_paths(start_snapshot, current_snapshot)
+    return changed_numstat_paths(open_snapshot, current_snapshot)
 
 
 def snapshot_paths_changed_since(repo_root: Path, epoch: float) -> set[str]:
@@ -1416,16 +1416,16 @@ def _is_devcov_hook_modified_failure(command_output: str) -> bool:
     )
 
 
-def _emit_start_gate_drift_failure(
+def _emit_open_gate_drift_failure(
     command: str,
     *,
     exit_code: int,
     command_output: str,
     changed_paths: set[str],
 ) -> None:
-    """Explain why start gate rejected hook-induced baseline drift."""
+    """Explain why open gate rejected hook-induced baseline drift."""
     runtime_print(
-        "Start gate detected hook-induced baseline drift and did not "
+        "Open gate detected hook-induced baseline drift and did not "
         "record a usable session.",
         file=sys.stderr,
     )
@@ -1438,8 +1438,8 @@ def _emit_start_gate_drift_failure(
     if _is_devcov_hook_modified_failure(command_output):
         runtime_print(
             "The DevCovenant hook refreshed managed files during "
-            "`devcovenant gate --start`. Settle those managed updates "
-            "first, then rerun `devcovenant gate --start`.",
+            "`devcovenant gate --open`. Settle those managed updates "
+            "first, then rerun `devcovenant gate --open`.",
             file=sys.stderr,
         )
         return
@@ -1451,8 +1451,7 @@ def _emit_start_gate_drift_failure(
             file=sys.stderr,
         )
     runtime_print(
-        "Clear the hook-induced edits and rerun "
-        "`devcovenant gate --start`.",
+        "Clear the hook-induced edits and rerun " "`devcovenant gate --open`.",
         file=sys.stderr,
     )
 
@@ -1682,12 +1681,12 @@ def run_pre_commit_gate(
     command: str | None = None,
     notes: str = "",
 ) -> int:
-    """Run one gate pre-commit stage (`start`, `mid`, or `end`)."""
-    if stage not in {"start", "mid", "end"}:
-        raise SystemExit("stage must be 'start', 'mid', or 'end'.")
-    is_start = stage == "start"
-    is_mid = stage == "mid"
-    is_end = stage == "end"
+    """Run one gate pre-commit stage (`open`, `verify`, or `close`)."""
+    if stage not in {"open", "verify", "close"}:
+        raise SystemExit("stage must be 'open', 'verify', or 'close'.")
+    is_open = stage == "open"
+    is_verify = stage == "verify"
+    is_close = stage == "close"
     resolved_command = str(command or "").strip()
     if not resolved_command:
         resolved_command = workflow_contract_module.resolve_pre_commit_command(
@@ -1698,7 +1697,7 @@ def run_pre_commit_gate(
     status_path = registry_runtime_module.gate_status_path(repo_root)
     status_path.parent.mkdir(parents=True, exist_ok=True)
 
-    if is_end or is_mid:
+    if is_close or is_verify:
         try:
             pre_payload = _load_status(status_path)
         except ValueError as error:
@@ -1711,17 +1710,17 @@ def run_pre_commit_gate(
         if not session_id or session_state != "open":
             runtime_print(
                 f"Cannot run {stage} gate without an active open session. "
-                "Run `devcovenant gate --start` first.",
+                "Run `devcovenant gate --open` first.",
                 file=sys.stderr,
             )
             return 1
 
-    start_ts = _utc_now() if is_start else None
+    open_ts = _utc_now() if is_open else None
     run_ids_pending: list[str] = []
     recovery_run_ids: list[str] = []
     recovery_status_active = False
     recovery_status_previous: bytes | None = None
-    managed_env_stage = "managed" if is_mid else stage
+    managed_env_stage = "managed" if is_verify else stage
     try:
         managed_env, managed_python = (
             execution_runtime_module.resolve_managed_environment_for_stage(
@@ -1748,7 +1747,7 @@ def run_pre_commit_gate(
 
     while True:
         env = dict(managed_env or os.environ)
-        env["DEVCOV_DEVFLOW_STAGE"] = "" if is_mid else stage
+        env["DEVCOV_DEVFLOW_STAGE"] = "" if is_verify else stage
         hook_env = dict(env)
         auto_fix_enabled = (
             execution_runtime_module.resolve_engine_auto_fix_enabled(repo_root)
@@ -1770,7 +1769,7 @@ def run_pre_commit_gate(
         except ValueError as error:
             runtime_print(str(error), file=sys.stderr)
             return 1
-        if is_end:
+        if is_close:
             session_id = str(pre_payload.get("session_id", "")).strip()
             try:
                 workflow_payload = load_workflow_session(repo_root)
@@ -1784,7 +1783,7 @@ def run_pre_commit_gate(
                 diff_before,
                 session_id=session_id,
             )
-        if is_start:
+        if is_open:
             status_exists = status_path.exists()
             status_payload: dict[str, object] = {}
             status_parse_error = ""
@@ -1829,8 +1828,8 @@ def run_pre_commit_gate(
                 )
             elif session_state == "open":
                 runtime_print(
-                    "Cannot start a new session while another session is "
-                    "open. Complete it with `devcovenant gate --end`.",
+                    "Cannot open a new session while another session is "
+                    "open. Complete it with `devcovenant gate --close`.",
                     file=sys.stderr,
                 )
                 return 1
@@ -1845,36 +1844,36 @@ def run_pre_commit_gate(
                         "Closed gate session snapshot is unusable; opening "
                         "a recovery session from the current baseline."
                     )
-                raw_end_snapshot = status_snapshot_payload.get(
-                    "session_end_snapshot"
+                raw_close_snapshot = status_snapshot_payload.get(
+                    "session_close_snapshot"
                 )
-                if not isinstance(raw_end_snapshot, dict):
+                if not isinstance(raw_close_snapshot, dict):
                     recovery_reason = (
                         "Closed gate status is missing "
-                        "`session_end_snapshot`; "
+                        "`session_close_snapshot`; "
                         "opening a recovery session from the current "
                         "baseline."
                     )
                 else:
                     try:
-                        end_snapshot = (
+                        close_snapshot = (
                             execution_runtime_module.normalize_snapshot_rows(
-                                raw_end_snapshot,
-                                field_name="session_end_snapshot",
+                                raw_close_snapshot,
+                                field_name="session_close_snapshot",
                             )
                         )
                     except ValueError as error:
                         runtime_print(str(error), file=sys.stderr)
                         return 1
-                    changed_since_end = _changed_paths_between(
-                        end_snapshot,
+                    changed_since_close = _changed_paths_between(
+                        close_snapshot,
                         diff_before,
                     )
-                    if changed_since_end:
-                        recovery_baseline_snapshot = dict(end_snapshot)
+                    if changed_since_close:
+                        recovery_baseline_snapshot = dict(close_snapshot)
                         recovery_reason = (
                             "Detected edits after the previous "
-                            "`devcovenant gate --end`; opening a recovery "
+                            "`devcovenant gate --close`; opening a recovery "
                             "session that includes those unsessioned edits."
                         )
                         recovery_session_id = str(
@@ -1910,25 +1909,25 @@ def run_pre_commit_gate(
                     runtime_print(str(error), file=sys.stderr)
                     return 1
                 recovery_payload["session_id"] = str(
-                    int(start_ts.timestamp() * 1000000)
+                    int(open_ts.timestamp() * 1000000)
                 )
                 recovery_payload["session_state"] = "open"
-                recovery_payload["session_start_utc"] = start_ts.isoformat()
-                recovery_payload["session_start_epoch"] = start_ts.timestamp()
+                recovery_payload["session_open_utc"] = open_ts.isoformat()
+                recovery_payload["session_open_epoch"] = open_ts.timestamp()
                 recovery_payload.pop("changelog_baseline_reset", None)
                 recovery_payload.pop("changelog_baseline_reset_utc", None)
                 recovery_payload.pop("changelog_baseline_reset_epoch", None)
-                recovery_payload["changelog_start_top_entry_fingerprint"] = (
+                recovery_payload["changelog_open_top_entry_fingerprint"] = (
                     _entry_fingerprint(top_entry)
                 )
-                recovery_payload["changelog_start_top_entry_present"] = bool(
+                recovery_payload["changelog_open_top_entry_present"] = bool(
                     top_entry
                 )
-                recovery_payload["changelog_start_top_version"] = (
+                recovery_payload["changelog_open_top_version"] = (
                     _latest_changelog_version(repo_root)
                 )
                 recovery_remove_keys = [
-                    "session_end_snapshot",
+                    "session_close_snapshot",
                     "last_run_snapshot",
                     "run_events",
                 ]
@@ -1950,14 +1949,14 @@ def run_pre_commit_gate(
                 )
                 recovery_payload["session_snapshot_file"] = snapshot_rel_path
                 recovery_payload["session_snapshot_updated_utc"] = (
-                    start_ts.isoformat()
+                    open_ts.isoformat()
                 )
                 recovery_payload["session_snapshot_updated_epoch"] = (
-                    start_ts.timestamp()
+                    open_ts.timestamp()
                 )
                 recovery_payload.pop("run_events_count", None)
                 prune_inline_session_snapshot_fields(recovery_payload)
-                recovery_payload["recovery_start_reason"] = recovery_reason
+                recovery_payload["recovery_open_reason"] = recovery_reason
                 status_path.parent.mkdir(parents=True, exist_ok=True)
                 status_path.write_text(
                     json.dumps(recovery_payload, indent=2) + "\n",
@@ -1969,7 +1968,7 @@ def run_pre_commit_gate(
                 recovery_status_previous = None
 
         command_output = ""
-        if is_start or is_end or is_mid:
+        if is_open or is_close or is_verify:
             exit_code, command_output = _run_command_with_output(
                 hook_command,
                 env=hook_env,
@@ -1983,7 +1982,7 @@ def run_pre_commit_gate(
         try:
             diff_after_hooks = _current_numstat_snapshot(repo_root)
         except ValueError as error:
-            if stage == "start" and recovery_status_active:
+            if stage == "open" and recovery_status_active:
                 _restore_status_file(status_path, recovery_status_previous)
                 recovery_status_active = False
             runtime_print(str(error), file=sys.stderr)
@@ -1992,18 +1991,18 @@ def run_pre_commit_gate(
             diff_before, diff_after_hooks
         )
         hooks_changed = bool(hook_changed_paths)
-        if is_start and hooks_changed:
+        if is_open and hooks_changed:
             if recovery_status_active:
                 _restore_status_file(status_path, recovery_status_previous)
                 recovery_status_active = False
-            _emit_start_gate_drift_failure(
+            _emit_open_gate_drift_failure(
                 command,
                 exit_code=exit_code,
                 command_output=command_output,
                 changed_paths=hook_changed_paths,
             )
             return 1
-        if is_start and exit_code != 0:
+        if is_open and exit_code != 0:
             if recovery_status_active:
                 _restore_status_file(status_path, recovery_status_previous)
                 recovery_status_active = False
@@ -2014,20 +2013,20 @@ def run_pre_commit_gate(
                 file=sys.stderr,
             )
             runtime_print(
-                "Start gate failed. Clear pre-commit violations and rerun "
-                "`devcovenant gate --start`.",
+                "Open gate failed. Clear pre-commit violations and rerun "
+                "`devcovenant gate --open`.",
                 file=sys.stderr,
             )
             return exit_code
 
-        if stage == "start" and recovery_status_active and recovery_run_ids:
+        if stage == "open" and recovery_status_active and recovery_run_ids:
             _restore_status_file(status_path, recovery_status_previous)
             recovery_status_active = False
             recovery_rerun = _format_run_rerun_instructions(
                 recovery_run_ids,
             )
             runtime_print(
-                "Recovery start detected unsessioned edits and requires "
+                "Recovery open detected unsessioned edits and requires "
                 "fresh workflow runs before recording a new "
                 "baseline.",
                 file=sys.stderr,
@@ -2036,13 +2035,13 @@ def run_pre_commit_gate(
                 "Run "
                 f"{recovery_rerun},"
                 " "
-                "then rerun `devcovenant gate --start`. Start gate performs "
+                "then rerun `devcovenant gate --open`. Open gate performs "
                 "no internal workflow-run runs.",
                 file=sys.stderr,
             )
             return 1
 
-        if is_end and _is_blocking_devcov_failure(
+        if is_close and _is_blocking_devcov_failure(
             exit_code,
             command_output,
         ):
@@ -2053,13 +2052,13 @@ def run_pre_commit_gate(
                 file=sys.stderr,
             )
             runtime_print(
-                "End gate found blocking non-autofixed DevCovenant "
+                "Close gate found blocking non-autofixed DevCovenant "
                 "violations. Fix violations and rerun "
-                "`devcovenant gate --end`.",
+                "`devcovenant gate --close`.",
                 file=sys.stderr,
             )
             return exit_code
-        if is_mid and _is_blocking_devcov_failure(
+        if is_verify and _is_blocking_devcov_failure(
             exit_code,
             command_output,
         ):
@@ -2070,22 +2069,22 @@ def run_pre_commit_gate(
                 file=sys.stderr,
             )
             runtime_print(
-                "Mid gate found blocking non-autofixed DevCovenant "
+                "Verify gate found blocking non-autofixed DevCovenant "
                 "violations. Fix violations and rerun `devcovenant gate "
-                "--mid` before `devcovenant run`.",
+                "--verify` before `devcovenant run`.",
                 file=sys.stderr,
             )
             return exit_code
 
-        if is_mid and exit_code == 0 and hooks_changed:
+        if is_verify and exit_code == 0 and hooks_changed:
             runtime_print(
-                "Mid gate detected hook-induced file changes. "
-                "Rerun `devcovenant gate --mid` until hooks converge, then "
+                "Verify gate detected hook-induced file changes. "
+                "Rerun `devcovenant gate --verify` until hooks converge, then "
                 "run `devcovenant run`.",
                 file=sys.stderr,
             )
             return 1
-        if is_mid and exit_code != 0:
+        if is_verify and exit_code != 0:
             rendered = " ".join(shlex.split(command)) or command
             runtime_print(
                 "Pre-commit command failed with exit code "
@@ -2093,33 +2092,33 @@ def run_pre_commit_gate(
                 file=sys.stderr,
             )
             runtime_print(
-                "Mid gate failed. Clear pre-commit violations and rerun "
-                "`devcovenant gate --mid` before `devcovenant run`.",
+                "Verify gate failed. Clear pre-commit violations and rerun "
+                "`devcovenant gate --verify` before `devcovenant run`.",
                 file=sys.stderr,
             )
             return exit_code
-        if is_end and exit_code == 0 and hooks_changed:
+        if is_close and exit_code == 0 and hooks_changed:
             runtime_print(
-                "End gate detected hook-induced file changes. "
+                "Close gate detected hook-induced file changes. "
                 "Run `devcovenant run`, then rerun "
-                "`devcovenant gate --end`.",
+                "`devcovenant gate --close`.",
                 file=sys.stderr,
             )
             return 1
-        if is_end and exit_code == 0 and run_ids_pending:
+        if is_close and exit_code == 0 and run_ids_pending:
             rerun_runs = _format_run_rerun_instructions(
                 run_ids_pending,
             )
             runtime_print(
-                "End gate requires fresh workflow runs before "
+                "Close gate requires fresh workflow runs before "
                 "closure. Run "
                 f"{rerun_runs},"
                 " "
-                "then rerun `devcovenant gate --end`.",
+                "then rerun `devcovenant gate --close`.",
                 file=sys.stderr,
             )
             return 1
-        if is_end and exit_code != 0:
+        if is_close and exit_code != 0:
             rendered = " ".join(shlex.split(command)) or command
             runtime_print(
                 "Pre-commit command failed with exit code "
@@ -2129,11 +2128,11 @@ def run_pre_commit_gate(
             return exit_code
         break
 
-    if is_mid:
+    if is_verify:
         _record_workflow_anchor(
             repo_root,
             contract=workflow_contract,
-            stage="mid",
+            stage="verify",
             command=command,
             notes=notes,
             when=_utc_now(),
@@ -2141,7 +2140,7 @@ def run_pre_commit_gate(
             session_state="open",
         )
         runtime_print(
-            "Completed mid gate pre-commit sweep without changing gate "
+            "Completed verify gate pre-commit sweep without changing gate "
             "session lifecycle state."
         )
         return 0
@@ -2153,9 +2152,9 @@ def run_pre_commit_gate(
         return 1
     now = _utc_now()
     prefix = f"pre_commit_{stage}"
-    if start_ts is not None:
-        payload[f"{prefix}_utc"] = start_ts.isoformat()
-        payload[f"{prefix}_epoch"] = start_ts.timestamp()
+    if open_ts is not None:
+        payload[f"{prefix}_utc"] = open_ts.isoformat()
+        payload[f"{prefix}_epoch"] = open_ts.timestamp()
     else:
         payload[f"{prefix}_utc"] = now.isoformat()
         payload[f"{prefix}_epoch"] = now.timestamp()
@@ -2163,28 +2162,29 @@ def run_pre_commit_gate(
     payload[f"{prefix}_notes"] = notes.strip()
     payload.pop(f"{prefix}_cache_enabled", None)
     payload.pop(f"{prefix}_cache_control_env", None)
-    if is_start:
+    if is_open:
         # Purge legacy keys so old payload shape cannot silently persist.
         payload.pop("sha", None)
         payload.pop("tests_coverage_evidence", None)
-        payload.pop("changelog_start_diff_numstat", None)
-        payload.pop("changelog_start_exemption_fingerprints", None)
-        payload.pop("session_start_signature", None)
-        # Clear stale end-stage evidence so ordering checks stay session-bound.
+        payload.pop("changelog_open_diff_numstat", None)
+        payload.pop("changelog_open_exemption_fingerprints", None)
+        payload.pop("session_open_signature", None)
+        # Clear stale close-stage evidence so ordering checks stay
+        # session-bound.
         for key in (
-            "pre_commit_end_utc",
-            "pre_commit_end_epoch",
-            "pre_commit_end_command",
-            "pre_commit_end_notes",
-            "pre_commit_end_cache_enabled",
-            "pre_commit_end_cache_control_env",
+            "pre_commit_close_utc",
+            "pre_commit_close_epoch",
+            "pre_commit_close_command",
+            "pre_commit_close_notes",
+            "pre_commit_close_cache_enabled",
+            "pre_commit_close_cache_control_env",
         ):
             payload.pop(key, None)
-        session_id = str(int(start_ts.timestamp() * 1000000))
+        session_id = str(int(open_ts.timestamp() * 1000000))
         payload["session_id"] = session_id
         payload["session_state"] = "open"
-        payload["session_start_utc"] = start_ts.isoformat()
-        payload["session_start_epoch"] = start_ts.timestamp()
+        payload["session_open_utc"] = open_ts.isoformat()
+        payload["session_open_epoch"] = open_ts.timestamp()
         payload.pop("session_baseline_epoch", None)
         payload.pop("changelog_baseline_reset", None)
         payload.pop("changelog_baseline_reset_utc", None)
@@ -2200,15 +2200,15 @@ def run_pre_commit_gate(
             runtime_print(str(error), file=sys.stderr)
             return 1
         snapshot_remove_keys = [
-            "session_end_snapshot",
+            "session_close_snapshot",
             "last_run_snapshot",
             "run_events",
         ]
         snapshot_updates: dict[str, object] = {
-            # Persist the gate-start filesystem snapshot so policies can scope
+            # Persist the gate-open filesystem snapshot so policies can scope
             # deleted-file coverage to this session instead of HEAD-wide
             # history.
-            "session_start_snapshot": dict(diff_before),
+            "session_open_snapshot": dict(diff_before),
             "document_exemption_baseline": (
                 execution_runtime_module.capture_document_exemption_baseline(
                     repo_root,
@@ -2223,7 +2223,7 @@ def run_pre_commit_gate(
                 recovery_baseline_snapshot
             )
         else:
-            # Normal starts must not carry a stale recovery baseline forward.
+            # Normal opens must not carry a stale recovery baseline forward.
             snapshot_remove_keys.append("session_baseline_snapshot")
         (
             snapshot_rel_path,
@@ -2235,16 +2235,16 @@ def run_pre_commit_gate(
             remove_keys=tuple(snapshot_remove_keys),
         )
         payload["session_snapshot_file"] = snapshot_rel_path
-        payload["session_snapshot_updated_utc"] = start_ts.isoformat()
-        payload["session_snapshot_updated_epoch"] = start_ts.timestamp()
+        payload["session_snapshot_updated_utc"] = open_ts.isoformat()
+        payload["session_snapshot_updated_epoch"] = open_ts.timestamp()
         payload.pop("run_events_count", None)
         payload.update(
             execution_runtime_module.capture_agents_section_hashes(repo_root)
         )
-        payload.pop("session_end_utc", None)
-        payload.pop("session_end_epoch", None)
-        payload.pop("session_end_signature", None)
-        payload.pop("recovery_start_reason", None)
+        payload.pop("session_close_utc", None)
+        payload.pop("session_close_epoch", None)
+        payload.pop("session_close_signature", None)
+        payload.pop("recovery_open_reason", None)
         try:
             top_entry = _latest_changelog_entry(repo_root)
         except ValueError as error:
@@ -2253,11 +2253,11 @@ def run_pre_commit_gate(
                 recovery_status_active = False
             runtime_print(str(error), file=sys.stderr)
             return 1
-        payload["changelog_start_top_entry_fingerprint"] = _entry_fingerprint(
+        payload["changelog_open_top_entry_fingerprint"] = _entry_fingerprint(
             top_entry
         )
-        payload["changelog_start_top_entry_present"] = bool(top_entry)
-        payload["changelog_start_top_version"] = _latest_changelog_version(
+        payload["changelog_open_top_entry_present"] = bool(top_entry)
+        payload["changelog_open_top_version"] = _latest_changelog_version(
             repo_root
         )
     else:
@@ -2265,14 +2265,14 @@ def run_pre_commit_gate(
         session_state = str(payload.get("session_state", "")).strip().lower()
         if not session_id or session_state != "open":
             runtime_print(
-                "Cannot end gate without an active open session. "
-                "Run `devcovenant gate --start` first.",
+                "Cannot close gate without an active open session. "
+                "Run `devcovenant gate --open` first.",
                 file=sys.stderr,
             )
             return 1
         payload["session_state"] = "closed"
-        payload["session_end_utc"] = now.isoformat()
-        payload["session_end_epoch"] = now.timestamp()
+        payload["session_close_utc"] = now.isoformat()
+        payload["session_close_epoch"] = now.timestamp()
         payload.pop("changelog_baseline_reset", None)
         payload.pop("changelog_baseline_reset_utc", None)
         payload.pop("changelog_baseline_reset_epoch", None)
@@ -2282,7 +2282,7 @@ def run_pre_commit_gate(
         ) = merge_session_snapshot_payload(
             repo_root,
             payload,
-            updates={"session_end_snapshot": dict(diff_after_hooks)},
+            updates={"session_close_snapshot": dict(diff_after_hooks)},
         )
         payload["session_snapshot_file"] = snapshot_rel_path
         payload["session_snapshot_updated_utc"] = now.isoformat()
@@ -2302,10 +2302,10 @@ def run_pre_commit_gate(
         stage=stage,
         command=command,
         notes=notes,
-        when=start_ts if start_ts is not None else now,
+        when=open_ts if open_ts is not None else now,
         session_id=str(payload.get("session_id", "")).strip(),
         session_state=str(payload.get("session_state", "")).strip().lower(),
-        reset_runs=is_start,
+        reset_runs=is_open,
         session_snapshot_file=str(payload.get("session_snapshot_file", "")),
         session_snapshot_updated_utc=str(
             payload.get("session_snapshot_updated_utc", "")

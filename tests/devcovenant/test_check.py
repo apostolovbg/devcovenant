@@ -192,7 +192,7 @@ def _unit_test_run_does_not_mutate_gate_status_file() -> None:
                 {
                     "session_id": "s1",
                     "session_state": "open",
-                    "pre_commit_start_epoch": 1.0,
+                    "pre_commit_open_epoch": 1.0,
                 },
                 indent=2,
             ).encode("utf-8")

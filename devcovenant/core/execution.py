@@ -1460,17 +1460,17 @@ def snapshot_paths_changed_since(repo_root: Path, epoch: float) -> set[str]:
 
 def session_delta_paths(
     repo_root: Path,
-    start_snapshot: dict[str, str],
+    open_snapshot: dict[str, str],
     current_snapshot: dict[str, str],
     *,
-    session_start_epoch: float | None = None,
+    session_open_epoch: float | None = None,
 ) -> set[str]:
     """Return session delta paths using shared snapshot comparison logic."""
     return session_snapshot_runtime_module.session_delta_paths(
         repo_root,
-        start_snapshot,
+        open_snapshot,
         current_snapshot,
-        session_start_epoch=session_start_epoch,
+        session_open_epoch=session_open_epoch,
     )
 
 
@@ -2083,8 +2083,8 @@ def record_gate_status(
     # Purge legacy gate-status keys instead of carrying them forward.
     payload.pop("sha", None)
     payload.pop("tests_coverage_evidence", None)
-    payload.pop("changelog_start_diff_numstat", None)
-    payload.pop("changelog_start_exemption_fingerprints", None)
+    payload.pop("changelog_open_diff_numstat", None)
+    payload.pop("changelog_open_exemption_fingerprints", None)
     payload.pop("cache_enabled", None)
     payload.pop("cache_control_env", None)
     payload.pop("last_run", None)

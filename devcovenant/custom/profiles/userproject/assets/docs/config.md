@@ -101,7 +101,7 @@ DevCovenant to guess an unknown layout or hidden launcher hop.
 DevCovenant must either run from that declared managed context already or be
 able to resolve the declared interpreter path or environment root.
 Those profile-level `ignore_dirs` also feed the startup snapshot walk used by
-`gate --start`, so disposable trees stay out of the recorded session state as
+`gate --open`, so disposable trees stay out of the recorded session state as
 well as generated `.gitignore` and pre-commit excludes.
 
 The shipped user baseline keeps `github` active by default.
@@ -282,11 +282,11 @@ inherited cleanup lists.
 
 ### developer_mode
 `developer_mode` answers a simple question:
-is the project using DevCovenant as a tool, or is it being used to develop
-DevCovenant itself?
+is the project using DevCovenant as a tool, or does it own DevCovenant
+development surfaces?
 
 Use `false` for a normal repository using DevCovenant.
-Use `true` only when the repository is developing DevCovenant itself.
+Use `true` only when the repository owns DevCovenant development surfaces.
 
 ## Practical Review Order
 For a new repository, this is the shortest useful config review:

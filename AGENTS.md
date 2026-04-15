@@ -50,7 +50,7 @@ DevCovenant lifecycle and command behavior used by the project.
 - Treat `devcovenant/VERSION` as the only version-defining file.
 - Preserve command/runtime contracts unless an explicit plan item changes them.
 - Managed-environment metadata uses `bootstrap` for bootstrap-capable
-  commands and `managed` for mid-gate validation; avoid the legacy
+  commands and `managed` for verify-gate validation; avoid the legacy
   `command` token.
 - Keep implementation ownership in the flat `devcovenant/core/*.py`
   module surface.
@@ -128,7 +128,7 @@ during command waits.
 7. If a managed environment is configured, activate/use it first. Run
    DevCovenant commands and tests in that environment. Installing
    DevCovenant in that environment is recommended.
-8. Run `devcovenant gate --start` before any repository edits. For
+8. Run `devcovenant gate --open` before any repository edits. For
    long-running commands, use non-PTY (pseudoterminal) execution for
    non-interactive DevCovenant commands, prefer low-frequency polling,
    and avoid verbose or large-output streaming by default.
@@ -136,7 +136,7 @@ during command waits.
    150s, 180s, 240s, then every 60s.
    Do not narrate polling steps or cadence in routine progress updates
    unless the human explicitly asks.
-9. Before applying edits, clear start-gate complaints. Blocking violations
+9. Before applying edits, clear open-gate complaints. Blocking violations
    must be cleared; preferred behavior is to clear all complaints. When
    DevCovenant run artifacts are available, inspect summaries/tails/logs
    before rerunning commands.
@@ -147,19 +147,19 @@ during command waits.
    entrypoint.
 12. Preferred behavior: clear all DevCovenant complaints before continuing,
    unless the human explicitly requests otherwise.
-13. Run `devcovenant gate --mid` before `devcovenant run` to surface
+13. Run `devcovenant gate --verify` before `devcovenant run` to surface
    hook-induced mutations and blocking DevCovenant complaints early.
-   `gate --mid`
+   `gate --verify`
    requires an open session, does not record lifecycle state, and may
    need an explicit rerun until hooks converge.
 14. Run `devcovenant run`. For long runs, report status/run updates
    and final result, and prefer run-artifact summaries/tails before
    escalating to verbose streaming. Long silent waits in normal mode
    should surface `Please wait. In progress...`.
-15. Run `devcovenant gate --end`. Use the same artifact-first output
+15. Run `devcovenant gate --close`. Use the same artifact-first output
    discipline as workflow runs. Gate commands do not run required
    workflow runs internally.
-16. If end-gate hooks or checks produce additional changes or violations,
+16. If close-gate hooks or checks produce additional changes or violations,
    use `devcovenant gate --status` for lifecycle inspection and inspect
    the latest run artifacts before rerunning required commands until the
    repository is clean. When gates require workflow runs, run
@@ -169,7 +169,7 @@ during command waits.
 Audits are not a separate workflow mode. The same gate discipline applies.
 Use `check` as the default read-only audit command. Gate commands own
 refresh/autofix orchestration; lifecycle state writes are limited to
-`gate --start` / `gate --end`; `gate --mid` is non-lifecycle.
+`gate --open` / `gate --close`; `gate --verify` is non-lifecycle.
 Gate commands never run workflow runs internally.
 When DevCovenant run artifacts are available, inspect `summary.txt`,
 then `tail.txt` (if present), then full logs before using ad-hoc
@@ -586,7 +586,7 @@ Every change must be logged in a new changelog entry dated today, under the
 current version, with a three-line summary labeled Change/Why/Impact. Each
 summary line must include an action verb listed in the summary_verbs
 metadata and a Files block that lists only the touched paths for this
-change. The policy compares the top changelog entry against the gate-start
+change. The policy compares the top changelog entry against the gate-open
 top-entry fingerprint to require a fresh entry for each work session, while
 resolving changed paths from the active gate session. If the top version
 changes during the session, the new version section must be prepended above
@@ -1545,8 +1545,8 @@ manual_commands:
 managed_commands:
 - bootstrap=>{current_python} -m venv .venv
 - bootstrap=>{managed_python} -m pip install -r requirements.lock
-- start=>{current_python} -m venv .venv
-- start=>{managed_python} -m pip install -r requirements.lock
+- open=>{current_python} -m venv .venv
+- open=>{managed_python} -m pip install -r requirements.lock
 ```
 
 DevCovenant must run from one execution environment described by this
@@ -1575,12 +1575,12 @@ Active managed-environment policy reuses the current interpreter when it
 already satisfies the contract, re-executes CLI commands in the selected
 interpreter when needed, and only runs bootstrap commands when the target
 environment is still missing or invalid. Stage-scoped `managed_commands`
-accept `start`, `run`, `end`, `bootstrap`, `managed`, and `all` prefixes;
-bootstrap-mode commands may still reuse `start` bootstrap commands once
+accept `open`, `run`, `close`, `bootstrap`, `managed`, and `all` prefixes;
+bootstrap-mode commands may still reuse `open` bootstrap commands once
 when the target environment is not ready. When no automatic bootstrap
 commands are declared, `bootstrap` stage operations may keep using the
 current interpreter only when `allow_current_interpreter_fallback` is
-explicitly true; otherwise `start`, `run`, `end`, and `managed` remain
+explicitly true; otherwise `open`, `run`, `close`, and `managed` remain
 strict about the target environment so incomplete profiles fail loudly
 instead of falling through to wrapper adapters or alternate policy
 sources. If the resolved interpreter is missing or not executable,

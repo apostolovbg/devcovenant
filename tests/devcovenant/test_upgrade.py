@@ -254,7 +254,7 @@ def _unit_test_upgrade_preserves_open_gate_status_visibility() -> None:
                 {
                     "session_id": "upgrade-open-session",
                     "session_state": "open",
-                    "pre_commit_start_utc": "2026-03-01T10:00:00+00:00",
+                    "pre_commit_open_utc": "2026-03-01T10:00:00+00:00",
                 },
                 indent=2,
             )

@@ -55,9 +55,9 @@ changing in DevCovenant itself.
 3. [x] Silence and workflow messaging
    - Encode the silence rule in the managed AGENTS template and the repo
      `AGENTS.md`.
-   - Make `gate --start` state that agents should work in silence and only
+   - Make `gate --open` state that agents should work in silence and only
      provide a summary after work finishes.
-   - After `gate --end`, stage all changes before any chat summary.
+   - After `gate --close`, stage all changes before any chat summary.
    - Keep mid-work narration out of the workflow.
 4. [x] Version and metadata sync
    - Treat the canonical version file as the single source for both the project
@@ -65,7 +65,7 @@ changing in DevCovenant itself.
    - `version-governance` should validate only; `version-sync` should
      propagate version headers and versioned manifest fields automatically.
    - The bump flow should stay one move: change the canonical version file,
-     then let `gate --mid` or refresh propagate the versioned outputs.
+     then let `gate --verify` or refresh propagate the versioned outputs.
    - Make sure custom managed docs are included in the sync surface.
 5. [x] Project metadata sync
    - Keep the canonical version file as the source of truth and let
@@ -105,8 +105,8 @@ changing in DevCovenant itself.
    - Explain how to point one keyword set at multiple docs and how the policy
      keeps documentation growth deliberate.
    - Keep the example generic enough to apply outside the current repo.
-8. [x] Gate-start reminder
-   - `gate --start` prints the silence reminder in normal and verbose mode.
+8. [x] Gate-open reminder
+   - `gate --open` prints the silence reminder in normal and verbose mode.
    - The reminder says that AI agents work in silence and only provide a
      summary after work is complete.
 
@@ -118,7 +118,7 @@ changing in DevCovenant itself.
   generic, while the DevCovenant repo can widen scope locally through its
   repo-owned profile.
 - Silence and work-summary rules are explicit in the managed template, the
-  repo `AGENTS.md`, and the start-gate output.
+  repo `AGENTS.md`, and the open-gate output.
 - Version bumps remain one move: canonical version file first, sync output
   second.
 - Project name and description propagate through the canonical metadata path

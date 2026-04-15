@@ -96,7 +96,7 @@ contracts, and repo-shape validation.
   runtime registry paths, workflow contract resolution, and workflow
   validation
 - `devcovenant/core/gate_runtime.py`
-  `gate --start`, `--mid`, `--end`, status rendering, and gate-session
+  `gate --open`, `--verify`, `--close`, status rendering, and gate-session
   snapshots
 - `devcovenant/core/refresh_runtime.py`
   full refresh orchestration, policy registry refresh, dependency artifact

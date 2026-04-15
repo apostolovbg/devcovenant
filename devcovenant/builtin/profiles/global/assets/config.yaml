@@ -25,12 +25,12 @@
 #    writes `requirements.lock` from `requirements.in`
 #    and that `requirements.in` starts from the shipped
 #    `devcovenant/runtime-requirements.lock`
-#    and `gate --start` may bootstrap the declared environment from that
+#    and `gate --open` may bootstrap the declared environment from that
 #    lock automatically
 #    the manual equivalent is installing `requirements.lock` into the
 #    declared environment
-# 6) start normal work with
-#    `gate --start` -> `gate --mid` -> `run` -> `gate --end`
+# 6) open normal work with
+#    `gate --open` -> `gate --verify` -> `run` -> `gate --close`
 #
 # Three common starting situations:
 # - empty repo:
@@ -387,7 +387,7 @@ integrity:
 # Human-owned section.
 workflow:
   # Human-owned key.
-  # Canonical command recorded by `gate --start` / `gate --end`.
+  # Canonical command recorded by `gate --open` / `gate --close`.
   pre_commit_command: pre-commit run --all-files
 
 # ---------------------------------------------------------------------------

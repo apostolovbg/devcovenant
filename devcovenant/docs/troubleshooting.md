@@ -20,17 +20,17 @@ Ask these questions first:
 4. is the problem in config, generated files, runtime state, or tests?
 
 ## Gate Failures
-If `gate --start` fails, clear the reported problem before editing.
+If `gate --open` fails, clear the reported problem before editing.
 A failed start gate is not a usable starting point.
 If start reports hook-changed paths or says managed files were refreshed, the
 checkout was not settled yet. Apply or clear those changes, then rerun
-`gate --start`.
+`gate --open`.
 
-If `gate --mid` fails, clear the issue and rerun `gate --mid` until it is
+If `gate --verify` fails, clear the issue and rerun `gate --verify` until it is
 clean before `run`.
 
-If `gate --end` fails, inspect the latest run logs, rerun `run` if required,
-and then rerun `gate --end`.
+If `gate --close` fails, inspect the latest run logs, rerun `run` if required,
+and then rerun `gate --close`.
 
 ## Changelog Coverage Problems
 The two common causes are:

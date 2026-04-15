@@ -20,8 +20,8 @@ def _contract_tests_run_entry() -> dict[str, object]:
     return {
         "id": "tests",
         "enabled": True,
-        "after": "mid",
-        "before": "end",
+        "after": "verify",
+        "before": "close",
         "order": 100,
         "runner": {
             "kind": "command_group",
@@ -137,9 +137,9 @@ def _contract_build_workflow_contract_uses_profile_declared_runs() -> None:
         )
     assert contract["schema_version"] == module.SCHEMA_VERSION
     assert [anchor["id"] for anchor in contract["anchors"]] == [
-        "start",
-        "mid",
-        "end",
+        "open",
+        "verify",
+        "close",
     ]
     assert contract["run_ids"] == ["tests"]
     tests_run = module.resolve_run(contract, "tests")
@@ -512,8 +512,8 @@ def _write_workflow_contract_fixture(
         "    workflow_runs:",
         "      - id: tests",
         "        enabled: true",
-        "        after: mid",
-        "        before: end",
+        "        after: verify",
+        "        before: close",
         "        order: 100",
         "        runner:",
         "          kind: command_group",
@@ -674,10 +674,10 @@ def _closed_session_payload() -> dict[str, object]:
     return {
         "session_id": "123",
         "session_state": "closed",
-        "pre_commit_start_epoch": 10.0,
-        "pre_commit_start_command": "pre-commit run --all-files",
-        "pre_commit_end_epoch": 20.0,
-        "pre_commit_end_command": "pre-commit run --all-files",
+        "pre_commit_open_epoch": 10.0,
+        "pre_commit_open_command": "pre-commit run --all-files",
+        "pre_commit_close_epoch": 20.0,
+        "pre_commit_close_command": "pre-commit run --all-files",
         "last_run_epoch": 15.0,
         "last_run_utc": "2026-02-18T00:00:15+00:00",
         "commands": list(_DEFAULT_REQUIRED_COMMANDS),
@@ -688,16 +688,16 @@ def _open_session_payload() -> dict[str, object]:
     """Return a fully valid open-session status payload."""
     payload = _closed_session_payload()
     payload["session_state"] = "open"
-    payload.pop("pre_commit_end_epoch", None)
-    payload.pop("pre_commit_end_command", None)
+    payload.pop("pre_commit_close_epoch", None)
+    payload.pop("pre_commit_close_command", None)
     return payload
 
 
 class WorkflowSupportValidationTests(unittest.TestCase):
     """unittest wrappers for module-level tests."""
 
-    def test_start_stage_skips_checks(self):
-        """Start-stage pre-commit should skip workflow enforcement."""
+    def test_open_stage_skips_checks(self):
+        """Open-stage pre-commit should skip workflow enforcement."""
         monkeypatch = MonkeyPatch()
         try:
             with tempfile.TemporaryDirectory() as temp_dir:
@@ -707,7 +707,7 @@ class WorkflowSupportValidationTests(unittest.TestCase):
                     ["src/example.py"],
                     working_numstat={"src/example.py": "1\t1\tsrc/example.py"},
                 )
-                monkeypatch.setenv("DEVCOV_DEVFLOW_STAGE", "start")
+                monkeypatch.setenv("DEVCOV_DEVFLOW_STAGE", "open")
                 violations = workflow_validation.check_workflow_contract(ctx)
                 self.assertEqual(violations, [])
         finally:
@@ -721,14 +721,14 @@ class WorkflowSupportValidationTests(unittest.TestCase):
                 tmp_path,
                 ["src/example.py"],
                 working_numstat={"src/example.py": "1\t1\tsrc/example.py"},
-                session_reason_code="unsessioned_edits_after_end",
+                session_reason_code="unsessioned_edits_after_close",
             )
             violations = workflow_validation.check_workflow_contract(ctx)
             self.assertTrue(violations)
-            self.assertIn("gate --start", violations[0].message)
-            self.assertIn("gate --mid", violations[0].message)
+            self.assertIn("gate --open", violations[0].message)
+            self.assertIn("gate --verify", violations[0].message)
             self.assertIn("devcovenant run", violations[0].message)
-            self.assertIn("gate --end", violations[0].message)
+            self.assertIn("gate --close", violations[0].message)
 
     def test_missing_status_allows_read_only_check_bootstrap(self):
         """Read-only check should not fail before the first gate session."""
@@ -767,10 +767,10 @@ class WorkflowSupportValidationTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp_dir:
             tmp_path = Path(temp_dir).resolve()
             payload = _closed_session_payload()
-            payload["pre_commit_start_command"] = (
+            payload["pre_commit_open_command"] = (
                 "python3 -m pre_commit run --all-files"
             )
-            payload["pre_commit_end_command"] = (
+            payload["pre_commit_close_command"] = (
                 "/tmp/.venv/bin/python -m pre_commit run --all-files"
             )
             _write_workflow_status_payload(tmp_path, payload)
@@ -788,8 +788,8 @@ class WorkflowSupportValidationTests(unittest.TestCase):
                 )
             )
 
-    def test_open_session_requires_end(self):
-        """Non-end stage should fail while session remains open."""
+    def test_open_session_requires_close(self):
+        """Non-close stage should fail while session remains open."""
         with tempfile.TemporaryDirectory() as temp_dir:
             tmp_path = Path(temp_dir).resolve()
             _write_workflow_status_payload(
@@ -800,7 +800,7 @@ class WorkflowSupportValidationTests(unittest.TestCase):
                 tmp_path,
                 ["src/example.py"],
                 working_numstat={"src/example.py": "1\t1\tsrc/example.py"},
-                session_reason_code="unsessioned_edits_after_end",
+                session_reason_code="unsessioned_edits_after_close",
             )
             violations = workflow_validation.check_workflow_contract(ctx)
             self.assertTrue(
@@ -862,10 +862,10 @@ class WorkflowSupportValidationTests(unittest.TestCase):
                 session_path.unlink()
             violations = workflow_validation.check_workflow_contract(ctx)
             self.assertTrue(violations)
-            self.assertIn("gate --start", violations[0].message)
-            self.assertIn("gate --mid", violations[0].message)
+            self.assertIn("gate --open", violations[0].message)
+            self.assertIn("gate --verify", violations[0].message)
             self.assertIn("devcovenant run", violations[0].message)
-            self.assertIn("gate --end", violations[0].message)
+            self.assertIn("gate --close", violations[0].message)
 
     def test_custom_runtime_paths_are_honored(self):
         """Custom evidence paths from config should be honored."""

@@ -4,7 +4,7 @@ text: |
   current version, with a three-line summary labeled Change/Why/Impact. Each
   summary line must include an action verb listed in the summary_verbs
   metadata and a Files block that lists only the touched paths for this
-  change. The policy compares the top changelog entry against the gate-start
+  change. The policy compares the top changelog entry against the gate-open
   top-entry fingerprint to require a fresh entry for each work session, while
   resolving changed paths from the active gate session. If the top version
   changes during the session, the new version section must be prepended above

@@ -2,8 +2,8 @@
 **Project Version:** 1.0.1b2
 
 ## Overview
-This page explains how to install DevCovenant, when to use `pipx` versus a
-source checkout, and what each lifecycle command does inside a repository.
+This page explains how to install DevCovenant and what each lifecycle command
+does inside a repository.
 
 DevCovenant separates setup from activation:
 - `install` copies DevCovenant into the repository and writes the starting
@@ -16,25 +16,24 @@ only then run `deploy`.
 
 ## Before You Start
 You need:
-- a way to run DevCovenant on your machine: `pipx` for normal use, or a full
-  source checkout when you are developing DevCovenant itself
+- a way to run DevCovenant on your machine, usually `pipx`
 - a git repository
 - Python and any tools required by the active profile stack
 - permission to create or use the managed environment when that policy is
   enabled
 
-## User Install Versus Source Development
+## Machine Install
 Use these two paths deliberately:
 
 1. `pipx` install for normal CLI use.
    This is the preferred machine install when you want to use DevCovenant in
    one or more repositories.
 
-2. source checkout for DevCovenant development.
-   Use a full source checkout only when you are developing DevCovenant itself
-   or testing unreleased changes.
+2. local checkout for unreleased testing.
+   Use a full checkout only when you intentionally need local source behavior
+   instead of the installed CLI.
 
-If the console script is unavailable from a source checkout, use
+If the console script is unavailable from a local checkout, use
 `python3 -m devcovenant ...`.
 On Windows, `py -m devcovenant ...` is the usual equivalent form.
 Every public command also accepts `--quiet`, `--normal`, or `--verbose`.
@@ -142,7 +141,7 @@ Use `--overwrite` when the Desktop target already exists.
 ### run
 Runs the declared workflow steps for the repository.
 Use it when a gate command tells you that workflow evidence is stale and
-must be refreshed before a new `gate --start` or before `gate --end`
+must be refreshed before a new `gate --open` or before `gate --close`
 can close.
 
 ### clean
@@ -185,17 +184,6 @@ modules own the real orchestration logic.
 Operator-facing command behavior should stay documented here in lockstep with
 the owning flat-core runtime module instead of drifting into hidden wrapper
 logic.
-
-When you run DevCovenant from a source checkout, DevCovenant-owned trees also
-have a stricter hygiene contract than ordinary user code:
-- `devcovenant/**`
-- `tests/devcovenant/**`
-
-Those owned trees must not write repository-local `__pycache__`, `*.pyc`,
-`*.pyo`, or similar compiled Python artifacts during normal DevCovenant
-source and test runs.
-If one of those artifacts appears under the owned trees, treat it as a
-DevCovenant bug rather than normal Python residue.
 
 ## Package Build Surface
 The published package intentionally ships the runtime-facing docs and profile
@@ -252,7 +240,7 @@ Use this as the practical first integration flow:
    If the active stack declares a local environment, `deploy` materializes the
    workspace dependency artifacts and one manual equivalent is installing
    `requirements.lock` into that declared environment.
-   `gate --start` can also run the declared bootstrap commands when the target
+   `gate --open` can also run the declared bootstrap commands when the target
    environment is still missing.
    On Windows, use the interpreter path declared by the active stack to
    install `requirements.lock`.
@@ -265,10 +253,10 @@ Use this as the practical first integration flow:
 6. Prove the reviewed setup with the full gate cycle:
 
    ```bash
-   devcovenant gate --start
-   devcovenant gate --mid
+   devcovenant gate --open
+   devcovenant gate --verify
    devcovenant run
-   devcovenant gate --end
+   devcovenant gate --close
    ```
 
 For a normal repository, do that first cycle before adding custom policies or
@@ -282,10 +270,9 @@ That usually means:
 ## Developer Mode
 `developer_mode: false` means a normal repository using DevCovenant as a tool.
 
-`developer_mode: true` means the repository is being used to develop
-DevCovenant itself.
-That enables development-only paths that ordinary user repositories should not
-keep.
+`developer_mode: true` means the repository owns DevCovenant development
+surfaces and enables development-only paths that ordinary user repositories
+should not keep.
 
 ## Managed Environment Notes
 The shipped install baseline keeps `managed-environment` disabled until the
@@ -301,7 +288,7 @@ any declared bootstrap commands.
 If the selected interpreter path exists but is not executable, DevCovenant
 stops with a clear error.
 The shipped `python_venv` profile declares both bootstrap-stage and
-start-stage bootstrap commands, so bootstrap-mode commands can enter the
+open-stage bootstrap commands, so bootstrap-mode commands can enter the
 repo-local `.venv` after the repository opts in.
 If the repository uses a bench-managed, container-managed, system, or other
 custom environment, declare that environment through the profile stack or

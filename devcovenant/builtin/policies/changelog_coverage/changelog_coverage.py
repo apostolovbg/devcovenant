@@ -318,12 +318,12 @@ def _session_deleted_paths(
     current_snapshot_paths: set[str],
 ) -> set[str]:
     """
-    Return session-scoped deleted paths from the gate-start snapshot.
+    Return session-scoped deleted paths from the gate-open snapshot.
 
     Deleted-file coverage is derived from the session snapshot baseline and
     never from git working-tree/HEAD diff state.
     """
-    raw_snapshot = session_snapshot.get("session_start_snapshot")
+    raw_snapshot = session_snapshot.get("session_open_snapshot")
     if not isinstance(raw_snapshot, dict):
         return set()
     start_paths: set[str] = set()
@@ -343,11 +343,11 @@ def _deleted_paths_for_changelog_coverage(
     """
     Return deleted paths relevant to the current coverage scope.
 
-    `gate --start` validates the pre-edit baseline and must not import deleted
-    paths. Non-start checks require a valid gate session and derive deletions
-    from the gate-start snapshot only.
+    `gate --open` validates the pre-edit baseline and must not import deleted
+    paths. Non-open checks require a valid gate session and derive deletions
+    from the gate-open snapshot only.
     """
-    if stage == "start":
+    if stage == "open":
         return set()
     if not context.change_state.session_valid:
         return set()
@@ -538,7 +538,7 @@ def _load_gate_status(status_path: Path) -> dict[str, object]:
     if not status_path.exists():
         raise ValueError(
             f"Gate status file is missing: {status_path}. "
-            "Run `devcovenant gate --start` first."
+            "Run `devcovenant gate --open` first."
         )
     try:
         payload = json.loads(status_path.read_text(encoding="utf-8"))
@@ -679,7 +679,7 @@ class ChangelogCoverageCheck(PolicyCheck):
         if not session_id or session_state != "open":
             raise ValueError(
                 "Cannot reset the changelog baseline without an active open "
-                "gate session. Run `devcovenant gate --start` first."
+                "gate session. Run `devcovenant gate --open` first."
             )
         now = datetime.now(timezone.utc)
         status_payload[_RESET_BASELINE_FLAG] = True
@@ -832,7 +832,7 @@ class ChangelogCoverageCheck(PolicyCheck):
         gate_status: dict[str, object] = {}
         session_snapshot: dict[str, object] = {}
         start_exemption_fingerprints: dict[str, dict[str, str]] = {}
-        if stage != "start":
+        if stage != "open":
             default_status_rel = Path(context.change_state.gate_status_path)
             if gate_status_rel == default_status_rel:
                 gate_status = dict(context.change_state.gate_status_payload)
@@ -1069,7 +1069,7 @@ class ChangelogCoverageCheck(PolicyCheck):
             else:
                 require_new_session_entry = False
                 snapshot_preservation_failed = False
-                if stage != "start":
+                if stage != "open":
                     session_state = (
                         str(gate_status.get("session_state", ""))
                         .strip()
@@ -1082,11 +1082,11 @@ class ChangelogCoverageCheck(PolicyCheck):
                     if session_state == "open":
                         snapshot_fingerprint = str(
                             gate_status.get(
-                                "changelog_start_top_entry_fingerprint", ""
+                                "changelog_open_top_entry_fingerprint", ""
                             )
                         ).strip()
                         snapshot_version = str(
-                            gate_status.get("changelog_start_top_version", "")
+                            gate_status.get("changelog_open_top_version", "")
                         ).strip()
                         reset_baseline_active = bool(
                             gate_status.get(_RESET_BASELINE_FLAG, False)
@@ -1107,7 +1107,7 @@ class ChangelogCoverageCheck(PolicyCheck):
                                     file_path=root_changelog,
                                     message=(
                                         "Latest changelog entry matches the "
-                                        "gate-start snapshot. Add a new entry "
+                                        "gate-open snapshot. Add a new entry "
                                         "for this session."
                                     ),
                                     suggestion=(
@@ -1135,7 +1135,7 @@ class ChangelogCoverageCheck(PolicyCheck):
                             ):
                                 snapshot_preservation_failed = True
                                 snapshot_message = (
-                                    "Gate-start changelog snapshot was "
+                                    "Gate-open changelog snapshot was "
                                     "edited or removed. A new entry must be "
                                     "prepended and the prior top entry must "
                                     "remain unchanged somewhere below it."

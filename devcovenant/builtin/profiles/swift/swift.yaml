@@ -34,8 +34,8 @@ policy_overlays:
 workflow_runs:
   - id: tests
     enabled: true
-    after: mid
-    before: end
+    after: verify
+    before: close
     order: 100
     runner:
       kind: command_group

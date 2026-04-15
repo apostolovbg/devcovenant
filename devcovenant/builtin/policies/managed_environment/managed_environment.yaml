@@ -26,12 +26,12 @@ text: |
   already satisfies the contract, re-executes CLI commands in the selected
   interpreter when needed, and only runs bootstrap commands when the target
   environment is still missing or invalid. Stage-scoped `managed_commands`
-  accept `start`, `run`, `end`, `bootstrap`, `managed`, and `all` prefixes;
-  bootstrap-mode commands may still reuse `start` bootstrap commands once
+  accept `open`, `run`, `close`, `bootstrap`, `managed`, and `all` prefixes;
+  bootstrap-mode commands may still reuse `open` bootstrap commands once
   when the target environment is not ready. When no automatic bootstrap
   commands are declared, `bootstrap` stage operations may keep using the
   current interpreter only when `allow_current_interpreter_fallback` is
-  explicitly true; otherwise `start`, `run`, `end`, and `managed` remain
+  explicitly true; otherwise `open`, `run`, `close`, and `managed` remain
   strict about the target environment so incomplete profiles fail loudly
   instead of falling through to wrapper adapters or alternate policy
   sources. If the resolved interpreter is missing or not executable,

@@ -83,7 +83,7 @@ Interpret them this way:
 - `bandit.yaml` skips Bandit `B105` because that heuristic repeatedly
   misclassifies ordinary control tokens such as `start`, `critical`,
   `stdout`, and `false` as secret material
-- reviewed process boundaries now carry targeted `# nosec` markers so
+- reviewed process boundaries carry targeted `# nosec` markers so
   Bandit output stays focused on unexpected subprocess surfaces rather than
   on the deliberate core runtime boundaries we already review manually
 
@@ -104,12 +104,12 @@ DevCovenant keeps release assurance visible in normal automation:
    vulnerability auditing directly through the normal local gate/check path
 3. the repo-specific `Build` job inside `CI` owns built-artifact proof for
    the wheel, sdist, and documented `pipx` install path, and each proof
-   runs the full public workflow: `gate --start`, `gate --mid`, `run`,
-   `gate --end`, then `check`
+   runs the full public workflow: `gate --open`, `gate --verify`, `run`,
+   `gate --close`, then `check`
 4. repo-specific CI jobs use DevCovenant's managed-environment contract
    instead of hardcoding one environment type's shell-activation command
 5. `bandit.yaml` is the tracked Bandit configuration surface for this repo's
-   low-signal skip list, but the scanner itself now runs through
+   low-signal skip list, but the scanner itself runs through
    `security-scanner` instead of through a CI-only shell step
 6. the publish workflow uses PyPI trusted publishing instead of a long-lived
    upload token, and PyPI-side attestations are emitted through that publish

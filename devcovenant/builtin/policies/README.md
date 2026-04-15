@@ -85,5 +85,5 @@ A custom policy override suppresses builtin autofix helpers for that policy ID.
 5. Keep tests behavioral/contract-focused; do not add placeholder stubs.
 6. Run `devcovenant refresh` after descriptor or blueprint changes.
 7. Run full gate sequence before finalizing:
-   `gate --start` -> `gate --mid` (rerun until clean) ->
-   `run` -> `gate --end`.
+   `gate --open` -> `gate --verify` (rerun until clean) ->
+   `run` -> `gate --close`.

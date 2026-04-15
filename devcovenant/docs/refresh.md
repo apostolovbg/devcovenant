@@ -30,7 +30,7 @@ That same refresh pass also rebuilds tracked policy metadata from the
 active resolved script path, so same-id custom policy overrides are
 recorded as `custom: true` in generated policy state even while the
 builtin implementation remains present on disk.
-For dependency-maintenance surfaces, the refresh-owned runtime now walks
+For dependency-maintenance surfaces, the refresh-owned runtime walks
 supported `-r`/`--requirement` includes when it builds license
 inventories and refreshes provider lock surfaces before surfaces that
 compose those lockfiles.

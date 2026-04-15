@@ -47,9 +47,9 @@ modular ownership.
 2. Update the mirrored tests under `tests/devcovenant/core/`.
 3. Update docs affected by behavior changes.
 4. Run the gate sequence:
-   - `devcovenant gate --start`
-   - `devcovenant gate --mid`
+   - `devcovenant gate --open`
+   - `devcovenant gate --verify`
    - `devcovenant run`
-   - `devcovenant gate --end`
+   - `devcovenant gate --close`
 5. Keep `SPEC.md`, `PLAN.md`, and the reference maps aligned when contracts
    change.

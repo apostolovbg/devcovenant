@@ -30,10 +30,10 @@ Follow the canonical gate sequence for every repository change, including
 documentation-only edits:
 
 ```bash
-python3 -m devcovenant gate --start
-python3 -m devcovenant gate --mid
+python3 -m devcovenant gate --open
+python3 -m devcovenant gate --verify
 python3 -m devcovenant run
-python3 -m devcovenant gate --end
+python3 -m devcovenant gate --close
 ```
 
 If the console script is available on PATH, use `devcovenant ...` instead of

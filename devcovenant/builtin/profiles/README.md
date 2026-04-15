@@ -120,7 +120,7 @@ license files.
    repo-owned shadow copy and mirrored tests.
 4. Use `--undo` to remove the copied profile tree and mirrored tests.
 5. Run `devcovenant refresh`.
-6. Run `devcovenant gate --start`.
-7. Run `devcovenant gate --mid` until clean.
+6. Run `devcovenant gate --open`.
+7. Run `devcovenant gate --verify` until clean.
 8. Verify with `devcovenant run`.
-9. Finalize with `devcovenant gate --end`.
+9. Finalize with `devcovenant gate --close`.

@@ -1,7 +1,7 @@
 metadata:
   schema_version: 1
   registry_layout: single-root
-  policy_registry_input_hash: 2c1a6159d93b91aa3ea9bfc47069fe46c536b44df1a480e0b2c65a2ebb87b1ae
+  policy_registry_input_hash: 4ecceba48dc48f7e1517ed00de60ef237dd53723099cac7f8ec691d13757dc0b
 project-governance:
   project_name: devcovenant
   project_description: devcovenant is a repository governance framework.
@@ -68,7 +68,7 @@ managed-docs:
       project_governance_headers: false
       import_seed: true
       authoritative_source: true
-      body_fingerprint: e187a7057d76936f8a1c437b36c526102bf1b6c7e4c664fbaf05a750a07dbdd1
+      body_fingerprint: 5b5629fddd3af7c556472fbf175af8eeee4f678103ab77e6dfc4f74986383cd1
     LICENSE:
       enabled: false
       descriptor_path: devcovenant/builtin/profiles/global/assets/LICENSE.yaml
@@ -117,7 +117,7 @@ managed-docs:
       project_governance_headers: false
       import_seed: true
       authoritative_source: true
-      body_fingerprint: 7a818fa9383af98d63009869f1de900a8d1af63108cd6b58e0e22c586640abc3
+      body_fingerprint: 0d23d97cced72b5c1267da36ca9f41d7df45dff4beac07a93cd23378d8c85ab4
     SPEC.md:
       enabled: true
       descriptor_path: devcovenant/builtin/profiles/global/assets/SPEC.yaml
@@ -142,13 +142,13 @@ managed-docs:
 workflow_contract:
   schema_version: 4
   anchors:
-  - id: start
+  - id: open
     owner: core
     anchor_kind: gate_anchor
-  - id: mid
+  - id: verify
     owner: core
     anchor_kind: gate_anchor
-  - id: end
+  - id: close
     owner: core
     anchor_kind: gate_anchor
   runs:
@@ -157,8 +157,8 @@ workflow_contract:
     owner_id: python
     enabled: true
     position:
-      after: mid
-      before: end
+      after: verify
+      before: close
       order: 100
     runner:
       kind: command_group
@@ -198,7 +198,7 @@ policies:
       current version, with a three-line summary labeled Change/Why/Impact. Each
       summary line must include an action verb listed in the summary_verbs
       metadata and a Files block that lists only the touched paths for this
-      change. The policy compares the top changelog entry against the gate-start
+      change. The policy compares the top changelog entry against the gate-open
       top-entry fingerprint to require a fresh entry for each work session, while
       resolving changed paths from the active gate session. If the top version
       changes during the session, the new version section must be prepended above
@@ -1992,7 +1992,7 @@ policies:
     - pip-wheel-metadata/**
     origin: builtin
     script_exists: true
-    hash: c776fbaaa971e7f8e125b079fc43b533f84e42fac5b6352c951fd8117e20eab0
+    hash: f998d85eb088d86ef9a4737d4a3170d42a5646ad5ed82ce892ad57e91935d635
     script_path: builtin/changelog_coverage.py
   devcov-raw-string-escapes:
     enabled: true
@@ -5891,12 +5891,12 @@ policies:
       already satisfies the contract, re-executes CLI commands in the selected
       interpreter when needed, and only runs bootstrap commands when the target
       environment is still missing or invalid. Stage-scoped `managed_commands`
-      accept `start`, `run`, `end`, `bootstrap`, `managed`, and `all` prefixes;
-      bootstrap-mode commands may still reuse `start` bootstrap commands once
+      accept `open`, `run`, `close`, `bootstrap`, `managed`, and `all` prefixes;
+      bootstrap-mode commands may still reuse `open` bootstrap commands once
       when the target environment is not ready. When no automatic bootstrap
       commands are declared, `bootstrap` stage operations may keep using the
       current interpreter only when `allow_current_interpreter_fallback` is
-      explicitly true; otherwise `start`, `run`, `end`, and `managed` remain
+      explicitly true; otherwise `open`, `run`, `close`, and `managed` remain
       strict about the target environment so incomplete profiles fail loudly
       instead of falling through to wrapper adapters or alternate policy
       sources. If the resolved interpreter is missing or not executable,
@@ -5926,8 +5926,8 @@ policies:
       managed_commands:
       - bootstrap=>{current_python} -m venv .venv
       - bootstrap=>{managed_python} -m pip install -r requirements.lock
-      - start=>{current_python} -m venv .venv
-      - start=>{managed_python} -m pip install -r requirements.lock
+      - open=>{current_python} -m venv .venv
+      - open=>{managed_python} -m pip install -r requirements.lock
     metadata_resolution:
       id:
         descriptor:
@@ -6132,8 +6132,8 @@ policies:
           values:
           - bootstrap=>{current_python} -m venv .venv
           - bootstrap=>{managed_python} -m pip install -r requirements.lock
-          - start=>{current_python} -m venv .venv
-          - start=>{managed_python} -m pip install -r requirements.lock
+          - open=>{current_python} -m venv .venv
+          - open=>{managed_python} -m pip install -r requirements.lock
           behavior: append
           replaced_inherited_values:
           - ()
@@ -6141,8 +6141,8 @@ policies:
           values:
           - bootstrap=>{current_python} -m venv .venv
           - bootstrap=>{managed_python} -m pip install -r requirements.lock
-          - start=>{current_python} -m venv .venv
-          - start=>{managed_python} -m pip install -r requirements.lock
+          - open=>{current_python} -m venv .venv
+          - open=>{managed_python} -m pip install -r requirements.lock
           behavior: append
           replaced_inherited_values:
           - ()
@@ -6150,8 +6150,8 @@ policies:
           values:
           - bootstrap=>{current_python} -m venv .venv
           - bootstrap=>{managed_python} -m pip install -r requirements.lock
-          - start=>{current_python} -m venv .venv
-          - start=>{managed_python} -m pip install -r requirements.lock
+          - open=>{current_python} -m venv .venv
+          - open=>{managed_python} -m pip install -r requirements.lock
       custom:
         runtime_defaults:
           values:
@@ -6192,8 +6192,8 @@ policies:
       managed_commands: &id052
       - bootstrap=>{current_python} -m venv .venv
       - bootstrap=>{managed_python} -m pip install -r requirements.lock
-      - start=>{current_python} -m venv .venv
-      - start=>{managed_python} -m pip install -r requirements.lock
+      - open=>{current_python} -m venv .venv
+      - open=>{managed_python} -m pip install -r requirements.lock
     runtime_config_overrides: {}
     runtime_effective_options:
       id: managed-environment
@@ -6213,7 +6213,7 @@ policies:
     - .venv/bin/python
     origin: builtin
     script_exists: true
-    hash: 92a8efad6be9fa73173e815bbd080bcb976916b8270316a014db364502b1a502
+    hash: 6b67f0722588705b2e7b81448bc4cf7f95a15d4b3ea8be7cca397087883a9221
     script_path: builtin/managed_environment.py
   modules-need-tests:
     enabled: true
@@ -13532,8 +13532,8 @@ profiles:
     workflow_runs:
     - id: tests
       enabled: true
-      after: mid
-      before: end
+      after: verify
+      before: close
       order: 100
       runner:
         kind: command_group
@@ -13594,8 +13594,8 @@ profiles:
     workflow_runs:
     - id: tests
       enabled: true
-      after: mid
-      before: end
+      after: verify
+      before: close
       order: 100
       runner:
         kind: command_group
@@ -14213,8 +14213,8 @@ profiles:
     workflow_runs:
     - id: tests
       enabled: true
-      after: mid
-      before: end
+      after: verify
+      before: close
       order: 100
       runner:
         kind: command_group
@@ -14319,8 +14319,8 @@ profiles:
     workflow_runs:
     - id: tests
       enabled: true
-      after: mid
-      before: end
+      after: verify
+      before: close
       order: 100
       runner:
         kind: command_group
@@ -14384,8 +14384,8 @@ profiles:
     workflow_runs:
     - id: tests
       enabled: true
-      after: mid
-      before: end
+      after: verify
+      before: close
       order: 100
       runner:
         kind: command_group
@@ -14472,8 +14472,8 @@ profiles:
     workflow_runs:
     - id: tests
       enabled: true
-      after: mid
-      before: end
+      after: verify
+      before: close
       order: 100
       runner:
         kind: command_group
@@ -14796,8 +14796,8 @@ profiles:
     workflow_runs:
     - id: tests
       enabled: true
-      after: mid
-      before: end
+      after: verify
+      before: close
       order: 100
       runner:
         kind: command_group
@@ -14885,8 +14885,8 @@ profiles:
     workflow_runs:
     - id: tests
       enabled: true
-      after: mid
-      before: end
+      after: verify
+      before: close
       order: 100
       runner:
         kind: command_group
@@ -15043,8 +15043,8 @@ profiles:
     workflow_runs:
     - id: tests
       enabled: true
-      after: mid
-      before: end
+      after: verify
+      before: close
       order: 100
       runner:
         kind: command_group
@@ -15089,8 +15089,8 @@ profiles:
     workflow_runs:
     - id: tests
       enabled: true
-      after: mid
-      before: end
+      after: verify
+      before: close
       order: 100
       runner:
         kind: command_group
@@ -15157,8 +15157,8 @@ profiles:
     workflow_runs:
     - id: tests
       enabled: true
-      after: mid
-      before: end
+      after: verify
+      before: close
       order: 100
       runner:
         kind: command_group
@@ -15304,8 +15304,8 @@ profiles:
     workflow_runs:
     - id: tests
       enabled: true
-      after: mid
-      before: end
+      after: verify
+      before: close
       order: 100
       runner:
         kind: command_group
@@ -15361,8 +15361,8 @@ profiles:
     workflow_runs:
     - id: tests
       enabled: true
-      after: mid
-      before: end
+      after: verify
+      before: close
       order: 100
       runner:
         kind: command_group
@@ -15728,8 +15728,8 @@ profiles:
         managed_commands:
         - bootstrap=>{current_python} -m venv .venv
         - bootstrap=>{managed_python} -m pip install -r requirements.lock
-        - start=>{current_python} -m venv .venv
-        - start=>{managed_python} -m pip install -r requirements.lock
+        - open=>{current_python} -m venv .venv
+        - open=>{managed_python} -m pip install -r requirements.lock
     source: builtin
     path: devcovenant/builtin/profiles/python_venv
     assets_available: []
@@ -15788,8 +15788,8 @@ profiles:
     workflow_runs:
     - id: tests
       enabled: true
-      after: mid
-      before: end
+      after: verify
+      before: close
       order: 100
       runner:
         kind: command_group
@@ -15905,8 +15905,8 @@ profiles:
     workflow_runs:
     - id: tests
       enabled: true
-      after: mid
-      before: end
+      after: verify
+      before: close
       order: 100
       runner:
         kind: command_group
@@ -15995,8 +15995,8 @@ profiles:
     workflow_runs:
     - id: tests
       enabled: true
-      after: mid
-      before: end
+      after: verify
+      before: close
       order: 100
       runner:
         kind: command_group
@@ -16036,8 +16036,8 @@ profiles:
     workflow_runs:
     - id: tests
       enabled: true
-      after: mid
-      before: end
+      after: verify
+      before: close
       order: 100
       runner:
         kind: command_group
@@ -16193,8 +16193,8 @@ profiles:
     workflow_runs:
     - id: tests
       enabled: true
-      after: mid
-      before: end
+      after: verify
+      before: close
       order: 100
       runner:
         kind: command_group
@@ -16387,10 +16387,10 @@ profiles:
               .venv/bin/python -m pip install -r requirements.lock
               .venv/bin/python -m pip install --no-deps "$WHEEL_PATH"
               .venv/bin/python -m devcovenant --version
-              .venv/bin/python -m devcovenant gate --start
-              .venv/bin/python -m devcovenant gate --mid
+              .venv/bin/python -m devcovenant gate --open
+              .venv/bin/python -m devcovenant gate --verify
               .venv/bin/python -m devcovenant run
-              .venv/bin/python -m devcovenant gate --end
+              .venv/bin/python -m devcovenant gate --close
               .venv/bin/python -m devcovenant check
               popd >/dev/null
           - name: Prove sdist artifact lifecycle
@@ -16463,10 +16463,10 @@ profiles:
               .venv/bin/python -m pip install -r requirements.lock
               .venv/bin/python -m pip install --no-deps "$SDIST_PATH"
               .venv/bin/python -m devcovenant --version
-              .venv/bin/python -m devcovenant gate --start
-              .venv/bin/python -m devcovenant gate --mid
+              .venv/bin/python -m devcovenant gate --open
+              .venv/bin/python -m devcovenant gate --verify
               .venv/bin/python -m devcovenant run
-              .venv/bin/python -m devcovenant gate --end
+              .venv/bin/python -m devcovenant gate --close
               .venv/bin/python -m devcovenant check
               popd >/dev/null
           - name: Install DevCovenant with pipx
@@ -16594,10 +16594,10 @@ profiles:
               python3 -m venv .venv
               .venv/bin/python -m pip install -r requirements.lock
               .venv/bin/python -m pip install --no-deps "$WHEEL_PATH"
-              "$PIPX_BIN_DIR/devcovenant" gate --start
-              "$PIPX_BIN_DIR/devcovenant" gate --mid
+              "$PIPX_BIN_DIR/devcovenant" gate --open
+              "$PIPX_BIN_DIR/devcovenant" gate --verify
               "$PIPX_BIN_DIR/devcovenant" run
-              "$PIPX_BIN_DIR/devcovenant" gate --end
+              "$PIPX_BIN_DIR/devcovenant" gate --close
               "$PIPX_BIN_DIR/devcovenant" check
               popd >/dev/null
           - name: Upload distributions

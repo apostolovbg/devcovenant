@@ -42,7 +42,7 @@ class ChangeState:
     Precomputed change scopes for policy checks.
 
     Attributes:
-        stage: Gate stage (`start`, `mid`, `end`, or empty).
+        stage: Gate stage (`open`, `verify`, `close`, or empty).
         gate_status_path: Relative gate-status path used for session snapshots.
         current_snapshot_paths:
             Snapshot-visible paths in the current repo scan.
@@ -364,7 +364,7 @@ class PolicyCheck(ABC):
         Return changed files from the active gate session scope.
         """
         state = context.change_state
-        if state.stage == "start":
+        if state.stage == "open":
             return []
         if not state.session_valid:
             top_command = (
@@ -382,7 +382,7 @@ class PolicyCheck(ABC):
             message = state.session_error.strip()
             if not message:
                 message = (
-                    "Session scope requested but gate-start snapshot is "
+                    "Session scope requested but gate-open snapshot is "
                     "not available."
                 )
             raise ValueError(message)

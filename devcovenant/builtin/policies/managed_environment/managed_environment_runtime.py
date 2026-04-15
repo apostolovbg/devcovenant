@@ -25,7 +25,7 @@ from devcovenant.core.repository_paths import display_path
 POLICY_ID = "managed-environment"
 RUNTIME_ACTION_RESOLVE_STAGE = "resolve-stage"
 _MANAGED_ENV_STAGES = frozenset(
-    {"start", "run", "end", "bootstrap", "managed", "all"}
+    {"open", "run", "close", "bootstrap", "managed", "all"}
 )
 _MANAGED_STAGE_RUNS_ENV = "DEVCOV_MANAGED_STAGE_RUNS"
 _GUIDANCE_TOKEN_PATTERN = re.compile(r"{([a-zA-Z0-9_]+)}")
@@ -213,7 +213,7 @@ def _parse_managed_commands(entries: list[str]) -> list[tuple[str, str]]:
     """Parse metadata-managed command entries into stage/command pairs."""
     parsed: list[tuple[str, str]] = []
     for entry in entries:
-        stage = "start"
+        stage = "open"
         command_text = entry.strip()
         if "=>" in command_text:
             raw_stage, raw_command = command_text.split("=>", 1)
@@ -557,7 +557,7 @@ def _write_managed_stage_runs(env: dict[str, str], stages: set[str]) -> None:
     """Persist prepared-stage set into process environment."""
     ordered = [
         stage
-        for stage in ("start", "run", "end", "bootstrap", "managed", "all")
+        for stage in ("open", "run", "close", "bootstrap", "managed", "all")
         if stage in stages
     ]
     env[_MANAGED_STAGE_RUNS_ENV] = ",".join(ordered)
@@ -687,10 +687,10 @@ def resolve_managed_environment_for_stage(
 ) -> tuple[dict[str, str] | None, str | None]:
     """Resolve and optionally prepare managed-environment execution state."""
     stage_token = str(stage or "").strip().lower()
-    if stage_token not in {"start", "run", "end", "bootstrap", "managed"}:
+    if stage_token not in {"open", "run", "close", "bootstrap", "managed"}:
         raise ValueError(
             "Invalid managed-environment stage "
-            f"`{stage}`. Allowed: start, run, end, bootstrap, managed."
+            f"`{stage}`. Allowed: open, run, close, bootstrap, managed."
         )
     entry = _load_policy_entry(repo_root)
     if entry is None:
@@ -768,8 +768,8 @@ def resolve_managed_environment_for_stage(
         command_search_paths=command_search_paths,
     )
 
-    if stage_token == "start" and environment_ready:
-        prepared_stages.add("start")
+    if stage_token == "open" and environment_ready:
+        prepared_stages.add("open")
         _write_managed_stage_runs(env, prepared_stages)
     elif stage_token not in prepared_stages:
         env, ran_stage_commands = _run_managed_commands_for_stage(
@@ -805,19 +805,19 @@ def resolve_managed_environment_for_stage(
     if (
         not environment_ready
         and stage_token in {"bootstrap", "run"}
-        and "start" not in prepared_stages
+        and "open" not in prepared_stages
     ):
-        env, ran_start_commands = _run_managed_commands_for_stage(
+        env, ran_open_commands = _run_managed_commands_for_stage(
             repo_root,
             env,
             managed_commands,
-            target_stage="start",
+            target_stage="open",
             expected_interpreters=expected_interpreters,
             expected_paths=expected_paths,
             include_all_stage=False,
         )
-        if ran_start_commands:
-            prepared_stages.add("start")
+        if ran_open_commands:
+            prepared_stages.add("open")
             _write_managed_stage_runs(env, prepared_stages)
         managed_python, managed_root = _select_managed_environment(
             expected_interpreters,

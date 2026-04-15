@@ -105,13 +105,13 @@ def _unit_test_run_id_collision_appends_numeric_suffix() -> None:
         first = module.create_run_log_context(
             repo_root,
             "gate",
-            ["devcovenant", "gate", "--start"],
+            ["devcovenant", "gate", "--open"],
             started_at=_fixed_start(),
         )
         second = module.create_run_log_context(
             repo_root,
             "gate",
-            ["devcovenant", "gate", "--start"],
+            ["devcovenant", "gate", "--open"],
             started_at=_fixed_start(),
         )
 

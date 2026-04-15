@@ -515,8 +515,8 @@ def _config_comment_header() -> str:
             "# 3) set `install.config_reviewed: true`",
             "# 4) run `devcovenant deploy`",
             "# 5) prepare the repository's declared environment",
-            "# 6) start normal work with",
-            "#    `gate --start` -> `gate --mid` -> `run` -> `gate --end`",
+            "# 6) open normal work with",
+            "#    `gate --open` -> `gate --verify` -> `run` -> `gate --close`",
             rule,
         ]
     )

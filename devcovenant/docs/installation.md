@@ -119,7 +119,7 @@ It means a human reviewed the starting config and is ready to activate it.
 It is not a hidden switch.
 
 ## Copy-Ready Custom Profile Template
-DevCovenant now ships a copy-ready bootstrap template for the first custom
+DevCovenant ships a copy-ready bootstrap template for the first custom
 profile:
 - copy `devcovenant/builtin/profiles/userproject/`
   to `devcovenant/custom/profiles/userproject/`
@@ -203,7 +203,7 @@ resolved managed environment instead of assuming a local `.venv`.
 ### run
 Runs the declared workflow steps for the repository.
 Use it when a gate command tells you that workflow evidence is stale and
-must be refreshed before a new `gate --start` or before `gate --end`
+must be refreshed before a new `gate --open` or before `gate --close`
 can close.
 
 ### clean
@@ -331,7 +331,7 @@ Use this as the practical first integration flow:
    If the active stack seeds a local `.venv`, `deploy` materializes the
    workspace dependency artifacts and one manual equivalent is creating
    `.venv` and installing `requirements.lock`.
-   `gate --start` can also run the declared bootstrap commands when the target
+   `gate --open` can also run the declared bootstrap commands when the target
    environment is still missing.
    On Windows, use `.venv\\Scripts\\python.exe -m pip install -r \
    requirements.lock`.
@@ -344,10 +344,10 @@ Use this as the practical first integration flow:
 6. Prove the reviewed setup with the full gate cycle:
 
    ```bash
-   devcovenant gate --start
-   devcovenant gate --mid
+   devcovenant gate --open
+   devcovenant gate --verify
    devcovenant run
-   devcovenant gate --end
+   devcovenant gate --close
    ```
 
 For a normal repository, do that first cycle before adding custom policies or
@@ -380,7 +380,7 @@ any declared bootstrap commands.
 If the selected interpreter path exists but is not executable, DevCovenant
 stops with a clear error.
 The shipped `python_venv` profile declares both bootstrap-stage and
-start-stage bootstrap commands, so bootstrap-mode commands can enter the
+open-stage bootstrap commands, so bootstrap-mode commands can enter the
 repo-local `.venv` after the repository opts in.
 If the repository uses a bench-managed, container-managed, system, or other
 custom environment, declare that environment through the profile stack or

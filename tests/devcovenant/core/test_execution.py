@@ -703,12 +703,12 @@ def _unit_test_ci_workflow_split_docs_are_consistent() -> None:
     assert ".github/workflows/publish.yml" in readme
 
 
-def _unit_test_workflow_doc_marks_mid_gate_required() -> None:
-    """Workflow docs should keep gate --mid mandatory on command surfaces."""
+def _unit_test_workflow_doc_marks_verify_gate_required() -> None:
+    """Workflow docs should keep gate --verify mandatory."""
     content = _read_output_doc_contract_text("devcovenant/docs/workflow.md")
     assert "Required pre-run check." in content
     assert "before `run` records workflow" in content
-    assert "rerun `gate --mid` until it is" in content
+    assert "rerun `gate --verify` until\nit is" in content
     assert "optional mutating preflight" not in content
 
 
@@ -1851,9 +1851,9 @@ class ExecutionTests(unittest.TestCase):
         """Run CI workflow ownership wording consistency assertions."""
         _unit_test_ci_workflow_split_docs_are_consistent()
 
-    def test_workflow_doc_marks_mid_gate_required(self):
-        """Run required gate-mid wording assertions for workflow docs."""
-        _unit_test_workflow_doc_marks_mid_gate_required()
+    def test_workflow_doc_marks_verify_gate_required(self):
+        """Run required gate-verify wording assertions for workflow docs."""
+        _unit_test_workflow_doc_marks_verify_gate_required()
 
     def test_contract_index_lists_frozen_contract_homes(self):
         """Run contract-index coverage assertions."""

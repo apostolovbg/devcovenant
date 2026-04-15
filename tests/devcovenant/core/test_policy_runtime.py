@@ -70,14 +70,14 @@ def _check_context_symbol_assertions_cover_context_seam() -> None:
     assert module.build_check_context
 
 
-def _change_state_start_stage_filters_ignored_paths() -> None:
-    """Start-stage builder should capture current snapshot and mark valid."""
+def _change_state_open_stage_filters_ignored_paths() -> None:
+    """Open-stage builder should capture current snapshot and mark valid."""
     module = importlib.import_module(MODULE)
     with tempfile.TemporaryDirectory() as tmpdir:
         repo_root = Path(tmpdir)
         with (
             mock.patch.dict(
-                module.os.environ, {"DEVCOV_DEVFLOW_STAGE": "start"}
+                module.os.environ, {"DEVCOV_DEVFLOW_STAGE": "open"}
             ),
             mock.patch.object(
                 module,
@@ -95,7 +95,7 @@ def _change_state_start_stage_filters_ignored_paths() -> None:
                 ),
                 is_ignored_path=lambda path: path.name == "ignored.py",
             )
-        assert state.stage == "start"
+        assert state.stage == "open"
         assert state.session_valid is True
         assert state.session_paths == []
         assert state.session_error == ""
@@ -114,7 +114,7 @@ def _change_state_open_session_uses_baseline_and_filters() -> None:
             repo_root,
             gate_status={"session_id": "open-ctx-1", "session_state": "open"},
             session_snapshot={
-                "session_start_snapshot": {
+                "session_open_snapshot": {
                     "a.py": "old-a\ta.py",
                     "b.py": "old-b\tb.py",
                     "ignored.py": "old-ignored\tignored.py",
@@ -160,8 +160,8 @@ def _change_state_open_session_uses_baseline_and_filters() -> None:
         assert state.session_paths == [repo_root / "a.py", repo_root / "b.py"]
 
 
-def _change_state_closed_session_rejects_post_end_edits() -> None:
-    """Closed-session builder should reject post-end edits."""
+def _change_state_closed_session_rejects_post_close_edits() -> None:
+    """Closed-session builder should reject post-close edits."""
     module = importlib.import_module(MODULE)
     with tempfile.TemporaryDirectory() as tmpdir:
         repo_root = Path(tmpdir)
@@ -171,7 +171,9 @@ def _change_state_closed_session_rejects_post_end_edits() -> None:
                 "session_id": "closed-ctx-1",
                 "session_state": "closed",
             },
-            session_snapshot={"session_end_snapshot": {"a.py": "old-a\ta.py"}},
+            session_snapshot={
+                "session_close_snapshot": {"a.py": "old-a\ta.py"}
+            },
         )
         with (
             mock.patch.dict(module.os.environ, {}, clear=True),
@@ -187,9 +189,9 @@ def _change_state_closed_session_rejects_post_end_edits() -> None:
                 is_ignored_path=lambda _path: False,
             )
         assert state.session_valid is False
-        assert state.session_reason_code == "unsessioned_edits_after_end"
+        assert state.session_reason_code == "unsessioned_edits_after_close"
         assert (
-            "Detected edits after the previous `devcovenant gate --end`"
+            "Detected edits after the previous `devcovenant gate --close`"
             in state.session_error
         )
 
@@ -206,7 +208,7 @@ def _change_state_open_session_rejects_legacy_snapshot() -> None:
                 "session_state": "open",
             },
             session_snapshot={
-                "session_start_snapshot": {"legacy.py": "1\t1\tlegacy.py"}
+                "session_open_snapshot": {"legacy.py": "1\t1\tlegacy.py"}
             },
         )
         with (
@@ -224,12 +226,12 @@ def _change_state_open_session_rejects_legacy_snapshot() -> None:
             )
         assert state.session_valid is False
         assert state.session_reason_code == "unsupported_snapshot_style"
-        assert "`session_start_snapshot`" in state.session_error
-        assert "gate --start" in state.session_error
+        assert "`session_open_snapshot`" in state.session_error
+        assert "gate --open" in state.session_error
 
 
 def _change_state_closed_session_rejects_legacy_snapshot() -> None:
-    """Closed-session builder should reject legacy end snapshot rows."""
+    """Closed-session builder should reject legacy close snapshot rows."""
     module = importlib.import_module(MODULE)
     with tempfile.TemporaryDirectory() as tmpdir:
         repo_root = Path(tmpdir)
@@ -240,7 +242,7 @@ def _change_state_closed_session_rejects_legacy_snapshot() -> None:
                 "session_state": "closed",
             },
             session_snapshot={
-                "session_end_snapshot": {"legacy.py": "1\t1\tlegacy.py"}
+                "session_close_snapshot": {"legacy.py": "1\t1\tlegacy.py"}
             },
         )
         with (
@@ -258,8 +260,8 @@ def _change_state_closed_session_rejects_legacy_snapshot() -> None:
             )
         assert state.session_valid is False
         assert state.session_reason_code == "unsupported_snapshot_style"
-        assert "`session_end_snapshot`" in state.session_error
-        assert "gate --start" in state.session_error
+        assert "`session_close_snapshot`" in state.session_error
+        assert "gate --open" in state.session_error
 
 
 def _build_context_assembles_context_with_helper_state() -> None:
@@ -268,7 +270,7 @@ def _build_context_assembles_context_with_helper_state() -> None:
     with tempfile.TemporaryDirectory() as tmpdir:
         repo_root = Path(tmpdir)
         expected_state = ChangeState(
-            stage="mid",
+            stage="verify",
             gate_status_path="devcovenant/registry/runtime/gate_status.json",
             session_valid=True,
             session_paths=[repo_root / "changed.py"],
@@ -319,7 +321,7 @@ def _build_context_prefers_snapshot_paths_for_all_files() -> None:
     with tempfile.TemporaryDirectory() as tmpdir:
         repo_root = Path(tmpdir)
         expected_state = ChangeState(
-            stage="mid",
+            stage="verify",
             gate_status_path="devcovenant/registry/runtime/gate_status.json",
             session_valid=True,
             session_paths=[repo_root / "changed.py"],
@@ -364,17 +366,17 @@ class PolicyRuntimeCheckContextTests(unittest.TestCase):
         """Run explicit policy-check-context symbol assertions."""
         _check_context_symbol_assertions_cover_context_seam()
 
-    def test_build_change_state_start_stage_filters_ignored_paths(self):
-        """Run start-stage change-state builder assertions."""
-        _change_state_start_stage_filters_ignored_paths()
+    def test_build_change_state_open_stage_filters_ignored_paths(self):
+        """Run open-stage change-state builder assertions."""
+        _change_state_open_stage_filters_ignored_paths()
 
     def test_build_change_state_open_session_uses_baseline_and_filters(self):
         """Run open-session baseline/filter change-state assertions."""
         _change_state_open_session_uses_baseline_and_filters()
 
-    def test_build_change_state_closed_session_rejects_post_end_edits(self):
-        """Run closed-session post-end edit rejection assertions."""
-        _change_state_closed_session_rejects_post_end_edits()
+    def test_build_change_state_closed_session_rejects_post_close_edits(self):
+        """Run closed-session post-close edit rejection assertions."""
+        _change_state_closed_session_rejects_post_close_edits()
 
     def test_build_change_state_open_session_rejects_legacy_snapshot(self):
         """Run open-session legacy-snapshot rejection assertions."""

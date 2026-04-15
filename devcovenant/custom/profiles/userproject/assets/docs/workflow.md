@@ -8,11 +8,11 @@ and where to look when something fails.
 The normal DevCovenant work slice is:
 
 ```bash
-devcovenant gate --start
+devcovenant gate --open
 # edit files and clear complaints while working
-devcovenant gate --mid
+devcovenant gate --verify
 devcovenant run
-devcovenant gate --end
+devcovenant gate --close
 ```
 
 That sequence is the workflow.
@@ -30,41 +30,41 @@ Session inspection.
 Use it when you want to know whether a gate session is open and which run logs
 matter for the work slice.
 
-### gate --start
+### gate --open
 Opens the tracked work session.
 It records the starting state that later checks compare against after
 honoring active-profile ignore dirs and the configured engine ignores.
-If `gate --start` fails, fix the reported problem before editing.
+If `gate --open` fails, fix the reported problem before editing.
 
-### gate --mid
+### gate --verify
 Required pre-run check.
 It catches pre-commit or DevCovenant changes before `run` records workflow
 results.
-If it reports changes, apply or clear them and rerun `gate --mid` until it is
-clean.
+If it reports changes, apply or clear them and rerun `gate --verify` until
+it is clean.
 
 ### run
 Runs the declared workflow steps for the repository.
 This is the middle of the workflow, not the whole workflow by itself.
 
-### gate --end
+### gate --close
 Runs the closing pre-commit pass and closes the session.
-If required workflow evidence is stale or failing, end-gate will tell you to
+If required workflow evidence is stale or failing, close-gate will tell you to
 refresh it before the session can close.
 
 ## Required Order
 The public workflow has four stages:
-1. `gate --start`
-2. `gate --mid`
+1. `gate --open`
+2. `gate --verify`
 3. `run`
-4. `gate --end`
+4. `gate --close`
 
 The reserved anchors are:
-- `start`
-- `mid`
-- `end`
+- `open`
+- `verify`
+- `close`
 
-Declared workflow runs live between `mid` and `end`.
+Declared workflow runs live between `verify` and `close`.
 Profiles contribute those runs through `workflow_runs`.
 DevCovenant validates and orders them with:
 - `after`
@@ -145,7 +145,7 @@ Dependency vulnerability auditing should stay in
 `dependency-management.surfaces`, not in a separate CI-only shell command.
 That keeps local gates, local `check`, and generated CI on the same lock
 health contract.
-The same rule now applies to Python security scanning: when the active
+The same rule applies to Python security scanning: when the active
 profile stack contributes Bandit, `security-scanner` owns that backend
 through normal policy metadata instead of through a standalone workflow step.
 That split usually looks like this:
@@ -170,16 +170,16 @@ YAML block shape from the `active:` key line.
 
 If you intentionally rebuild or re-baseline the changelog during an open work
 session, run `devcovenant policy changelog-coverage reset-baseline` after
-`devcovenant gate --start`. That command relaxes only the preserved-old-entry
+`devcovenant gate --open`. That command relaxes only the preserved-old-entry
 rule for the active session. Normal changelog entry shape, date, summary, and
 file-coverage checks still apply.
 
 The generated `.github/workflows/ci.yml` file should stay aligned with the
 same public lifecycle the CLI exposes locally:
-- `devcovenant gate --start`
-- `devcovenant gate --mid`
+- `devcovenant gate --open`
+- `devcovenant gate --verify`
 - `devcovenant run`
-- `devcovenant gate --end`
+- `devcovenant gate --close`
 
 That CI file is part of the workflow contract, not a second workflow model.
 
@@ -193,13 +193,13 @@ If the current interpreter already matches that setup, DevCovenant reuses it.
 If not, it selects the configured interpreter or environment root and then runs
 any declared bootstrap commands.
 
-That keeps `gate --start` non-destructive once a configured environment already
+That keeps `gate --open` non-destructive once a configured environment already
 exists.
 It also keeps the workflow portable across repositories that declare a local
 environment, bench-like environments, and other declared environment layouts.
 With a stack that declares a local environment, `deploy`/`refresh`
 materializes the workspace dependency artifacts, and profiles such as
-`python_venv` can declare bootstrap-stage plus start-stage bootstrap commands
+`python_venv` can declare bootstrap-stage plus open-stage bootstrap commands
 when the target environment is still missing.
 If a repository uses a different environment shape, it should declare that
 shape explicitly instead of expecting DevCovenant to guess it.
@@ -226,11 +226,11 @@ roots.
 
 ## Recovery Rules
 Use these recovery rules consistently:
-- if `gate --start` fails, fix the start-gate complaint before editing
-- if `gate --mid` fails, rerun `gate --mid` until clean before `run`
+- if `gate --open` fails, fix the open-gate complaint before editing
+- if `gate --verify` fails, rerun `gate --verify` until clean before `run`
 - if `run` fails, inspect run logs first, fix the cause, then rerun `run`
-- if `gate --end` fails, inspect logs, refresh required workflow evidence, and
-  rerun `gate --end`
+- if `gate --close` fails, inspect logs, refresh required workflow evidence,
+  and rerun `gate --close`
 - if you are unsure where a slice stands, use `devcovenant gate --status`
 
 ## Practical Rule

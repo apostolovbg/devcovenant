@@ -37,7 +37,7 @@ how managed docs and license text are rendered.
 
 The tracked registry also records the resolved workflow definition.
 That includes:
-- the reserved anchors `start`, `mid`, and `end`
+- the reserved anchors `open`, `verify`, and `close`
 - the declared runs from active profiles
 - the run order DevCovenant must enforce
 - freshness and recording settings for those runs
@@ -80,7 +80,7 @@ the registry is recording the dependency surface contract that generated them.
 The same tracked metadata can also capture stage-scoped managed-environment
 bootstrap commands, so registry diffs are the expected result when a
 repository's managed-environment stack changes how profiles such as
-`python_venv` can prepare `.venv` for `deploy`, `refresh`, or `gate --start`.
+`python_venv` can prepare `.venv` for `deploy`, `refresh`, or `gate --open`.
 When a proof repository activates one of those profiles through text-mode
 config edits, the edit should preserve the existing YAML list indentation
 instead of inventing a new block shape.
@@ -176,7 +176,7 @@ Read `devcovenant/registry/registry.yaml` when you need to know:
 
 Read `devcovenant/registry/runtime/` when you need to know:
 - whether a gate session is open
-- whether `mid` or `end` has been satisfied
+- whether `verify` or `close` has been satisfied
 - whether workflow evidence is still fresh
 - which run failed most recently
 - which run-log folder belongs to the active slice

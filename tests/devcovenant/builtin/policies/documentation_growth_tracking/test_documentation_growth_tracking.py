@@ -546,12 +546,12 @@ def _unit_test_current_snapshot_paths_trigger_runtime_scope(tmp_path: Path):
         change_state=ChangeState(
             current_snapshot_paths=[code_file],
             session_valid=False,
-            session_error="Run `devcovenant gate --start` first.",
+            session_error="Run `devcovenant gate --open` first.",
         ),
     )
     violations = checker.check(context)
     assert violations
-    assert "gate --start" in violations[0].message
+    assert "gate --open" in violations[0].message
 
 
 class GeneratedUnittestCases(unittest.TestCase):

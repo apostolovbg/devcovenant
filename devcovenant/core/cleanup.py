@@ -589,7 +589,7 @@ def clean_repo(
         runtime_print(
             (
                 "Error: Cannot run `clean` while a gate session is open. "
-                "Run `devcovenant gate --end` first, then run `devcovenant "
+                "Run `devcovenant gate --close` first, then run `devcovenant "
                 "clean ...` outside the active session."
             ),
             file=sys.stderr,

@@ -53,6 +53,6 @@ language units through shared translator runtime contracts.
    profile shadows a builtin source.
 3. Refresh to regenerate registries and generated assets.
 4. Verify with full gate sequence:
-   `gate --start` -> `gate --mid` (rerun until clean) ->
-   `run` -> `gate --end`.
+   `gate --open` -> `gate --verify` (rerun until clean) ->
+   `run` -> `gate --close`.
 5. Keep `PROFILE_MAP.md` and docs aligned when adding new profiles.

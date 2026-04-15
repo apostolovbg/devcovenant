@@ -144,9 +144,9 @@ intentionally not trying to do.
 
 2. Governed change slice
    - Trigger: a contributor needs to make any governed change, including docs.
-   - Main path: `devcovenant gate --start`, edit while clearing complaints,
-     `devcovenant gate --mid` until clean, `devcovenant run`,
-     `devcovenant gate --end`.
+   - Main path: `devcovenant gate --open`, edit while clearing complaints,
+     `devcovenant gate --verify` until clean, `devcovenant run`,
+     `devcovenant gate --close`.
    - Result: the repository closes with fresh run evidence, closed gate state,
      updated changelog coverage, and inspectable run artifacts.
 
@@ -186,7 +186,8 @@ intentionally not trying to do.
    - Trigger: source-tree CI, built-artifact proof, or manual release.
    - Main path: generated `CI` runs the `Governance` job and dependent
      `Build` proof, where wheel, sdist, and documented `pipx` install paths
-     all execute `gate --start -> gate --mid -> run -> gate --end -> check`;
+     all execute `gate --open -> gate --verify -> run -> gate --close ->
+     check`;
      manual `publish.yml` then downloads the validated CI artifacts and
      provenance and verifies them before release.
    - Result: the shipped artifact is backed by the same workflow DevCovenant
@@ -243,19 +244,19 @@ intentionally not trying to do.
   their materialized test mirrors stay in sync whenever either side changes.
 
 ### Workflow And Evidence
-- The governed work slice shall be `gate --start`, `gate --mid`, `run`,
-  `gate --end`.
+- The governed work slice shall be `gate --open`, `gate --verify`, `run`,
+  `gate --close`.
 - `check` shall remain read-only and shall not open or close a gate session.
 - `gate --status` shall report the latest completed public workflow stage,
-  including `mid`.
-- `gate --start` shall open a tracked session and record the session baseline
+  including `verify`.
+- `gate --open` shall open a tracked session and record the session baseline
   snapshot used for later change-scoped behavior.
-- `gate --mid` shall act as the required pre-run preflight and shall surface
+- `gate --verify` shall act as the required pre-run preflight and shall surface
   hook mutations and blocking DevCovenant complaints before run evidence is
   recorded.
 - `run` shall execute all enabled declared workflow runs in validated declared
   order and record evidence for them in the active workflow session.
-- `gate --end` shall only close the session when every declared run required
+- `gate --close` shall only close the session when every declared run required
   for the active session has fresh passing evidence.
 - Every command shall write run artifacts under `devcovenant/logs/`, and the
   primary debug entrypoint shall be the emitted `Run logs:` path and its
@@ -269,8 +270,10 @@ intentionally not trying to do.
   profile names.
 
 ### Workflow Contract And Extensibility
-- The workflow contract shall reserve the anchors `start`, `mid`, and `end`.
-- Profiles shall declare workflow runs that execute between `mid` and `end`.
+- The workflow contract shall reserve the anchors `open`, `verify`, and
+  `close`.
+- Profiles shall declare workflow runs that execute between `verify` and
+  `close`.
 - Declared workflow runs shall support executable ordering via `after`,
   `before`, and `order`.
 - Unknown ordering references shall fail contract resolution.
@@ -433,7 +436,7 @@ intentionally not trying to do.
     mirrors -> refreshed governed repository
   - repo-owned custom copy removed -> materialized mirrors removed ->
     builtin default visible again
-  - no session -> open gate session -> mid-cleared session -> run-evidenced
+  - no session -> open gate session -> verify-cleared session -> run-evidenced
     session -> closed session
   - stale workflow evidence -> fresh passing run evidence -> stale again when
     relevant files change
@@ -510,8 +513,8 @@ intentionally not trying to do.
 - A normal user can install DevCovenant with `pipx`, run `devcovenant install`
   in a repository, review `devcovenant/config.yaml`, run `deploy`, and reach a
   working governed starting point.
-- A contributor can complete a governed slice through `gate --start`,
-  `gate --mid`, `run`, and `gate --end`, and the repository records usable
+- A contributor can complete a governed slice through `gate --open`,
+  `gate --verify`, `run`, and `gate --close`, and the repository records usable
   run artifacts and closed session state.
 - A repository can run `devcovenant custom --policy|--profile <name> --do` to
   materialize a repo-owned custom copy and its mirrored tests under

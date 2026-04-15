@@ -315,10 +315,10 @@ def _profile_registry_governance_workflow_signature(
         "Set up Python",
         "Configure Python cache root",
         "Install DevCovenant runtime dependencies",
-        "Run DevCovenant start gate",
-        "Run DevCovenant mid gate",
+        "Run DevCovenant open gate",
+        "Run DevCovenant verify gate",
         "Run DevCovenant workflow runs",
-        "Run DevCovenant end gate",
+        "Run DevCovenant close gate",
     }
     selected_steps: list[dict[str, object]] = []
     for raw_step in steps:
@@ -528,10 +528,10 @@ def _profile_ci_workflow_contains_build_job_artifact_proof() -> None:
     assert "pushd artifacts/sdist-proof >/dev/null" in all_run_blocks
     assert "pushd artifacts/pipx-proof >/dev/null" in all_run_blocks
     for command in (
-        "python -m devcovenant gate --start",
-        "python -m devcovenant gate --mid",
+        "python -m devcovenant gate --open",
+        "python -m devcovenant gate --verify",
         "python -m devcovenant run",
-        "python -m devcovenant gate --end",
+        "python -m devcovenant gate --close",
     ):
         assert command in all_run_blocks
     assert "cat > tests/__init__.py <<'PY'" in all_run_blocks
@@ -552,7 +552,7 @@ def _profile_ci_workflow_contains_build_job_artifact_proof() -> None:
         '.venv/bin/python -m pip install --no-deps "$SDIST_PATH"'
         in all_run_blocks
     )
-    assert ".venv/bin/python -m devcovenant gate --start" in all_run_blocks
+    assert ".venv/bin/python -m devcovenant gate --open" in all_run_blocks
     assert '"$PIPX_BIN_DIR/devcovenant" install' in all_run_blocks
     assert '"$PIPX_BIN_DIR/devcovenant" deploy' in all_run_blocks
     assert '"$PIPX_BIN_DIR/devcovenant" refresh' in all_run_blocks
@@ -563,10 +563,10 @@ def _profile_ci_workflow_contains_build_job_artifact_proof() -> None:
     assert "existing_item_indent = None" in all_run_blocks
     assert "profiles.active items not found in config.yaml" in all_run_blocks
     assert 'candidate_stripped.startswith("- ")' in all_run_blocks
-    assert '"$PIPX_BIN_DIR/devcovenant" gate --start' in all_run_blocks
-    assert '"$PIPX_BIN_DIR/devcovenant" gate --mid' in all_run_blocks
+    assert '"$PIPX_BIN_DIR/devcovenant" gate --open' in all_run_blocks
+    assert '"$PIPX_BIN_DIR/devcovenant" gate --verify' in all_run_blocks
     assert '"$PIPX_BIN_DIR/devcovenant" run' in all_run_blocks
-    assert '"$PIPX_BIN_DIR/devcovenant" gate --end' in all_run_blocks
+    assert '"$PIPX_BIN_DIR/devcovenant" gate --close' in all_run_blocks
     assert '"$PIPX_BIN_DIR/devcovenant" check' in all_run_blocks
     assert "python -m devcovenant --version" in all_run_blocks
     assert 'line.strip() == "config_reviewed: false"' in all_run_blocks
@@ -783,8 +783,8 @@ def _profile_python_venv_declares_opt_in_managed_env_contract() -> None:
     assert managed_commands == [
         "bootstrap=>{current_python} -m venv .venv",
         "bootstrap=>{managed_python} -m pip install -r requirements.lock",
-        "start=>{current_python} -m venv .venv",
-        "start=>{managed_python} -m pip install -r requirements.lock",
+        "open=>{current_python} -m venv .venv",
+        "open=>{managed_python} -m pip install -r requirements.lock",
     ]
 
 

@@ -62,6 +62,117 @@ Example:
 ## Version 1.0.1b3
 
 - 2026-04-15:
+  Change: Renamed gate lifecycle flags to `--open`, `--verify`, and
+  `--close`, removed release-timing wording from user-facing docs, and
+  standardized historical changelog entry spacing.
+  Why: Clarified that every gate invocation is a command while preserving
+  flag syntax, and aligned the full changelog with the documented blank-line
+  layout.
+  Impact: Users follow `gate --open -> gate --verify -> run -> gate --close`,
+  generated docs and workflows use the renamed lifecycle, and old changelog
+  entries match the same spacing contract as new entries.
+  Files:
+  CHANGELOG.md
+  .github/workflows/ci.yml
+  AGENTS.md
+  CONTRIBUTING.md
+  PLAN.md
+  README.md
+  SECURITY.md
+  SPEC.md
+  devcovenant/README.md
+  devcovenant/builtin/policies/README.md
+  devcovenant/builtin/policies/changelog_coverage/changelog_coverage.py
+  devcovenant/builtin/policies/changelog_coverage/changelog_coverage.yaml
+  devcovenant/builtin/policies/changelog_coverage/test_blueprints.yaml
+  devcovenant/builtin/policies/documentation_growth_tracking/\
+    test_blueprints.yaml
+  devcovenant/builtin/policies/managed_environment/managed_environment.yaml
+  devcovenant/builtin/policies/managed_environment/\
+    managed_environment_runtime.py
+  devcovenant/builtin/policies/managed_environment/test_blueprints.yaml
+  devcovenant/builtin/policies/tests_coverage/test_blueprints.yaml
+  devcovenant/builtin/profiles/README.md
+  devcovenant/builtin/profiles/csharp/csharp.yaml
+  devcovenant/builtin/profiles/dart/dart.yaml
+  devcovenant/builtin/profiles/docker/docker.yaml
+  devcovenant/builtin/profiles/fastapi/fastapi.yaml
+  devcovenant/builtin/profiles/flutter/flutter.yaml
+  devcovenant/builtin/profiles/frappe/frappe.yaml
+  devcovenant/builtin/profiles/github/assets/ci.yml
+  devcovenant/builtin/profiles/global/assets/AGENTS.yaml
+  devcovenant/builtin/profiles/global/assets/CONTRIBUTING.yaml
+  devcovenant/builtin/profiles/global/assets/config.yaml
+  devcovenant/builtin/profiles/go/go.yaml
+  devcovenant/builtin/profiles/java/java.yaml
+  devcovenant/builtin/profiles/javascript/javascript.yaml
+  devcovenant/builtin/profiles/kubernetes/kubernetes.yaml
+  devcovenant/builtin/profiles/objective_c/objective_c.yaml
+  devcovenant/builtin/profiles/php/php.yaml
+  devcovenant/builtin/profiles/python/python.yaml
+  devcovenant/builtin/profiles/python_venv/python_venv.yaml
+  devcovenant/builtin/profiles/ruby/ruby.yaml
+  devcovenant/builtin/profiles/rust/rust.yaml
+  devcovenant/builtin/profiles/swift/swift.yaml
+  devcovenant/builtin/profiles/terraform/terraform.yaml
+  devcovenant/builtin/profiles/typescript/typescript.yaml
+  devcovenant/cli.py
+  devcovenant/config.yaml
+  devcovenant/core/README.md
+  devcovenant/core/cleanup.py
+  devcovenant/core/execution.py
+  devcovenant/core/gate_runtime.py
+  devcovenant/core/policy_contract.py
+  devcovenant/core/policy_runtime.py
+  devcovenant/core/refresh_runtime.py
+  devcovenant/core/workflow_support.py
+  devcovenant/custom/README.md
+  devcovenant/custom/policies/README.md
+  devcovenant/custom/profiles/README.md
+  devcovenant/custom/profiles/userproject/assets/SECURITY.yaml
+  devcovenant/custom/profiles/userproject/assets/docs/config.md
+  devcovenant/custom/profiles/userproject/assets/docs/installation.md
+  devcovenant/custom/profiles/userproject/assets/docs/policies.md
+  devcovenant/custom/profiles/userproject/assets/docs/profiles.md
+  devcovenant/custom/profiles/userproject/assets/docs/registry.md
+  devcovenant/custom/profiles/userproject/assets/docs/troubleshooting.md
+  devcovenant/custom/profiles/userproject/assets/docs/workflow.md
+  devcovenant/custom/profiles/userproject/userproject.yaml
+  devcovenant/docs/architecture.md
+  devcovenant/docs/config.md
+  devcovenant/docs/contracts.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/refresh.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/troubleshooting.md
+  devcovenant/docs/workflow.md
+  devcovenant/gate.py
+  devcovenant/registry/README.md
+  devcovenant/registry/registry.yaml
+  tests/devcovenant/builtin/policies/changelog_coverage/\
+    test_changelog_coverage.py
+  tests/devcovenant/builtin/policies/documentation_growth_tracking/\
+    test_documentation_growth_tracking.py
+  tests/devcovenant/builtin/policies/managed_environment/\
+    test_managed_environment.py
+  tests/devcovenant/builtin/policies/managed_environment/\
+    test_managed_environment_runtime.py
+  tests/devcovenant/builtin/policies/tests_coverage/test_tests_coverage.py
+  tests/devcovenant/core/test_execution.py
+  tests/devcovenant/core/test_gate_runtime.py
+  tests/devcovenant/core/test_policy_runtime.py
+  tests/devcovenant/core/test_profile_registry.py
+  tests/devcovenant/core/test_run_logs.py
+  tests/devcovenant/core/test_workflow_support.py
+  tests/devcovenant/test_check.py
+  tests/devcovenant/test_cli.py
+  tests/devcovenant/test_gate.py
+  tests/devcovenant/test_refresh.py
+  tests/devcovenant/test_upgrade.py
+
+- 2026-04-15:
   Change: Added changelog blank-line enforcement, updated the managed
   changelog template text, and bumped DevCovenant to `1.0.1b3`.
   Why: Align the enforced changelog layout with the documented examples while
@@ -2459,6 +2570,7 @@ Example:
   tests/devcovenant/core/services/test_policy_registry.py
   tests/devcovenant/test_install.py
   tests/devcovenant/test_refresh.py
+
 - 2026-04-01:
   Change: generalized the remaining package-doc wording, documented the split
     dependency surfaces in the policy and registry docs, and hardened
@@ -2493,6 +2605,7 @@ Example:
   devcovenant/docs/workflow.md
   devcovenant/licenses/README.md
   devcovenant/registry/registry.yaml
+
 - 2026-04-01:
   Change: materialized exact cross-platform and cross-version marker pins in
     `requirements.in`, refreshed the hash-locked requirements artifacts, and
@@ -2518,6 +2631,7 @@ Example:
   requirements.in
   requirements.lock
   tests/devcovenant/test_refresh.py
+
 - 2026-04-01:
   Change: enabled opt-in hash-locked Python dependency refresh in the
     `dependency-management` policy command, removed live `pip` upgrades from
@@ -2559,6 +2673,7 @@ Example:
   tests/devcovenant/builtin/policies/dependency_management/\
     test_dependency_lock_runtime.py
   tests/devcovenant/core/services/test_profile_registry.py
+
 - 2026-04-01:
   Change: hardened the CLI managed-reexec tests to mock interpreter
     executability, removed leftover compatibility wording from core
@@ -2581,6 +2696,7 @@ Example:
   devcovenant/docs/registry.md
   devcovenant/registry/registry.yaml
   tests/devcovenant/test_cli.py
+
 - 2026-03-31:
   Change: corrected the changelog version cut points, replaced the live
     version-change guard with preserved-entry tracking plus an explicit
@@ -2617,6 +2733,7 @@ Example:
   devcovenant/registry/registry.yaml
   tests/devcovenant/builtin/policies/changelog_coverage/\
     test_changelog_coverage.py
+
 - 2026-03-31:
   Change: restored the missing `1.0.1` and `1.0.0` changelog boundaries,
     recorded the gate-start top version for live slices, enforced that a
@@ -2671,6 +2788,7 @@ Example:
   tests/devcovenant/core/runtime/test_execution.py
   tests/devcovenant/core/services/test_managed_docs.py
   tests/devcovenant/core/services/test_project_governance.py
+
 - 2026-03-31:
   Change: added `project-governance.copyright_notice`,
     rendered the global `LICENSE` template from
@@ -2709,6 +2827,7 @@ Example:
   devcovenant/registry/registry.yaml
   tests/devcovenant/core/services/test_managed_docs.py
   tests/devcovenant/core/services/test_project_governance.py
+
 - 2026-03-31:
   Change: changed managed license rendering to sync only the
     `# project-name version` title, added a general
@@ -2750,6 +2869,7 @@ Example:
     autofix/test_global.py
   tests/devcovenant/custom/policies/package_artifact_mirror/\
     test_package_artifact_mirror.py
+
 - 2026-03-31:
   Change: updated the managed `LICENSE` source to use project
     version metadata, taught `package-artifact-mirror` to skip
@@ -2789,6 +2909,7 @@ Example:
   tests/devcovenant/custom/policies/package_artifact_mirror/\
     test_package_artifact_mirror.py
   tests/devcovenant/core/services/test_managed_docs.py
+
 - 2026-03-31:
   Change: renamed the package mirror policy to
     `package-artifact-mirror`, copied the root `LICENSE` into
@@ -2845,6 +2966,7 @@ Example:
   tests/devcovenant/custom/policies/package_artifact_mirror/\
     test_package_artifact_mirror.py
   tests/devcovenant/test_install.py
+
 - 2026-03-31:
   Change: enabled repo version-governance, switched the canonical
     version scheme to PEP 440, and changed the governed prerelease line
@@ -3005,6 +3127,7 @@ Example:
     test_global.py
   tests/devcovenant/custom/policies/package_artifact_mirror/\
     test_package_artifact_mirror.py
+
 - 2026-03-31:
   Change: corrected the first-run onboarding flow, synchronized the
     `devcov_core_paths` boundary with the real shipped runtime commands, and
@@ -3042,6 +3165,7 @@ Example:
   tests/devcovenant/core/services/test_profile_registry.py
   tests/devcovenant/test_install.py
   tests/devcovenant/test_refresh.py
+
 - 2026-03-31:
   Change: added a builtin `github` profile, moved generated GitHub Actions
     CI ownership out of the always-on `global` profile, and gave that base
@@ -3097,6 +3221,7 @@ Example:
   tests/devcovenant/core/services/test_profile_registry.py
   tests/devcovenant/test_install.py
   tests/devcovenant/test_refresh.py
+
 - 2026-03-31:
   Change: rewrote the package and repo docs in plainer language, aligned
     preserved root trust and map docs with their corrected asset owners, and
@@ -3161,6 +3286,7 @@ Example:
   devcovenant/registry/registry.yaml
   licenses/THIRD_PARTY_LICENSES.md
   tests/devcovenant/core/runtime/test_execution.py
+
 - 2026-03-31:
   Change: repaired the GitHub Actions workflow contract by replacing invalid
     job-level `runner.temp` expressions with GitHub-safe cache-root setup
@@ -3183,6 +3309,7 @@ Example:
   devcovenant/docs/workflow.md
   devcovenant/registry/registry.yaml
   tests/devcovenant/core/services/test_profile_registry.py
+
 - 2026-03-31:
   Change: aligned workflow cache routing, snapshot ignore rules, cleanup
     behavior, and publish interpreter setup so CI bytecode junk cannot
@@ -3216,6 +3343,7 @@ Example:
   tests/devcovenant/core/runtime/test_session_snapshot.py
   tests/devcovenant/core/services/test_profile_registry.py
   tests/devcovenant/test_refresh.py
+
 - 2026-03-31:
   Change: hardened the `1.0.1` release candidate by making Python 3.10 support
     self-sufficient, pinning workflow actions to immutable SHAs, keeping the
@@ -3258,6 +3386,7 @@ Example:
   tests/devcovenant/core/services/test_profile_registry.py
   tests/devcovenant/custom/policies/readme_sync/test_readme_sync.py
   tests/devcovenant/test_refresh.py
+
 - 2026-03-30:
   Change: bumped authoritative package, documentation, and managed-source
     release surfaces from `1.0.0` to `1.0.1`.
@@ -3352,6 +3481,7 @@ Example:
   devcovenant/docs/workflow.md
   devcovenant/registry/registry.yaml
   tests/devcovenant/test_refresh.py
+
 - 2026-03-30:
   Change: stabilized managed-environment selection and CI release workflow
     readiness across repo `.venv`, external tool hosts, and generic profile
@@ -3396,6 +3526,7 @@ Example:
     test_managed_environment_runtime.py
   tests/devcovenant/core/services/test_profile_registry.py
   tests/devcovenant/core/services/test_project_governance.py
+
 - 2026-03-30:
   Change: aligned the installed baseline managed-environment contract,
     gate command resolution, and Node 24-capable workflow refs into one
@@ -3423,6 +3554,7 @@ Example:
   devcovenant/registry/registry.yaml
   tests/devcovenant/core/services/test_profile_registry.py
   tests/devcovenant/test_install.py
+
 - 2026-03-30:
   Change: enabled the baseline managed-environment policy, resolved gate
     pre-commit commands from the workflow contract, and updated owned GitHub
@@ -3464,6 +3596,7 @@ Example:
   devcovenant/registry/registry.yaml
   tests/devcovenant/core/flow/test_gate.py
   tests/devcovenant/core/services/test_profile_registry.py
+
 - 2026-03-30:
   Change: corrected managed-environment interpreter matching so DevCovenant
     only reuses the current Python when it actually matches the declared
@@ -3484,6 +3617,7 @@ Example:
   devcovenant/docs/policies.md
   tests/devcovenant/builtin/policies/managed_environment/\
     test_managed_environment_runtime.py
+
 - 2026-03-30:
   Change: aligned managed-doc inventory and refresh/docs ownership around
     available-versus-enabled doc selection, documented descriptor precedence
@@ -3520,6 +3654,7 @@ Example:
   tests/devcovenant/core/services/test_manifest_inventory.py
   tests/devcovenant/core/services/test_structure_validation.py
   tests/devcovenant/test_refresh.py
+
 - 2026-03-30:
   Change: removed the invariant framework from the runtime, split repo-only
     trust and release surfaces out of package docs, tightened dependency-lock
@@ -3614,6 +3749,7 @@ Example:
   tests/devcovenant/core/services/test_structure_validation.py
   tests/devcovenant/test_install.py
   tests/devcovenant/test_refresh.py
+
 - 2026-03-30:
   Change: removed the managed-doc generic-scaffold legacy bridge, split core
     invariant descriptor loading away from policy descriptors, and corrected
@@ -3649,6 +3785,7 @@ Example:
   tests/devcovenant/core/services/test_core_invariants.py
   tests/devcovenant/core/services/test_managed_docs.py
   tests/devcovenant/test_refresh.py
+
 - 2026-03-30:
   Change: added the `forward-only` compatibility policy, generated
     policy-specific AGENTS governance guidance, removed touched legacy
@@ -3701,6 +3838,7 @@ Example:
   tests/devcovenant/core/flow/test_gate.py
   tests/devcovenant/core/flow/test_workflow_validation.py
   tests/devcovenant/core/services/test_project_governance.py
+
 - 2026-03-30:
   Change: clarified config ownership across the template and live config,
     removed the remaining invariant-policy-shaped config narration, and
@@ -3747,6 +3885,7 @@ Example:
   tests/devcovenant/core/services/test_core_invariants.py
   tests/devcovenant/core/services/test_metadata.py
   tests/devcovenant/test_refresh.py
+
 - 2026-03-30:
   Change: simplified the managed-environment runtime to reuse a valid target
     interpreter, bootstrap only when the configured environment is still
@@ -3788,6 +3927,7 @@ Example:
     test_managed_environment_runtime.py
   tests/devcovenant/core/flow/test_gate.py
   tests/devcovenant/core/services/test_profile_registry.py
+
 - 2026-03-30:
   Change: fixed managed-doc sync so `Last Updated` date rollover alone no
     longer rewrites clean descriptor-backed docs during refresh or start gate.
@@ -3802,6 +3942,7 @@ Example:
   devcovenant/core/services/managed_docs.py
   devcovenant/docs/architecture.md
   tests/devcovenant/core/services/test_managed_docs.py
+
 - 2026-03-30:
   Change: fixed the gate pre-commit contract to use the canonical
     `pre-commit run --all-files` launcher, normalized equivalent
@@ -3832,6 +3973,7 @@ Example:
   devcovenant/registry/registry.yaml
   tests/devcovenant/core/flow/test_gate.py
   tests/devcovenant/core/flow/test_workflow_validation.py
+
 - 2026-03-29:
   Change: corrected the Python-family `tests` workflow runs to keep
     `python3 -m unittest discover -v`, remove the redundant `pytest`
@@ -3857,6 +3999,7 @@ Example:
   devcovenant/docs/workflow.md
   devcovenant/registry/registry.yaml
   tests/devcovenant/core/services/test_profile_registry.py
+
 - 2026-03-29:
   Change: removed the duplicate Python `unittest` launcher from the
     Python-family `tests` workflow runs and seeded the `pipx` proof `.venv`
@@ -3884,6 +4027,7 @@ Example:
   devcovenant/docs/workflow.md
   devcovenant/registry/registry.yaml
   tests/devcovenant/core/services/test_profile_registry.py
+
 - 2026-03-29:
   Change: extracted a detailed durable product specification into `SPEC.md`
     from the live code, CLI surface, generated workflow contract, and
@@ -3897,6 +4041,7 @@ Example:
   Files:
   CHANGELOG.md
   SPEC.md
+
 - 2026-03-29:
   Change: hardened the shared PTY child-output runner to treat Linux EOF
     `EIO` races as normal command completion once the child exits, and added
@@ -3913,6 +4058,7 @@ Example:
   devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
   devcovenant/docs/workflow.md
   tests/devcovenant/core/runtime/test_execution.py
+
 - 2026-03-29:
   Change: updated workflow-validation guidance to teach the four-stage
     `gate --start -> gate --mid -> run -> gate --end` contract, extended
@@ -3934,6 +4080,7 @@ Example:
   devcovenant/docs/workflow.md
   tests/devcovenant/core/flow/test_workflow_validation.py
   tests/devcovenant/core/services/test_profile_registry.py
+
 - 2026-03-29:
   Change: clarified the profile and registry docs so they no longer say the
     repo profile owns the `.gha-pycache/` ignore rule or that tracked
@@ -3950,6 +4097,7 @@ Example:
   devcovenant/custom/profiles/devcovrepo/assets/docs/registry.md
   devcovenant/docs/profiles.md
   devcovenant/docs/registry.md
+
 - 2026-03-29:
   Change: aligned the CI managed-environment docs with the real
     `Governance` and `Build` behavior, renamed provenance fields from
@@ -3977,6 +4125,7 @@ Example:
   devcovenant/registry/registry.yaml
   tests/devcovenant/core/services/test_profile_registry.py
   tests/devcovenant/test_refresh.py
+
 - 2026-03-29:
   Change: moved built-artifact proof back into the `Build` job inside
     `CI`, renamed the main `CI` job to `governance`, deleted the separate
@@ -4012,6 +4161,7 @@ Example:
   devcovenant/registry/registry.yaml
   tests/devcovenant/core/runtime/test_execution.py
   tests/devcovenant/core/services/test_profile_registry.py
+
 - 2026-03-29:
   Change: fixed the workflow-validation missing-runs message construction to
     avoid the multiline f-string parse failure in Python 3.11 and added a
@@ -4024,6 +4174,7 @@ Example:
   CHANGELOG.md
   devcovenant/core/flow/workflow_validation.py
   tests/devcovenant/core/flow/test_workflow_validation.py
+
 - 2026-03-29:
   Change: renamed the generated CI workflow from `ci-and-test.yml` to
     `ci.yml`, updated refresh and policy ownership around the new path, and
@@ -4068,6 +4219,7 @@ Example:
     test_documentation_growth_tracking.py
   tests/devcovenant/core/services/test_profile_registry.py
   tests/devcovenant/test_refresh.py
+
 - 2026-03-29:
   Change: simplified CI ownership by removing generated built-artifact proof
     from `ci_and_test`, moved the `pipx` lifecycle proof into `build.yml`,
@@ -4095,6 +4247,7 @@ Example:
   devcovenant/docs/workflow.md
   devcovenant/registry/registry.yaml
   tests/devcovenant/core/services/test_profile_registry.py
+
 - 2026-03-29:
   Change: aligned the last stale `test` workflow residue with the public
     `run` contract, strengthened the `pipx` lifecycle proof to execute the
@@ -4129,6 +4282,7 @@ Example:
   devcovenant/registry/registry.yaml
   tests/devcovenant/builtin/policies/managed_environment/\
     test_managed_environment_runtime.py
+
 - 2026-03-29:
   Change: tightened `devcovenant asset` to a Desktop-only copy contract with
     an optional Desktop output filename instead of accepting general
@@ -4153,6 +4307,7 @@ Example:
   devcovenant/docs/refresh.md
   tests/devcovenant/core/services/test_asset_materialization.py
   tests/devcovenant/test_asset.py
+
 - 2026-03-29:
   Change: added `devcovenant asset FILE.ext [path]`, shared asset
     materialization helpers, and the matching docs/tests so reusable profile
@@ -4186,6 +4341,7 @@ Example:
   tests/devcovenant/core/services/test_asset_materialization.py
   tests/devcovenant/test_asset.py
   tests/devcovenant/test_cli.py
+
 - 2026-03-29:
   Change: fixed `changelog-coverage` to preserve the gate-start top entry by
     fingerprint anywhere below the fresh session entry instead of requiring
@@ -4206,6 +4362,7 @@ Example:
   devcovenant/registry/registry.yaml
   tests/devcovenant/builtin/policies/changelog_coverage/\
     test_changelog_coverage.py
+
 - 2026-03-29:
   Change: fixed long-description sync in generated `pyproject.toml` by
     replacing the whole TOML field block and reusing the wrapped TOML
@@ -4222,6 +4379,7 @@ Example:
   devcovenant/core/flow/refresh.py
   devcovenant/core/services/project_governance.py
   tests/devcovenant/test_refresh.py
+
 - 2026-03-29:
   Change: updated the generic seeded project-description rendering across
     generated
@@ -4254,6 +4412,7 @@ Example:
   requirements.lock
   tests/devcovenant/test_refresh.py
   tests/devcovenant/core/services/test_project_governance.py
+
 - 2026-03-29:
   Change: implemented real workflow-run ordering semantics with validated
     `after` and `before` references, truthful `mid` status reporting, and
@@ -4283,6 +4442,7 @@ Example:
   tests/devcovenant/core/flow/test_workflow_contract.py
   tests/devcovenant/core/runtime/test_execution.py
   tests/devcovenant/core/services/test_profile_registry.py
+
 - 2026-03-29:
   Change: marked the release-candidate preparation roadmap item done after
     proving the exact candidate tree through governed, packaging, and
@@ -4294,6 +4454,7 @@ Example:
   Files:
   CHANGELOG.md
   PLAN.md
+
 - 2026-03-28:
   Change: marked the `run` migration and core de-spaghettization roadmap
     items done and revised the plan summary to reflect release-candidate
@@ -4307,6 +4468,7 @@ Example:
   Files:
   CHANGELOG.md
   PLAN.md
+
 - 2026-03-28:
   Change: documented that `clean --all` cleans the runtime registry only for
     its `registry` scope and preserves the tracked `registry.yaml` contract.
@@ -4323,6 +4485,7 @@ Example:
   devcovenant/custom/profiles/devcovrepo/assets/docs/registry.md
   devcovenant/docs/installation.md
   devcovenant/docs/registry.md
+
 - 2026-03-28:
   Change: fixed stale `run` guidance in workflow runtime/docs, documented the
     public manual-attestation and artifact-check operator contract, and
@@ -4353,6 +4516,7 @@ Example:
   tests/devcovenant/core/runtime/test_execution.py
   tests/devcovenant/core/services/test_profile_registry.py
   tests/devcovenant/test_run.py
+
 - 2026-03-28:
   Change: removed the lingering `required_run_ids` carry-forward seam from
     workflow-session persistence and renamed the flow-layer clean module to
@@ -4379,6 +4543,7 @@ Example:
   tests/devcovenant/core/flow/test_workflow_validation.py
   tests/devcovenant/core/runtime/test_workflow_session.py
   tests/devcovenant/test_clean.py
+
 - 2026-03-28:
   Change: aligned the live workflow-run contract in code, docs, profiles,
     and tests so `devcovenant run` now means “run all configured runs”
@@ -4449,6 +4614,7 @@ Example:
   tests/devcovenant/core/services/test_profile_registry.py
   tests/devcovenant/test_refresh.py
   tests/devcovenant/test_run.py
+
 - 2026-03-28:
   Change: clarified the workflow-run roadmap in `PLAN.md` so `devcovenant
     run` now plainly means “run all configured runs” without an
@@ -4461,6 +4627,7 @@ Example:
   Files:
   CHANGELOG.md
   PLAN.md
+
 - 2026-03-28:
   Change: removed the last live `test_events` compatibility shims, fixed the
     managed workflow doc source, and added direct coverage for the public
@@ -4487,6 +4654,7 @@ Example:
   tests/devcovenant/core/flow/test_workflow_contract.py
   tests/devcovenant/core/runtime/test_event.py
   tests/devcovenant/core/runtime/test_execution.py
+
 - 2026-03-28:
   Change: Removed the drifted duplicate workflow-run surface across the CLI,
     runtime, registry, docs, generated outputs, and tests.
@@ -4593,6 +4761,7 @@ Example:
   tests/devcovenant/test_run.py
   tests/devcovenant/test_refresh.py
   tests/devcovenant/test_run.py
+
 - 2026-03-28:
   Change: generalized workflow phase-event reporting and formalized
     configurable runtime evidence paths across the runtime, profiles, docs,
@@ -4654,6 +4823,7 @@ Example:
   tests/devcovenant/core/flow/test_workflow_validation.py
   tests/devcovenant/core/runtime/test_event.py
   tests/devcovenant/core/runtime/test_registry.py
+
 - 2026-03-27:
   Change: defined explicit workflow-run freshness and universal
     per-invocation output-mode overrides across the CLI, runtime, docs, and
@@ -4684,6 +4854,7 @@ Example:
   tests/devcovenant/core/flow/test_workflow_contract.py
   tests/devcovenant/core/runtime/test_execution.py
   tests/devcovenant/test_cli.py
+
 - 2026-03-27:
   Change: amended the roadmap to formalize the remaining workflow-contract
     hardening gaps after the core `run` migration.
@@ -4696,6 +4867,7 @@ Example:
   Files:
   CHANGELOG.md
   PLAN.md
+
 - 2026-03-27:
   Change: simplified the repeated full-check sequencing inside
     `policy_engine.py` into private helper paths.
@@ -4710,6 +4882,7 @@ Example:
   devcovenant/core/services/policy_engine.py
   devcovenant/docs/architecture.md
   tests/devcovenant/core/services/test_policy_engine.py
+
 - 2026-03-27:
   Change: migrated gate/session-derived policy-check context out of
     `core/services` into the workflow-owned `core/flow` layer.
@@ -4730,6 +4903,7 @@ Example:
   devcovenant/docs/workflow.md
   tests/devcovenant/core/flow/test_policy_check_context.py
   tests/devcovenant/core/services/test_policy_check_context.py
+
 - 2026-03-27:
   Change: moved workflow-contract resolution out of `core/services` into the
     workflow-owned `core/flow` layer.
@@ -4758,6 +4932,7 @@ Example:
   devcovenant/registry/registry.yaml
   tests/devcovenant/core/flow/test_workflow_contract.py
   tests/devcovenant/core/services/test_workflow_contract.py
+
 - 2026-03-27:
   Change: migrated namespaced policy-command parsing and runtime-action
     dispatch out of `core/services` into `core/runtime`.
@@ -4796,6 +4971,7 @@ Example:
   tests/devcovenant/core/runtime/test_policy_runtime_actions.py
   tests/devcovenant/core/services/test_policy_commands.py
   tests/devcovenant/core/services/test_policy_runtime_actions.py
+
 - 2026-03-27:
   Change: migrated runtime-facing event-adapter loading and policy-report
     output
@@ -4829,6 +5005,7 @@ Example:
   tests/devcovenant/core/runtime/test_policy_reporting.py
   tests/devcovenant/core/services/test_event.py
   tests/devcovenant/core/services/test_policy_reporting.py
+
 - 2026-03-27:
   Change: restructured AGENTS policy/core-invariant block refresh out of
     `core/services` into the shared `core/lib/agents_blocks.py` helper and
@@ -4858,6 +5035,7 @@ Example:
   tests/devcovenant/core/lib/test_agents_blocks.py
   tests/devcovenant/core/services/test_core_invariant_block_refresh.py
   tests/devcovenant/core/services/test_policy_block_refresh.py
+
 - 2026-03-26:
   Change: split the mixed services-layer `registry.py` into tracked-registry,
     policy-registry, and manifest-inventory helpers and removed the old
@@ -4910,6 +5088,7 @@ Example:
   tests/devcovenant/core/services/test_structure_validation.py
   tests/devcovenant/core/services/test_tracked_registry.py
   tests/devcovenant/test_install.py
+
 - 2026-03-26:
   Change: moved gate-status payload validation into flow-owned helpers and
     renamed the remaining core-invariant service modules to
@@ -4944,6 +5123,7 @@ Example:
   tests/devcovenant/core/services/test_devcov_structure_guard.py
   tests/devcovenant/core/services/test_integrity_validation.py
   tests/devcovenant/core/services/test_structure_validation.py
+
 - 2026-03-26:
   Change: normalized workflow-state recording to `last_run_utc` plus
     `commands`, moved workflow child output onto a generic channel, and
@@ -4999,6 +5179,7 @@ Example:
   tests/devcovenant/core/runtime/test_workflow_session.py
   tests/devcovenant/core/services/test_devcov_integrity_guard.py
   tests/devcovenant/core/services/test_workflow_contract.py
+
 - 2026-03-26:
   Change: moved workflow-validation ownership into `core/flow`, split
     tracked and runtime registry path helpers, and rewired the invariant
@@ -5042,6 +5223,7 @@ Example:
   tests/devcovenant/core/services/test_devflow_run_gates.py
   tests/devcovenant/core/services/test_registry.py
   tests/devcovenant/core/services/test_tracked_registry.py
+
 - 2026-03-26:
   Change: revised the roadmap to dissolve `devflow_run_gates`, split
     registry code by both ephemerity and ownership, and replace leftover
@@ -5057,6 +5239,7 @@ Example:
   Files:
   CHANGELOG.md
   PLAN.md
+
 - 2026-03-26:
   Change: renamed the visible generated workflow contract from `Workflows`
     to `CI`, renamed the generated main job to `DevCovenant`, and
@@ -5086,6 +5269,7 @@ Example:
   devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
   devcovenant/registry/registry.yaml
   tests/devcovenant/core/services/test_profile_registry.py
+
 - 2026-03-26:
   Change: amended the roadmap to add the immediate CI naming/blocker work and
     a full post-`run` core de-spaghettization item.
@@ -5099,6 +5283,7 @@ Example:
   Files:
   CHANGELOG.md
   PLAN.md
+
 - 2026-03-26:
   Change: corrected the artifact-lifecycle GitHub Actions scripts to use
     direct temp-repo directory switches, renamed the visible CI workflow
@@ -5129,6 +5314,7 @@ Example:
   devcovenant/custom/profiles/devcovrepo/assets/docs/profiles.md
   PLAN.md
   tests/devcovenant/core/services/test_profile_registry.py
+
 - 2026-03-26:
   Change: amended the roadmap to require universal `--quiet`, `--normal`, \
     and `--verbose` CLI overrides as part of the core `run` migration.
@@ -5141,6 +5327,7 @@ Example:
   Files:
   CHANGELOG.md
   PLAN.md
+
 - 2026-03-26:
   Change: implemented the core `run` migration by adding the new root command,
   moving built-in profiles onto declared `workflow_runs`, and rewriting the
@@ -5234,6 +5421,7 @@ Example:
   tests/devcovenant/test_cli.py
   tests/devcovenant/test_run.py
   tests/devcovenant/test_test.py
+
 - 2026-03-26:
   Change: rewrote the active plan to treat the half-migrated workflow-run
   redesign as a release blocker and to sequence the full `devcovenant run`
@@ -5247,6 +5435,7 @@ Example:
   Files:
   CHANGELOG.md
   PLAN.md
+
 - 2026-03-26:
   Change: reran the external-grade release audit against the current staged
   release-candidate tree and recorded the closure outcome in the plan.
@@ -5260,6 +5449,7 @@ Example:
   Files:
   CHANGELOG.md
   PLAN.md
+
 - 2026-03-26:
   Change: clarified the baseline-first lifecycle for repo-specific custom
   policies and profiles in the operator docs and locked that guidance with a
@@ -5287,6 +5477,7 @@ Example:
   devcovenant/custom/profiles/devcovrepo/assets/docs/policies.md
   devcovenant/custom/profiles/devcovrepo/assets/docs/profiles.md
   tests/devcovenant/core/runtime/test_execution.py
+
 - 2026-03-25:
   Change: formalized workflow runs as a tracked/runtime contract by adding
   `workflow_contract`, `workflow_session.json`, the generic
@@ -5334,6 +5525,7 @@ Example:
   tests/devcovenant/test_cli.py
   tests/devcovenant/test_run.py
   tests/devcovenant/test_refresh.py
+
 - 2026-03-25:
   Change: rewrote the active release plan to formalize the intended
   workflow-run extension redesign, including run ownership, tracked and
@@ -5349,6 +5541,7 @@ Example:
   Files:
   CHANGELOG.md
   PLAN.md
+
 - 2026-03-25:
   Change: tightened dependency-management lock refresh so
   `requirements.lock` ignores and scrubs environment-specific pip option
@@ -5369,6 +5562,7 @@ Example:
   devcovenant/docs/policies.md
   tests/devcovenant/builtin/policies/dependency_management/\
     test_dependency_lock_runtime.py
+
 - 2026-03-25:
   Change: removed rebuild-in-publish behavior and wired publish to download,
   verify, and release the exact previously validated Build artifact.
@@ -5388,6 +5582,7 @@ Example:
   devcovenant/docs/installation.md
   devcovenant/docs/workflow.md
   tests/devcovenant/core/services/test_profile_registry.py
+
 - 2026-03-25:
   Change: replaced the shallow CI artifact startup checks with real
   built-artifact lifecycle proof for wheel, sdist, and the `pipx`
@@ -5413,6 +5608,7 @@ Example:
   devcovenant/docs/workflow.md
   devcovenant/registry/registry.yaml
   tests/devcovenant/core/services/test_profile_registry.py
+
 - 2026-03-25:
   Change: added the core invariant descriptor YAMLs to wheel and sdist
   packaging, then corrected the dependency-management no-touch false positive
@@ -5441,6 +5637,7 @@ Example:
   tests/devcovenant/builtin/policies/dependency_management/\
     test_dependency_management.py
   tests/devcovenant/test_install.py
+
 - 2026-03-25:
   Change: rewrote the active remediation roadmap around the external
   release-grade audit findings.
@@ -5453,6 +5650,7 @@ Example:
   Files:
   CHANGELOG.md
   PLAN.md
+
 - 2026-03-25:
   Change: documented and configured a reviewed repo-specific `pip-audit`
   exception for `CVE-2026-4539`.
@@ -5472,6 +5670,7 @@ Example:
   devcovenant/docs/workflow.md
   devcovenant/registry/registry.yaml
   tests/devcovenant/core/services/test_profile_registry.py
+
 - 2026-03-25:
   Change: Renamed the generated workflow's visible common-denominator label to
   `Checks`, then made the build-and-install job resolve pipx's bin directory
@@ -5497,6 +5696,7 @@ Example:
   SECURITY.md
   devcovenant/registry/registry.yaml
   tests/devcovenant/core/services/test_profile_registry.py
+
 - 2026-03-24:
   Change: Sorted profile and policy-source discovery before refresh writes its
   tracked outputs, then added regression coverage and doc notes for that
@@ -5517,6 +5717,7 @@ Example:
   devcovenant/registry/registry.yaml
   tests/devcovenant/core/services/test_profile_registry.py
   tests/devcovenant/test_refresh.py
+
 - 2026-03-24:
   Change: Replaced the generated repo-specific CI sprawl with one
   `ci-and-test` job that carries the scanner steps and one dependent
@@ -5544,6 +5745,7 @@ Example:
   devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
   devcovenant/registry/registry.yaml
   tests/devcovenant/core/services/test_profile_registry.py
+
 - 2026-03-24:
   Change: Closed the final store-bought QA audit by rerunning the outside-in
   checks across docs, config, registry, workflows, packaged README behavior,
@@ -5558,6 +5760,7 @@ Example:
   Files:
   CHANGELOG.md
   PLAN.md
+
 - 2026-03-24:
   Change: Rewrote the openings of the main package reference docs so they keep
   the explicit contract markers the test suite expects while shifting the
@@ -5579,6 +5782,7 @@ Example:
   devcovenant/docs/policies.md
   devcovenant/docs/project_governance.md
   devcovenant/docs/registry.md
+
 - 2026-03-24:
   Change: Rewrote Item 4 in `PLAN.md` to record the completed `pipx` install
   contract, the repo-specific installed-CLI smoke proof, and the current
@@ -5593,6 +5797,7 @@ Example:
   Files:
   CHANGELOG.md
   PLAN.md
+
 - 2026-03-24:
   Change: Standardized the public install story around `pipx`, updated the
   operator and support docs to distinguish installed-CLI use from source
@@ -5627,6 +5832,7 @@ Example:
   devcovenant/docs/workflow.md
   devcovenant/registry/registry.yaml
   tests/devcovenant/core/services/test_profile_registry.py
+
 - 2026-03-24:
   Change: Simplified `MANIFEST.in`, replaced implicit setuptools package-data
   scanning with explicit package-data declarations in `pyproject.toml`, fixed
@@ -5667,6 +5873,7 @@ Example:
   tests/devcovenant/builtin/policies/dependency_management/\
   test_dependency_lock_runtime.py
   tests/devcovenant/test_install.py
+
 - 2026-03-23:
   Change: Reconciled the generated config commentary with the current cleanup
   and CI contract, removed the stale hardcoded `.venv` wording, restored the
@@ -5690,6 +5897,7 @@ Example:
   devcovenant/docs/profiles.md
   devcovenant/docs/refresh.md
   tests/devcovenant/test_refresh.py
+
 - 2026-03-23:
   Change: Amended `PLAN.md` to insert a detailed remediation item for making
   `pipx` the explicit, validated public install path, and adjusted the
@@ -5704,6 +5912,7 @@ Example:
   Files:
   CHANGELOG.md
   PLAN.md
+
 - 2026-03-23:
   Change: Updated the repo-specific `readme-sync` policy so the packaged
   README can rewrite repo-relative public links from package metadata instead
@@ -5727,6 +5936,7 @@ Example:
   devcovenant/docs/registry.md
   devcovenant/registry/registry.yaml
   tests/devcovenant/custom/policies/readme_sync/test_readme_sync.py
+
 - 2026-03-23:
   Change: Rewrote `PLAN.md` into a detailed pre-release remediation roadmap
   organized around the final audit findings, with explicit items for the PyPI
@@ -5742,6 +5952,7 @@ Example:
   Files:
   CHANGELOG.md
   PLAN.md
+
 - 2026-03-23:
   Change: Replaced the old project-governance `development_stance` model with
   `maintenance_stance` plus `compatibility_policy`, updated the default stage
@@ -5782,6 +5993,7 @@ Example:
   tests/devcovenant/core/services/test_project_governance.py
   tests/devcovenant/test_deploy.py
   tests/devcovenant/test_refresh.py
+
 - 2026-03-23:
   Change: Removed hardcoded `.venv` cleanup protection, made managed
   environment cleanup protection metadata-driven, and summarized protected
@@ -5815,6 +6027,7 @@ Example:
   tests/devcovenant/core/flow/test_clean.py
   tests/devcovenant/core/runtime/test_execution.py
   tests/devcovenant/core/services/test_cleanup.py
+
 - 2026-03-23:
   Change: Protected the active clean run directory from log cleanup so
   `clean --logs` and `clean --all` keep their own reported run-artifact path
@@ -5835,6 +6048,7 @@ Example:
   devcovenant/docs/workflow.md
   devcovenant/custom/profiles/devcovrepo/assets/docs/installation.md
   devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
+
 - 2026-03-23:
   Change: Fixed refresh so legacy all-empty `clean.overrides` blocks collapse
   back to `{}`, restoring profile-driven cleanup targets and making
@@ -5856,6 +6070,7 @@ Example:
   devcovenant/docs/workflow.md
   devcovenant/custom/profiles/devcovrepo/assets/docs/config.md
   devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
+
 - 2026-03-23:
   Change: Removed the one-off `update_lock` command, dropped its
   dependency-management alias/helper surfaces, and expanded the
@@ -5896,6 +6111,7 @@ Example:
   tests/devcovenant/core/services/test_policy_commands.py
   tests/devcovenant/test_cli.py
   tests/devcovenant/test_update_lock.py
+
 - 2026-03-23:
   Change: Removed `.github/dependabot.yml`, renamed the generated CI workflow
   contract from `governance-and-test` to `ci-and-test`, and updated the
@@ -5947,6 +6163,7 @@ Example:
   tests/devcovenant/core/runtime/test_execution.py
   tests/devcovenant/core/services/test_profile_registry.py
   tests/devcovenant/test_refresh.py
+
 - 2026-03-23:
   Change: Moved the supported-Python compatibility and assurance jobs out of
   the global generated workflow, restored the generic `CI and Tests` base, and
@@ -5977,6 +6194,7 @@ Example:
   SECURITY.md
   tests/devcovenant/core/runtime/test_execution.py
   tests/devcovenant/core/services/test_profile_registry.py
+
 - 2026-03-22:
   Change: Removed empty former policy directories from the working tree
   after the policy-to-core invariant migration and recorded the cleanup.
@@ -5986,6 +6204,7 @@ Example:
   runtime architecture without changing tracked product behavior.
   Files:
   CHANGELOG.md
+
 - 2026-03-22:
   Change: Rewrote DevCovenant's documentation set around an operator-first
   `README.md`, merged overlapping detailed docs into a smaller reference set,
@@ -6043,6 +6262,7 @@ Example:
   devcovenant/docs/workflow.md
   devcovenant/registry/registry.yaml
   tests/devcovenant/test_refresh.py
+
 - 2026-03-22:
   Change: Strengthened the roadmap so managed document templates across builtin
   and relevant custom profiles must become detailed, reader-useful blueprints
@@ -6059,6 +6279,7 @@ Example:
   Files:
   CHANGELOG.md
   PLAN.md
+
 - 2026-03-22:
   Change: Added a detailed documentation-restructure roadmap ahead of the
   final store-bought QA closure and rewrote the plan's writing-direction and
@@ -6073,6 +6294,7 @@ Example:
   Files:
   CHANGELOG.md
   PLAN.md
+
 - 2026-03-22:
   Change: Hardened release assurance by adding CI compatibility/scanner jobs,
   CycloneDX SBOM generation, and PyPI trusted publishing while tightening
@@ -6108,6 +6330,7 @@ Example:
   devcovenant/registry/registry.yaml
   devcovenant/update_lock.py
   tests/devcovenant/test_refresh.py
+
 - 2026-03-22:
   Change: Added public `SECURITY.md`, `PRIVACY.md`, and `SUPPORT.md`
   surfaces, hardened run-log metadata redaction, and replaced runtime
@@ -6134,6 +6357,7 @@ Example:
   tests/devcovenant/builtin/policies/documentation_growth_tracking/\
     test_documentation_growth_tracking.py
   tests/devcovenant/core/runtime/test_run_logging.py
+
 - 2026-03-22:
   Change: Standardized dependency-management operations by promoting core
   invariants out of policy land, converging dependency-license-sync into the
@@ -6280,6 +6504,7 @@ Example:
   tests/devcovenant/core/services/test_policy_runtime_actions.py
   tests/devcovenant/test_cli.py
   tests/devcovenant/test_policy.py
+
 - 2026-03-22:
   Change: Completed the public package and compliance baseline slice by
   tightening buyer-facing package metadata, documenting the public package
@@ -6295,6 +6520,7 @@ Example:
   devcovenant/docs/installation.md
   licenses/THIRD_PARTY_LICENSES.md
   pyproject.toml
+
 - 2026-03-22:
   Change: Amended the active roadmap so core DevCovenant invariants are
   promoted out of policy land before the dependency-management and
@@ -6309,6 +6535,7 @@ Example:
   Files:
   CHANGELOG.md
   PLAN.md
+
 - 2026-03-22:
   Change: Amended the active roadmap to add a formal
   dependency-management and policy-command standardization item and reorder
@@ -6322,6 +6549,7 @@ Example:
   Files:
   CHANGELOG.md
   PLAN.md
+
 - 2026-03-22:
   Change: Aligned public project identity, package metadata synchronization,
   managed-doc rendering, dependency-license inventory generation, and the
@@ -6391,6 +6619,7 @@ Example:
   tests/devcovenant/test_cli.py
   tests/devcovenant/test_install.py
   tests/devcovenant/test_refresh.py
+
 - 2026-03-21:
   Change: Rewrote the active roadmap into a tight external-readiness plan
   focused on package polish, compliance accuracy, security and privacy trust
@@ -6404,6 +6633,7 @@ Example:
   Files:
   CHANGELOG.md
   PLAN.md
+
 - 2026-03-21:
   Change: Froze the simplified product contracts through a new contract
   index, tightened the primary docs into explicit normative homes, added
@@ -6430,6 +6660,7 @@ Example:
   tests/devcovenant/core/runtime/test_execution.py
   tests/devcovenant/core/services/test_managed_docs.py
   tests/devcovenant/core/services/test_policy_block_refresh.py
+
 - 2026-03-21:
   Change: Simplified the docs information architecture around clearer
   primary homes, slimmed the README entrypoint, simplified documentation
@@ -6460,6 +6691,7 @@ Example:
   devcovenant/docs/troubleshooting.md
   devcovenant/docs/workflow.md
   devcovenant/registry/registry.yaml
+
 - 2026-03-21:
   Change: Reduced repeated cold setup in the slow refresh, deploy, upgrade,
   and managed-doc test families, kept the two standard test runs intact, and
@@ -6478,6 +6710,7 @@ Example:
     test_managed_doc_assets.py
   tests/devcovenant/test_refresh.py
   tests/devcovenant/test_upgrade.py
+
 - 2026-03-21:
   Change: Added a shared run-scoped YAML cache, rewired the hot command
   paths through it, documented the new runtime-loading ownership, and marked
@@ -6522,6 +6755,7 @@ Example:
   devcovenant/registry/registry.yaml
   devcovenant/undeploy.py
   tests/devcovenant/core/services/test_yaml_cache.py
+
 - 2026-03-21:
   Change: Rewrote `PLAN.md` into a dependency-ordered anti-fragmentation and
   performance-remediation roadmap that focuses first on command speed, test
@@ -6535,6 +6769,7 @@ Example:
   Files:
   CHANGELOG.md
   PLAN.md
+
 - 2026-03-21:
   Change: Rewrote `PLAN.md` into a detailed contract-formalization roadmap
   that defines the next contract-freezing program across managed docs,
@@ -6548,6 +6783,7 @@ Example:
   Files:
   CHANGELOG.md
   PLAN.md
+
 - 2026-03-21:
   Change: Rewrote the live `PLAN.md` into the current detailed roadmap
   standard and rewrote the completed items so they read like completed work
@@ -6561,6 +6797,7 @@ Example:
   Files:
   CHANGELOG.md
   PLAN.md
+
 - 2026-03-21:
   Change: Updated the `PLAN.md` and `SPEC.md` templates into durable detailed
   scaffolds, tracked body-only managed-doc fingerprints in the registry, and
@@ -6587,6 +6824,7 @@ Example:
   devcovenant/registry/registry.yaml
   tests/devcovenant/core/services/test_managed_docs.py
   tests/devcovenant/test_refresh.py
+
 - 2026-03-21:
   Change: Expanded the main docs with clearer reader guidance, rewrote key
   sections in more practical language, and aligned the top-level README with
@@ -6610,6 +6848,7 @@ Example:
   devcovenant/docs/project_governance.md
   devcovenant/docs/registry.md
   devcovenant/docs/workflow.md
+
 - 2026-03-21:
   Change: Expanded the initial integration and bootstrap docs, clarified
   `install.config_reviewed`, and rewrote install/config/workflow guidance in
@@ -6635,6 +6874,7 @@ Example:
   devcovenant/docs/installation.md
   devcovenant/docs/profiles.md
   devcovenant/docs/workflow.md
+
 - 2026-03-20:
   Change: Added active-profile managed-doc descriptor resolution, enabled
   optional builtin docs and custom managed docs through `doc_assets`, and
@@ -6674,6 +6914,7 @@ Example:
   tests/devcovenant/custom/policies/managed_doc_assets/\
     test_managed_doc_assets.py
   tests/devcovenant/test_refresh.py
+
 - 2026-03-20:
   Change: Refactored shared managed-doc behavior into descriptors, rewired the
   common doc engine and managed-doc-assets checks to read those descriptor
@@ -6709,6 +6950,7 @@ Example:
   devcovenant/registry/registry.yaml
   tests/devcovenant/core/services/test_managed_docs.py
   tests/devcovenant/test_refresh.py
+
 - 2026-03-20:
   Change: Refactored managed-doc descriptor loading, seed adoption,
   preservation, and managed header/block rendering in one shared runtime
@@ -6735,6 +6977,7 @@ Example:
   tests/devcovenant/core/services/test_managed_docs.py
   tests/devcovenant/custom/policies/managed_doc_assets/\
     test_managed_doc_assets.py
+
 - 2026-03-20:
   Change: Clarified Item 1 wording so `developer_mode`,
   `config_reviewed`, and normal-repo cleanup behavior now describe real repo
@@ -6759,6 +7002,7 @@ Example:
   devcovenant/docs/profiles.md
   devcovenant/docs/workflow.md
   tests/devcovenant/test_deploy.py
+
 - 2026-03-20:
   Change: Rewrote `PLAN.md` into a fuller roadmap that keeps the same active
   tasks while making the direction more concrete, practical, and
@@ -6772,6 +7016,7 @@ Example:
   Files:
   CHANGELOG.md
   PLAN.md
+
 - 2026-03-20:
   Change: Finalized `developer_mode` and `install.config_reviewed`,
   documented the reviewed-true bootstrap contract, and marked Item 1 done in
@@ -6800,6 +7045,7 @@ Example:
   devcovenant/upgrade.py
   tests/devcovenant/test_deploy.py
   tests/devcovenant/test_install.py
+
 - 2026-03-20:
   Change: Renamed `devcov_core_include` to `developer_mode` and
   `install.generic_config` to `install.config_review_pending` across runtime,
@@ -6831,6 +7077,7 @@ Example:
   tests/devcovenant/core/services/test_policy_file_scope.py
   tests/devcovenant/test_deploy.py
   tests/devcovenant/test_install.py
+
 - 2026-03-20:
   Change: Rewrote the active roadmap in `PLAN.md` around developer-mode
   naming, the managed-docs service, descriptor-driven docs, optional/custom
@@ -6844,6 +7091,7 @@ Example:
   Files:
   CHANGELOG.md
   PLAN.md
+
 - 2026-03-20:
   Change: Expanded first-use abbreviations across repo docs, managed doc
   assets, and synced README surfaces.
@@ -6875,6 +7123,7 @@ Example:
   devcovenant/docs/registry.md
   devcovenant/docs/troubleshooting.md
   devcovenant/docs/workflow.md
+
 - 2026-03-20:
   Change: Documented `project-governance` as a first-class service in the
   README surfaces, dedicated docs, and supporting reference docs.
@@ -6896,6 +7145,7 @@ Example:
   devcovenant/docs/project_governance.md
   devcovenant/docs/registry.md
   devcovenant/docs/workflow.md
+
 - 2026-03-20:
   Change: Refactored `project-governance` into a core service, exposed it
   directly in config and registry state, and rendered its resolved state in
@@ -6942,6 +7192,7 @@ Example:
     test_project_governance.py
   tests/devcovenant/core/services/test_project_governance.py
   tests/devcovenant/test_refresh.py
+
 - 2026-03-20:
   Change: Closed Item 3 in `PLAN.md`, fixed the final `version-sync`
   equality seam for format-only schemes, and aligned the routed docs for the
@@ -6960,6 +7211,7 @@ Example:
   devcovenant/docs/policies.md
   devcovenant/docs/registry.md
   devcovenant/registry/registry.yaml
+
 - 2026-03-20:
   Change: Tightened Item 3 strictness by removing misleading fallback-style
   naming, replacing the fake `custom_regex` ordering path with an explicit
@@ -6988,6 +7240,7 @@ Example:
   tests/devcovenant/builtin/policies/version_governance/test_custom_regex.py
   tests/devcovenant/core/services/test_metadata.py
   tests/devcovenant/core/services/test_policy_check_runner.py
+
 - 2026-03-20:
   Change: Aligned the remaining Item 2 docs and policy wording around
   version-governance defaults, README ownership, and managed-doc asset sync.
@@ -7013,6 +7266,7 @@ Example:
   devcovenant/docs/registry.md
   devcovenant/docs/workflow.md
   devcovenant/registry/registry.yaml
+
 - 2026-03-20:
   Change: Restored explicit managed blocks for `PLAN.md` and `SPEC.md`
   through their global doc assets and refresh coverage.
@@ -7030,6 +7284,7 @@ Example:
   devcovenant/builtin/profiles/global/assets/SPEC.yaml
   devcovenant/docs/profiles.md
   tests/devcovenant/test_refresh.py
+
 - 2026-03-19:
   Change: Refined the remaining plan items so the closure path now focuses
   on docs-and-contract harmonization first, then strictness, naming, and
@@ -7041,6 +7296,7 @@ Example:
   Files:
   CHANGELOG.md
   PLAN.md
+
 - 2026-03-19:
   Change: Corrected managed-doc rendering so empty managed blocks keep
   their `<!-- DEVCOV:BEGIN -->` / `<!-- DEVCOV:END -->` markers and
@@ -7054,6 +7310,7 @@ Example:
   Files:
   CHANGELOG.md
   devcovenant/core/flow/refresh.py
+
 - 2026-03-19:
   Change: Restored `PLAN.md` as a real repo roadmap and fixed refresh so
   existing non-empty, non-one-line docs keep their authored body while only
@@ -7079,6 +7336,7 @@ Example:
   devcovenant/docs/profiles.md
   devcovenant/docs/workflow.md
   tests/devcovenant/test_refresh.py
+
 - 2026-03-19:
   Change: Hardened source-checkout startup so Python cache files no longer
   linger in the repo and restored the audit remediation plan to the real
@@ -7103,6 +7361,7 @@ Example:
   devcovenant/docs/workflow.md
   tests/devcovenant/core/runtime/test_execution.py
   tests/devcovenant/test_cli.py
+
 - 2026-03-19:
   Change: Rewrote the active plan into a condensed remediation roadmap for
   the anti-bullshit audit findings.
@@ -7114,6 +7373,7 @@ Example:
   Files:
   CHANGELOG.md
   PLAN.md
+
 - 2026-03-19:
   Change: Added install-time adoption for compatible pre-authored
   DevCovenant-managed docs and documented seeded `SPEC.md`, `README.md`,
@@ -7142,6 +7402,7 @@ Example:
   devcovenant/install.py
   tests/devcovenant/test_deploy.py
   tests/devcovenant/test_refresh.py
+
 - 2026-03-19:
   Change: Removed the fake `0.0.0` project-version fallback, made fresh
   installs explicitly unversioned, and rendered project-governance headers
@@ -7174,6 +7435,7 @@ Example:
   tests/devcovenant/builtin/policies/project_governance/\
     test_project_governance.py
   tests/devcovenant/test_refresh.py
+
 - 2026-03-19:
   Change: Disabled Python cache-file writes for source-checkout
   `python3 -m devcovenant ...` launches and updated the source-run docs.
@@ -7196,6 +7458,7 @@ Example:
   devcovenant/docs/profiles.md
   devcovenant/docs/workflow.md
   tests/devcovenant/test_cli.py
+
 - 2026-03-19:
   Change: Closed the version-stack roadmap with a local-only Item 5 audit
   and proof pass.
@@ -7210,6 +7473,7 @@ Example:
   PLAN.md
   README.md
   devcovenant/README.md
+
 - 2026-03-18:
   Change: Split `version-governance` into generic forward-ordering checks
   plus scheme-owned canonicalization and release-marker governance.
@@ -7246,6 +7510,7 @@ Example:
     test_pep440.py
   tests/devcovenant/builtin/policies/version_governance/\
     test_version_governance.py
+
 - 2026-03-18:
   Change: Introduced orthogonal `project-governance` lifecycle
   governance and wired managed headers plus changelog heading resolution
@@ -7285,6 +7550,7 @@ Example:
   tests/devcovenant/builtin/policies/project_governance/__init__.py
   tests/devcovenant/builtin/policies/project_governance/\
     test_project_governance.py
+
 - 2026-03-18:
   Change: Rewrote Item 3 in `PLAN.md` around an orthogonal
   `project-governance` policy instead of a mutually exclusive pre-version
@@ -7303,6 +7569,7 @@ Example:
   PLAN.md
   README.md
   devcovenant/README.md
+
 - 2026-03-17:
   Change: Added role-scoped package legality enforcement to
   `version-sync` and wired Python package manifests to PEP 440 legality.
@@ -7332,6 +7599,7 @@ Example:
   tests/devcovenant/builtin/policies/version_governance/\
     test_version_governance.py
   tests/devcovenant/builtin/policies/version_sync/test_version_sync.py
+
 - 2026-03-17:
   Change: Standardized explicit version-governance scheme selection and
   clarified version-stack wording across defaults, docs, and upgrade
@@ -7364,6 +7632,7 @@ Example:
   tests/devcovenant/builtin/policies/version_governance/\
     test_version_governance.py
   tests/devcovenant/test_upgrade.py
+
 - 2026-03-17:
   Change: Replaced the completed registry-layout roadmap with a new
   version-stack roadmap in `PLAN.md`.
@@ -7377,6 +7646,7 @@ Example:
   Files:
   CHANGELOG.md
   PLAN.md
+
 - 2026-03-16:
   Change: Refactored `version-sync` to delegate version parsing and
   equality to `version-governance` and replaced the old SemVer-only
@@ -7404,6 +7674,7 @@ Example:
   tests/devcovenant/builtin/policies/version_governance/\
     test_version_governance.py
   tests/devcovenant/builtin/policies/version_sync/test_version_sync.py
+
 - 2026-03-16:
   Change: Added `custom_regex` and `custom_adapter` scheme support to
   `version-governance` and extended the shared adapter contract for
@@ -7443,6 +7714,7 @@ Example:
   tests/devcovenant/builtin/policies/version_governance/test_semver.py
   tests/devcovenant/builtin/policies/version_governance/\
     test_version_governance.py
+
 - 2026-03-16:
   Change: Added first-class `pep440` scheme support to
   `version-governance` and wired Python-package version parsing into the
@@ -7474,6 +7746,7 @@ Example:
   tests/devcovenant/builtin/policies/version_governance/test_pep440.py
   tests/devcovenant/builtin/policies/version_governance/\
     test_version_governance.py
+
 - 2026-03-16:
   Change: Refactored `version-governance` into a shared policy shell with
   separate SemVer, CalVer, and integer scheme adapters.
@@ -7507,6 +7780,7 @@ Example:
   tests/devcovenant/builtin/policies/version_governance/\
     test_version_governance.py
   tests/devcovenant/builtin/policies/version_sync/test_version_sync.py
+
 - 2026-03-16:
   Change: Added build cleanup support for unpacked release trees named like
   `<project>-<version>/` in the repo root.
@@ -7524,6 +7798,7 @@ Example:
   devcovenant/docs/workflow.md
   tests/devcovenant/core/services/test_cleanup.py
   tests/devcovenant/test_clean.py
+
 - 2026-03-16:
   Change: Replaced the SemVer-only `semantic-version-scope` policy with
   the new `version-governance` framework and added CalVer/integer support.
@@ -7560,6 +7835,7 @@ Example:
   tests/devcovenant/builtin/policies/version_governance/\
     test_version_governance.py
   tests/devcovenant/builtin/policies/version_sync/test_version_sync.py
+
 - 2026-03-16:
   Change: Added an open-session guard so `devcovenant clean` now fails until
   the active gate is closed.
@@ -7576,6 +7852,7 @@ Example:
   devcovenant/docs/workflow.md
   tests/devcovenant/core/flow/test_clean.py
   tests/devcovenant/test_clean.py
+
 - 2026-03-16:
   Change: Added the question-mark prompt rule to the Dev Covenant and
   workflow template so question-only prompts stop command execution by
@@ -7590,6 +7867,7 @@ Example:
   CHANGELOG.md
   devcovenant/builtin/profiles/global/assets/AGENTS.yaml
   devcovenant/docs/profiles.md
+
 - 2026-03-16:
   Change: Closed the registry/runtime/log migration plan with local rebuild
   proof and a clean downstream `dlmc` validation run.
@@ -7601,6 +7879,7 @@ Example:
   Files:
   CHANGELOG.md
   PLAN.md
+
 - 2026-03-16:
   Change: Removed the last stale mixed-registry wording from docs, tests, and
   generated config commentary.
@@ -7617,6 +7896,7 @@ Example:
   devcovenant/docs/refresh.md
   tests/devcovenant/test_deploy.py
   tests/devcovenant/test_refresh.py
+
 - 2026-03-15:
   Change: Tightened install, refresh, upgrade, and packaging behavior around
   the tracked registry and runtime outputs.
@@ -7637,6 +7917,7 @@ Example:
   tests/devcovenant/test_install.py
   tests/devcovenant/test_refresh.py
   tests/devcovenant/test_upgrade.py
+
 - 2026-03-15:
   Change: Added first-class cleanup scopes for runtime registry and logs and
   widened `clean --all` to cover them.
@@ -7666,6 +7947,7 @@ Example:
   tests/devcovenant/test_clean.py
   tests/devcovenant/test_install.py
   tests/devcovenant/test_refresh.py
+
 - 2026-03-15:
   Change: Documented and recorded the split gate runtime state contract
   across the roadmap and runtime docs.
@@ -7682,6 +7964,7 @@ Example:
   devcovenant/docs/registry.md
   devcovenant/docs/workflow.md
   devcovenant/registry/README.md
+
 - 2026-03-15:
   Change: Marked Item 1 complete in the plan after the clean gated close.
   Why: Recorded the registry-architecture slice closure in the roadmap after
@@ -7691,6 +7974,7 @@ Example:
   Files:
   CHANGELOG.md
   PLAN.md
+
 - 2026-03-15:
   Change: Standardized the one-root registry architecture and repaired the
   migrated test and documentation contract around it.
@@ -7721,6 +8005,7 @@ Example:
   tests/devcovenant/core/services/test_cleanup.py
   tests/devcovenant/test_cli.py
   tests/devcovenant/test_refresh.py
+
 - 2026-03-15:
   Change: Replaced the roadmap with the forward-only registry architecture
   plan.
@@ -7732,6 +8017,7 @@ Example:
   Files:
   CHANGELOG.md
   PLAN.md
+
 - 2026-03-15:
   Change: Completed final validation and downstream operational proof.
   Why: Verified the strict no-fallback baseline with a local rebuild and a
@@ -7742,6 +8028,7 @@ Example:
   Files:
   CHANGELOG.md
   PLAN.md
+
 - 2026-03-15:
   Change: Rewrote docs and test narration to remove stale delegacy wording.
   Why: Clarified the 1.0.0 contract so docs and assertions describe current
@@ -7789,6 +8076,7 @@ Example:
   tests/devcovenant/core/services/test_profile_registry.py
   tests/devcovenant/core/services/test_runtime_profile.py
   tests/devcovenant/core/services/test_translator_engine.py
+
 - 2026-03-15:
   Change: Removed lazy package-export shims and made test-event handling
   explicit.
@@ -7833,6 +8121,7 @@ Example:
   devcovenant/install.py
   tests/devcovenant/core/services/test_event.py
   tests/devcovenant/core/services/test_registry.py
+
 - 2026-03-15:
   Change: Removed hidden check flags, clean placeholder compatibility,
   and gate-status pointer scanning.
@@ -7859,6 +8148,7 @@ Example:
   tests/devcovenant/core/services/test_cleanup.py
   tests/devcovenant/test_check.py
   tests/devcovenant/test_cli.py
+
 - 2026-03-15:
   Change: Removed managed-environment rerun fallbacks and enforced
   local-registry-only runtime resolution.
@@ -7898,6 +8188,7 @@ Example:
     test_managed_environment_runtime.py
   tests/devcovenant/core/runtime/test_execution.py
   tests/devcovenant/test_cli.py
+
 - 2026-03-15:
   Change: Removed legacy gate-snapshot migration logic and rejected old
     snapshot row formats explicitly.
@@ -7916,6 +8207,7 @@ Example:
   devcovenant/docs/workflow.md
   tests/devcovenant/core/runtime/test_session_snapshot.py
   tests/devcovenant/core/services/test_policy_check_context.py
+
 - 2026-03-15:
   Change: Removed the in-package launcher bootstrap and locked Item 2's
     honest launcher and pycache contract.
@@ -7947,6 +8239,7 @@ Example:
   devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
   tests/devcovenant/core/runtime/test_execution.py
   tests/devcovenant/test_cli.py
+
 - 2026-03-15:
   Change: Amended the no-fallback roadmap to insert a launcher and pycache
     strictness item ahead of the deeper delegacy removals.
@@ -7957,6 +8250,7 @@ Example:
   Files:
   CHANGELOG.md
   PLAN.md
+
 - 2026-03-15:
   Change: Reverted the aborted repo-root bootstrap experiment and
     resynchronized the managed documentation headers.
@@ -7970,6 +8264,7 @@ Example:
   CHANGELOG.md
   CONTRIBUTING.md
   README.md
+
 - 2026-03-15:
   Change: Completed Item 1 of the strict no-fallback plan and recorded the
     validated baseline finding.
@@ -7981,6 +8276,7 @@ Example:
   Files:
   CHANGELOG.md
   PLAN.md
+
 - 2026-03-15:
   Change: Replaced the completed hardening roadmap with a new strict
     no-fallback remediation plan.
@@ -7992,6 +8288,7 @@ Example:
   Files:
   CHANGELOG.md
   PLAN.md
+
 - 2026-03-14:
   Change: Documented the builtin-only shipped profile authority after the
     legacy `devcovenant/core/profiles/**` mirror removal.
@@ -8004,6 +8301,7 @@ Example:
   CHANGELOG.md
   devcovenant/custom/profiles/devcovrepo/devcovrepo.yaml
   devcovenant/docs/profiles.md
+
 - 2026-03-14:
   Change: Removed the obsolete legacy `devcovenant/core`
     compatibility tree, regenerated managed metadata, and
@@ -8334,6 +8632,7 @@ Example:
   tests/devcovenant/core/test_translator_runtime.py
   tests/devcovenant/custom/policies/readme_sync/fixers/__init__.py
   tests/devcovenant/custom/policies/readme_sync/fixers/test_global.py
+
 - 2026-03-14:
   Change: Removed `tqdm`, redesigned managed doc intros, and restructured
     `CONTRIBUTING.md` so the standard DevCovenant contributor contract lives
@@ -8371,6 +8670,7 @@ Example:
   requirements.in
   requirements.lock
   tests/devcovenant/test_refresh.py
+
 - 2026-03-14:
   Change: Standardized command-scoped help usage across DevCovenant CLI
     entrypoints and removed the uninstall run-log pointer that could not
@@ -8403,6 +8703,7 @@ Example:
   tests/devcovenant/test_refresh.py
   tests/devcovenant/test_undeploy.py
   tests/devcovenant/test_uninstall.py
+
 - 2026-03-14:
   Change: Revised the `clean` command contract to require explicit scope
     selection, record cleanup details in run summaries, and honor explicit
@@ -8437,6 +8738,7 @@ Example:
   tests/devcovenant/test_clean.py
   tests/devcovenant/test_install.py
   tests/devcovenant/test_refresh.py
+
 - 2026-03-14:
   Change: Added mirrored tests for internal runtime, policy, and profile
     surfaces while aligning package boundaries and repo policy scope for those
@@ -8793,6 +9095,7 @@ Example:
   devcovenant/core/tests_coverage_runtime.py
   devcovenant/core/translator_runtime.py
   devcovenant/custom/policies/readme_sync/fixers/global.py
+
 - 2026-03-14:
   Change: Added a first-class `clean` command with profile-seeded cleanup
     targets, config-driven layering, and protected runtime fences.
@@ -8839,6 +9142,7 @@ Example:
   tests/devcovenant/test_clean.py
   tests/devcovenant/test_install.py
   tests/devcovenant/test_refresh.py
+
 - 2026-03-14:
   Change: Removed the retired `devcovenant/docs/README.md` vampire file and
     cleared the remaining stale references to it from current docs.
@@ -8851,6 +9155,7 @@ Example:
   README.md
   devcovenant/docs/profiles.md
   devcovenant/docs/README.md
+
 - 2026-03-13:
   Change: Exposed typed runtime policy option views in the local policy
     registry alongside raw metadata trace and override warnings.
@@ -8869,6 +9174,7 @@ Example:
   devcovenant/docs/workflow.md
   tests/devcovenant/core/services/test_policy_runtime_actions.py
   tests/devcovenant/test_refresh.py
+
 - 2026-03-13:
   Change: Instrumented policy metadata resolution with per-key trace and
     override-replacement warnings recorded in the local policy registry.
@@ -8889,6 +9195,7 @@ Example:
   devcovenant/docs/workflow.md
   tests/devcovenant/core/services/test_metadata.py
   tests/devcovenant/test_refresh.py
+
 - 2026-03-13:
   Change: Promoted universal editor, packaging, coverage, and runtime artifact
     exclusions into the global baseline and builtin policy metadata while
@@ -8915,6 +9222,7 @@ Example:
   devcovenant/docs/profiles.md
   tests/devcovenant/test_install.py
   tests/devcovenant/test_refresh.py
+
 - 2026-03-13:
   Change: Adjusted repo-local scope metadata to exclude transient
     `*.egg-info` build artifacts during rebuild-and-reinstall validation.
@@ -8924,6 +9232,7 @@ Example:
     files while preserving governance on tracked project changes.
   Files:
   devcovenant/config.yaml
+
 - 2026-03-13:
   Change: Adjusted `last-updated` builtin package-doc allowlists and
     diagnostics while adding regressions for installed-doc and lifecycle-state
@@ -8942,6 +9251,7 @@ Example:
   tests/devcovenant/builtin/policies/last_updated/test_last_updated.py
   tests/devcovenant/test_refresh.py
   tests/devcovenant/test_upgrade.py
+
 - 2026-03-13:
   Change: Hardened upgrade custom-payload handling by pruning known
     repository-only custom paths leaked by older installs while preserving
@@ -8961,6 +9271,7 @@ Example:
   devcovenant/docs/workflow.md
   tests/devcovenant/test_install.py
   tests/devcovenant/test_upgrade.py
+
 - 2026-03-09:
   Change: Documented gate changelog-helper default header-key alignment in
     workflow and architecture references.
@@ -8971,6 +9282,7 @@ Example:
   Files:
   devcovenant/docs/architecture.md
   devcovenant/docs/workflow.md
+
 - 2026-03-09:
   Change: Renamed `last-updated-placement` to `last-updated`, migrated
     managed-doc header contracts to generated key fields, and hardened refresh
@@ -9056,6 +9368,7 @@ Example:
   tests/devcovenant/custom/policies/managed_doc_assets/\
     test_managed_doc_assets.py
   tests/devcovenant/test_refresh.py
+
 - 2026-03-09:
   Change: Replaced `CONTRIBUTING.md` and `SPEC.md` with current managed
     template outputs for a one-time baseline alignment.
@@ -9067,6 +9380,7 @@ Example:
   CHANGELOG.md
   CONTRIBUTING.md
   SPEC.md
+
 - 2026-03-09:
   Change: Hardened managed-doc descriptor validation in refresh and converted
     shipped doc asset templates to YAML literal block scalars.
@@ -9088,6 +9402,7 @@ Example:
   devcovenant/docs/profiles.md
   devcovenant/docs/workflow.md
   tests/devcovenant/test_refresh.py
+
 - 2026-03-09:
   Change: Removed shipped-profile inventory lists from folder profile docs and
     clarified package docs to treat custom profiles as repository-owned.
@@ -9101,6 +9416,7 @@ Example:
   devcovenant/builtin/profiles/README.md
   devcovenant/custom/profiles/README.md
   devcovenant/docs/profiles.md
+
 - 2026-03-09:
   Change: Converted REST API doc assets to YAML template descriptors and
     wired them into the `restapi` custom profile asset list.
@@ -9118,6 +9434,7 @@ Example:
   devcovenant/custom/profiles/restapi/assets/docs/auth.yaml
   devcovenant/custom/profiles/restapi/assets/docs/errors.yaml
   devcovenant/docs/profiles.md
+
 - 2026-03-08:
   Change: Added a reusable `restapi` custom profile with strict API-focused
     policy overlays for docs routing, security scope, and test expectations.
@@ -9132,6 +9449,7 @@ Example:
   devcovenant/custom/profiles/README.md
   devcovenant/custom/profiles/restapi/restapi.yaml
   devcovenant/docs/profiles.md
+
 - 2026-02-28:
   Change: Strengthened `no-raw-errors` to flag broad `except Exception`
     handlers and support explicit waiver markers/regions.
@@ -9161,6 +9479,7 @@ Example:
     test_no_raw_errors.py
   tests/devcovenant/builtin/policies/last_updated_placement/autofix/\
     test_global.py
+
 - 2026-02-28:
   Change: Implemented explicit runtime error contracts and CLI normalization,
     introduced builtin `no-raw-errors` policy with profile-owned metadata
@@ -9201,6 +9520,7 @@ Example:
   tests/devcovenant/core/runtime/test_errors.py
   tests/devcovenant/builtin/policies/no_raw_errors/\
     test_no_raw_errors.py
+
 - 2026-02-28:
   Change: Audited every repository Markdown doc and policy/profile doc-asset
     template, and aligned managed-environment re-exec wording across repo,
@@ -9223,6 +9543,7 @@ Example:
   devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
   devcovenant/builtin/profiles/global/assets/CONTRIBUTING.yaml
   devcovenant/builtin/profiles/global/assets/devcovenant/README.yaml
+
 - 2026-02-28:
   Change: Hardened managed-interpreter auto-rerun by validating executable
     paths before `execve` and falling back to rerun adapters or explicit
@@ -9237,6 +9558,7 @@ Example:
   devcovenant/docs/installation.md
   devcovenant/docs/workflow.md
   tests/devcovenant/test_cli.py
+
 - 2026-02-28:
   Change: Stabilized read-only check bootstrap scope, quiet-mode error routing,
     and managed-environment defaults across policy/runtime layers.
@@ -9269,6 +9591,7 @@ Example:
   tests/devcovenant/core/contracts/test_policy.py
   tests/devcovenant/core/runtime/test_execution.py
   tests/devcovenant/core/services/test_policy_engine.py
+
 - 2026-02-28:
   Change: Fixed GitHub Actions workflow validity by replacing unsupported
     job-env `runner.temp` expressions with `.gha-pycache`.
@@ -9284,6 +9607,7 @@ Example:
   devcovenant/builtin/profiles/global/assets/ci-and-test.yml
   devcovenant/docs/profiles.md
   devcovenant/docs/workflow.md
+
 - 2026-02-28:
   Change: Fixed GitHub Actions workflow env parsing by replacing job-level
     `${{ runner.temp }}` pycache expressions with a stable `.gha-pycache` path.
@@ -9299,6 +9623,7 @@ Example:
   devcovenant/builtin/profiles/global/assets/ci-and-test.yml
   devcovenant/docs/profiles.md
   devcovenant/docs/workflow.md
+
 - 2026-02-28:
   Change: Fixed governance workflow trigger rendering to emit canonical
     GitHub syntax (`on:`, `push:`, `pull_request:`) and validated it in
@@ -9314,6 +9639,7 @@ Example:
   devcovenant/docs/architecture.md
   devcovenant/docs/workflow.md
   tests/devcovenant/test_refresh.py
+
 - 2026-02-28:
   Change: Fixed baseline recovery regressions in deploy/refresh test fixtures
     after accidental undo drift changed seeded-install expectations.
@@ -9329,6 +9655,7 @@ Example:
   tests/devcovenant/test_install.py
   tests/devcovenant/test_refresh.py
   tests/devcovenant/test_upgrade.py
+
 - 2026-02-28:
   Change: Fixed upgrade/install preservation contract to keep all user custom
     payload directories without name-based pruning, and tightened package
@@ -9353,6 +9680,7 @@ Example:
   tests/devcovenant/test_deploy.py
   tests/devcovenant/test_refresh.py
   tests/devcovenant/test_upgrade.py
+
 - 2026-02-28:
   Change: Fixed upgrade/refresh resilience by preserving custom policy trees
     while enforcing custom descriptor parity with core policies, and
@@ -9372,6 +9700,7 @@ Example:
   devcovenant/install.py
   devcovenant/upgrade.py
   tests/devcovenant/test_upgrade.py
+
 - 2026-02-28:
   Change: Added a new builtin `opencl` language profile with translator/test
     coverage and aligned profile inventory docs so shipped language coverage is
@@ -9392,6 +9721,7 @@ Example:
   devcovenant/docs/translators.md
   tests/devcovenant/builtin/profiles/opencl/test_opencl_translator.py
   tests/devcovenant/core/services/test_profile_registry.py
+
 - 2026-02-28:
   Change: Fixed managed-environment re-exec for lifecycle bootstrap commands
     and strengthened unmanaged-doc refresh sync to inject managed headers/
@@ -9417,6 +9747,7 @@ Example:
   requirements.lock
   tests/devcovenant/test_cli.py
   tests/devcovenant/test_refresh.py
+
 - 2026-02-27:
   Change: Updated repository documentation through a full `.md` sweep,
     standardized required `gate --mid` guidance across stale docs/templates,
@@ -9454,6 +9785,7 @@ Example:
   devcovenant/registry/README.md
   tests/devcovenant/core/services/test_audit_digest.py
   tests/devcovenant/core/services/test_registry.py
+
 - 2026-02-27:
   Change: Updated README banner tags to one-line absolute GitHub raw URLs,
     enabled defaults profile long-line escape toggles, and fixed policy-def
@@ -9475,6 +9807,7 @@ Example:
   devcovenant/docs/architecture.md
   devcovenant/docs/profiles.md
   tests/devcovenant/core/services/test_policy_parse.py
+
 - 2026-02-27:
   Change: Standardized the public `1.0.0` changelog surface by removing
     pre-1.0 internal history and keeping release-baseline entries only.
@@ -9485,6 +9818,7 @@ Example:
   Files:
   AGENTS.md
   CHANGELOG.md
+
 - 2026-02-27:
   Change: Updated repository and package version surfaces from `0.2.6` to
     `1.0.0` across runtime metadata, docs headers, and global template assets.

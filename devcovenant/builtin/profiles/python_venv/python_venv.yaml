@@ -20,5 +20,5 @@ policy_overlays:
     managed_commands:
       - bootstrap=>{current_python} -m venv .venv
       - bootstrap=>{managed_python} -m pip install -r requirements.lock
-      - start=>{current_python} -m venv .venv
-      - start=>{managed_python} -m pip install -r requirements.lock
+      - open=>{current_python} -m venv .venv
+      - open=>{managed_python} -m pip install -r requirements.lock

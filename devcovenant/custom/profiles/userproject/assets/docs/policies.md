@@ -170,7 +170,7 @@ alone are not enough.
 That scanner ownership should stay inside policy metadata, not in raw CI
 commands or repo-only shell glue.
 
-The builtin `security-scanner` policy now supports structured `scanners`
+The builtin `security-scanner` policy supports structured `scanners`
 metadata.
 The builtin `python` profile uses that path to contribute a Bandit backend
 plus the default `bandit.yaml` asset.

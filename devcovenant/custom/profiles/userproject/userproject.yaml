@@ -172,10 +172,10 @@ ci_and_test:
             .venv/bin/python -m pip install -r requirements.lock
             .venv/bin/python -m pip install --no-deps "$WHEEL_PATH"
             .venv/bin/python -m devcovenant --version
-            .venv/bin/python -m devcovenant gate --start
-            .venv/bin/python -m devcovenant gate --mid
+            .venv/bin/python -m devcovenant gate --open
+            .venv/bin/python -m devcovenant gate --verify
             .venv/bin/python -m devcovenant run
-            .venv/bin/python -m devcovenant gate --end
+            .venv/bin/python -m devcovenant gate --close
             .venv/bin/python -m devcovenant check
             popd >/dev/null
         - name: Prove sdist artifact lifecycle
@@ -248,10 +248,10 @@ ci_and_test:
             .venv/bin/python -m pip install -r requirements.lock
             .venv/bin/python -m pip install --no-deps "$SDIST_PATH"
             .venv/bin/python -m devcovenant --version
-            .venv/bin/python -m devcovenant gate --start
-            .venv/bin/python -m devcovenant gate --mid
+            .venv/bin/python -m devcovenant gate --open
+            .venv/bin/python -m devcovenant gate --verify
             .venv/bin/python -m devcovenant run
-            .venv/bin/python -m devcovenant gate --end
+            .venv/bin/python -m devcovenant gate --close
             .venv/bin/python -m devcovenant check
             popd >/dev/null
         - name: Install DevCovenant with pipx
@@ -379,10 +379,10 @@ ci_and_test:
             python3 -m venv .venv
             .venv/bin/python -m pip install -r requirements.lock
             .venv/bin/python -m pip install --no-deps "$WHEEL_PATH"
-            "$PIPX_BIN_DIR/devcovenant" gate --start
-            "$PIPX_BIN_DIR/devcovenant" gate --mid
+            "$PIPX_BIN_DIR/devcovenant" gate --open
+            "$PIPX_BIN_DIR/devcovenant" gate --verify
             "$PIPX_BIN_DIR/devcovenant" run
-            "$PIPX_BIN_DIR/devcovenant" gate --end
+            "$PIPX_BIN_DIR/devcovenant" gate --close
             "$PIPX_BIN_DIR/devcovenant" check
             popd >/dev/null
         - name: Upload distributions

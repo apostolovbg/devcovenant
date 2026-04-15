@@ -249,8 +249,8 @@ def _write_gate_registry(repo_root: Path) -> None:
                 "    workflow_runs:",
                 "      - id: tests",
                 "        enabled: true",
-                "        after: mid",
-                "        before: end",
+                "        after: verify",
+                "        before: close",
                 "        order: 100",
                 "        runner:",
                 "          kind: command_group",
@@ -295,7 +295,7 @@ def _write_gate_runtime_config(repo_root: Path) -> None:
 
 
 def _write_gate_changelog(repo_root: Path) -> None:
-    """Write a minimal changelog for gate start fingerprints."""
+    """Write a minimal changelog for gate open fingerprints."""
     changelog_path = repo_root / "CHANGELOG.md"
     changelog_path.write_text(
         "\n".join(
@@ -367,8 +367,8 @@ def _write_gate_workflow_session(
     path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
 
 
-def _gate_start_clears_stale_pre_commit_end() -> None:
-    """Start gate should clear stale end-stage pre-commit evidence."""
+def _gate_open_clears_stale_pre_commit_close() -> None:
+    """Open gate should clear stale close-stage pre-commit evidence."""
     module = importlib.import_module(MODULE)
     with tempfile.TemporaryDirectory() as tmpdir:
         repo_root = Path(tmpdir)
@@ -383,17 +383,17 @@ def _gate_start_clears_stale_pre_commit_end() -> None:
             / "gate_status.json"
         )
         status_path.parent.mkdir(parents=True, exist_ok=True)
-        end_epoch = time.time() + 3600
+        close_epoch = time.time() + 3600
         status_payload = {
             "session_id": "old-session",
             "session_state": "closed",
-            "session_end_epoch": end_epoch,
-            "session_end_utc": "2026-02-24T18:00:00+00:00",
-            "pre_commit_end_epoch": 10.0,
-            "pre_commit_end_utc": "2026-02-24T18:00:00+00:00",
-            "pre_commit_end_command": "pre-commit run --all-files",
-            "pre_commit_end_notes": "stale",
-            "pre_commit_end_cache_enabled": True,
+            "session_close_epoch": close_epoch,
+            "session_close_utc": "2026-02-24T18:00:00+00:00",
+            "pre_commit_close_epoch": 10.0,
+            "pre_commit_close_utc": "2026-02-24T18:00:00+00:00",
+            "pre_commit_close_command": "pre-commit run --all-files",
+            "pre_commit_close_notes": "stale",
+            "pre_commit_close_cache_enabled": True,
         }
         status_path.write_text(
             json.dumps(status_payload, indent=2) + "\n", encoding="utf-8"
@@ -406,19 +406,19 @@ def _gate_start_clears_stale_pre_commit_end() -> None:
             mock.patch(managed_env_target, return_value=(None, None)),
             mock.patch(run_command_target, return_value=(0, "")),
         ):
-            exit_code = module.run_pre_commit_gate(repo_root, "start")
+            exit_code = module.run_pre_commit_gate(repo_root, "open")
         assert exit_code == 0
         updated = json.loads(status_path.read_text(encoding="utf-8"))
         assert updated.get("session_state") == "open"
-        assert "pre_commit_end_epoch" not in updated
-        assert "pre_commit_end_utc" not in updated
-        assert "pre_commit_end_command" not in updated
-        assert "pre_commit_end_notes" not in updated
-        assert "pre_commit_end_cache_enabled" not in updated
+        assert "pre_commit_close_epoch" not in updated
+        assert "pre_commit_close_utc" not in updated
+        assert "pre_commit_close_command" not in updated
+        assert "pre_commit_close_notes" not in updated
+        assert "pre_commit_close_cache_enabled" not in updated
 
 
-def _gate_start_injects_check_orchestration_env() -> None:
-    """Start gate should pass gate-owned check orchestration env to hooks."""
+def _gate_open_injects_check_orchestration_env() -> None:
+    """Open gate should pass gate-owned check orchestration env to hooks."""
     module = importlib.import_module(MODULE)
     with tempfile.TemporaryDirectory() as tmpdir:
         repo_root = Path(tmpdir)
@@ -441,16 +441,16 @@ def _gate_start_injects_check_orchestration_env() -> None:
             mock.patch(managed_env_target, return_value=(None, None)),
             mock.patch(run_command_target, side_effect=_capture_env),
         ):
-            exit_code = module.run_pre_commit_gate(repo_root, "start")
+            exit_code = module.run_pre_commit_gate(repo_root, "open")
         assert exit_code == 0
-        assert captured_env["DEVCOV_DEVFLOW_STAGE"] == "start"
+        assert captured_env["DEVCOV_DEVFLOW_STAGE"] == "open"
         assert captured_env["DEVCOV_CHECK_APPLY_FIXES"] == "0"
         assert captured_env["DEVCOV_CHECK_RUN_REFRESH"] == "1"
         assert captured_env["DEVCOV_CHECK_CLEAN_BYTECODE"] == "1"
 
 
-def _gate_start_respects_autofix_enabled_config() -> None:
-    """Start gate should enable autofix when config sets it true."""
+def _gate_open_respects_autofix_enabled_config() -> None:
+    """Open gate should enable autofix when config sets it true."""
     module = importlib.import_module(MODULE)
     with tempfile.TemporaryDirectory() as tmpdir:
         repo_root = Path(tmpdir)
@@ -490,7 +490,7 @@ def _gate_start_respects_autofix_enabled_config() -> None:
             mock.patch(managed_env_target, return_value=(None, None)),
             mock.patch(run_command_target, side_effect=_capture_env),
         ):
-            exit_code = module.run_pre_commit_gate(repo_root, "start")
+            exit_code = module.run_pre_commit_gate(repo_root, "open")
         assert exit_code == 0
         assert captured_env["DEVCOV_CHECK_APPLY_FIXES"] == "1"
 
@@ -582,8 +582,8 @@ def _gate_gate_child_output_streams_in_verbose_mode() -> None:
     emit_tail.assert_not_called()
 
 
-def _gate_start_targets_snapshot_files_for_pre_commit() -> None:
-    """Start gate should run pre-commit against snapshot file targets."""
+def _gate_open_targets_snapshot_files_for_pre_commit() -> None:
+    """Open gate should run pre-commit against snapshot file targets."""
     module = importlib.import_module(MODULE)
     with tempfile.TemporaryDirectory() as tmpdir:
         repo_root = Path(tmpdir)
@@ -599,7 +599,7 @@ def _gate_start_targets_snapshot_files_for_pre_commit() -> None:
         )
 
         def _capture_command(command, *, env=None):
-            """Capture hook command while preserving start success."""
+            """Capture hook command while preserving open success."""
             del env
             captured["command"] = str(command)
             return (0, "")
@@ -608,7 +608,7 @@ def _gate_start_targets_snapshot_files_for_pre_commit() -> None:
             mock.patch(managed_env_target, return_value=(None, None)),
             mock.patch(run_command_target, side_effect=_capture_command),
         ):
-            exit_code = module.run_pre_commit_gate(repo_root, "start")
+            exit_code = module.run_pre_commit_gate(repo_root, "open")
         assert exit_code == 0
         rendered = captured["command"]
         assert "--files" in rendered
@@ -616,8 +616,8 @@ def _gate_start_targets_snapshot_files_for_pre_commit() -> None:
         assert "--all-files" not in rendered
 
 
-def _gate_start_resolves_managed_python_module_pre_commit() -> None:
-    """Start gate should resolve `python -m pre_commit` via managed Python."""
+def _gate_open_resolves_managed_python_module_pre_commit() -> None:
+    """Open gate should resolve `python -m pre_commit` via managed Python."""
     module = importlib.import_module(MODULE)
     with tempfile.TemporaryDirectory() as tmpdir:
         repo_root = Path(tmpdir)
@@ -647,7 +647,7 @@ def _gate_start_resolves_managed_python_module_pre_commit() -> None:
             mock.patch.object(module.shutil, "which", return_value=None),
             mock.patch(run_command_target, side_effect=_capture_command),
         ):
-            exit_code = module.run_pre_commit_gate(repo_root, "start")
+            exit_code = module.run_pre_commit_gate(repo_root, "open")
         assert exit_code == 0
         rendered = captured["command"]
         assert rendered.startswith(f"{managed_python} -m pre_commit run")
@@ -655,8 +655,8 @@ def _gate_start_resolves_managed_python_module_pre_commit() -> None:
         assert "module_target.py" in rendered
 
 
-def _gate_start_avoids_pre_commit_console_script_shims() -> None:
-    """Start gate should not depend on a discovered pre-commit shim."""
+def _gate_open_avoids_pre_commit_console_script_shims() -> None:
+    """Open gate should not depend on a discovered pre-commit shim."""
     module = importlib.import_module(MODULE)
     with tempfile.TemporaryDirectory() as tmpdir:
         repo_root = Path(tmpdir)
@@ -688,7 +688,7 @@ def _gate_start_avoids_pre_commit_console_script_shims() -> None:
             ),
             mock.patch(run_command_target, side_effect=_capture_command),
         ):
-            exit_code = module.run_pre_commit_gate(repo_root, "start")
+            exit_code = module.run_pre_commit_gate(repo_root, "open")
         assert exit_code == 0
         rendered = captured["command"]
         assert rendered.startswith(f"{managed_python} -m pre_commit run")
@@ -696,8 +696,8 @@ def _gate_start_avoids_pre_commit_console_script_shims() -> None:
         assert "shim_target.py" in rendered
 
 
-def _gate_start_reports_hook_induced_drift_explicitly() -> None:
-    """Start gate should report managed drift explicitly when hooks rewrite."""
+def _gate_open_reports_hook_induced_drift_explicitly() -> None:
+    """Open gate should report managed drift explicitly when hooks rewrite."""
     module = importlib.import_module(MODULE)
     with tempfile.TemporaryDirectory() as tmpdir:
         repo_root = Path(tmpdir)
@@ -744,7 +744,7 @@ def _gate_start_reports_hook_induced_drift_explicitly() -> None:
                 module, "runtime_print", side_effect=_capture_runtime_print
             ),
         ):
-            exit_code = module.run_pre_commit_gate(repo_root, "start")
+            exit_code = module.run_pre_commit_gate(repo_root, "open")
         assert exit_code == 1
         assert any(
             ("hook-induced baseline drift" in line for line in lines)
@@ -761,8 +761,8 @@ def _gate_start_reports_hook_induced_drift_explicitly() -> None:
         ), lines
 
 
-def _gate_mid_targets_snapshot_files_for_pre_commit() -> None:
-    """Mid gate should run pre-commit against snapshot file targets."""
+def _gate_verify_targets_snapshot_files_for_pre_commit() -> None:
+    """Verify gate should run pre-commit against snapshot file targets."""
     module = importlib.import_module(MODULE)
     with tempfile.TemporaryDirectory() as tmpdir:
         repo_root = Path(tmpdir)
@@ -778,9 +778,9 @@ def _gate_mid_targets_snapshot_files_for_pre_commit() -> None:
         status_path.write_text(
             json.dumps(
                 {
-                    "session_id": "open-mid-target",
+                    "session_id": "open-verify-target",
                     "session_state": "open",
-                    "session_start_epoch": 10.0,
+                    "session_open_epoch": 10.0,
                 },
                 indent=2,
             )
@@ -792,15 +792,15 @@ def _gate_mid_targets_snapshot_files_for_pre_commit() -> None:
             {
                 "schema_version": 1,
                 "workflow_contract_schema_version": 1,
-                "session_id": "open-mid-target",
+                "session_id": "open-verify-target",
                 "session_state": "open",
                 "run_ids": ["tests"],
                 "anchors": {},
                 "runs": {},
             },
         )
-        tracked_path = repo_root / "mid_target.py"
-        tracked_path.write_text("print('mid')\n", encoding="utf-8")
+        tracked_path = repo_root / "verify_target.py"
+        tracked_path.write_text("print('verify')\n", encoding="utf-8")
         captured: dict[str, str] = {}
         managed_env_target = _MANAGED_ENV_TARGET
         auto_fix_target = _AUTO_FIX_TARGET
@@ -812,7 +812,7 @@ def _gate_mid_targets_snapshot_files_for_pre_commit() -> None:
         )
 
         def _capture_command(command, env=None):
-            """Capture hook command while preserving mid success."""
+            """Capture hook command while preserving verify success."""
             del env
             captured["command"] = str(command)
             return (0, "")
@@ -826,16 +826,16 @@ def _gate_mid_targets_snapshot_files_for_pre_commit() -> None:
                 side_effect=[{"sample.py": "same"}, {"sample.py": "same"}],
             ),
         ):
-            exit_code = module.run_pre_commit_gate(repo_root, "mid")
+            exit_code = module.run_pre_commit_gate(repo_root, "verify")
         assert exit_code == 0
         rendered = captured["command"]
         assert "--files" in rendered
-        assert "mid_target.py" in rendered
+        assert "verify_target.py" in rendered
         assert "--all-files" not in rendered
 
 
-def _gate_end_targets_snapshot_files_for_pre_commit() -> None:
-    """End gate should run pre-commit against snapshot file targets."""
+def _gate_close_targets_snapshot_files_for_pre_commit() -> None:
+    """Close gate should run pre-commit against snapshot file targets."""
     module = importlib.import_module(MODULE)
     with tempfile.TemporaryDirectory() as tmpdir:
         repo_root = Path(tmpdir)
@@ -858,11 +858,11 @@ def _gate_end_targets_snapshot_files_for_pre_commit() -> None:
         status_path.write_text(
             json.dumps(
                 {
-                    "session_id": "open-end-target",
+                    "session_id": "open-close-target",
                     "session_state": "open",
-                    "session_start_epoch": 10.0,
+                    "session_open_epoch": 10.0,
                     "last_run_epoch": 20.0,
-                    "last_run_session_id": "open-end-target",
+                    "last_run_session_id": "open-close-target",
                     "session_snapshot_file": snapshot_rel,
                 },
                 indent=2,
@@ -875,7 +875,7 @@ def _gate_end_targets_snapshot_files_for_pre_commit() -> None:
             {
                 "schema_version": 1,
                 "workflow_contract_schema_version": 1,
-                "session_id": "open-end-target",
+                "session_id": "open-close-target",
                 "session_state": "open",
                 "run_ids": ["tests"],
                 "session_snapshot_file": snapshot_rel,
@@ -884,13 +884,13 @@ def _gate_end_targets_snapshot_files_for_pre_commit() -> None:
                     "tests": {
                         "id": "tests",
                         "status": "passed",
-                        "last_run_session_id": "open-end-target",
+                        "last_run_session_id": "open-close-target",
                     }
                 },
             },
         )
-        tracked_path = repo_root / "end_target.py"
-        tracked_path.write_text("print('end')\n", encoding="utf-8")
+        tracked_path = repo_root / "close_target.py"
+        tracked_path.write_text("print('close')\n", encoding="utf-8")
         captured: dict[str, str] = {}
         managed_env_target = _MANAGED_ENV_TARGET
         changed_since_target = _CHANGED_SINCE_TARGET
@@ -902,7 +902,7 @@ def _gate_end_targets_snapshot_files_for_pre_commit() -> None:
         )
 
         def _capture_command(command, env=None):
-            """Capture hook command while preserving end success."""
+            """Capture hook command while preserving close success."""
             del env
             captured["command"] = str(command)
             return (0, "")
@@ -916,16 +916,16 @@ def _gate_end_targets_snapshot_files_for_pre_commit() -> None:
                 side_effect=[{"sample.py": "same"}, {"sample.py": "same"}],
             ),
         ):
-            exit_code = module.run_pre_commit_gate(repo_root, "end")
+            exit_code = module.run_pre_commit_gate(repo_root, "close")
         assert exit_code == 0
         rendered = captured["command"]
         assert "--files" in rendered
-        assert "end_target.py" in rendered
+        assert "close_target.py" in rendered
         assert "--all-files" not in rendered
 
 
-def _gate_start_recovery_requires_explicit_manual_tests() -> None:
-    """Recovery start should fail and instruct explicit workflow runs."""
+def _gate_open_recovery_requires_explicit_manual_tests() -> None:
+    """Recovery open should fail and instruct explicit workflow runs."""
     module = importlib.import_module(MODULE)
     with tempfile.TemporaryDirectory() as tmpdir:
         repo_root = Path(tmpdir)
@@ -941,15 +941,15 @@ def _gate_start_recovery_requires_explicit_manual_tests() -> None:
         )
         status_path.parent.mkdir(parents=True, exist_ok=True)
         snapshot_rel = _write_gate_session_snapshot(
-            repo_root, {"session_end_snapshot": {"sample.py": "old"}}
+            repo_root, {"session_close_snapshot": {"sample.py": "old"}}
         )
         status_path.write_text(
             json.dumps(
                 {
                     "session_id": "closed-1",
                     "session_state": "closed",
-                    "session_end_epoch": 100.0,
-                    "session_end_utc": "2026-02-25T11:00:00+00:00",
+                    "session_close_epoch": 100.0,
+                    "session_close_utc": "2026-02-25T11:00:00+00:00",
                     "session_snapshot_file": snapshot_rel,
                 },
                 indent=2,
@@ -1001,7 +1001,7 @@ def _gate_start_recovery_requires_explicit_manual_tests() -> None:
                 module, "runtime_print", side_effect=_capture_runtime_print
             ),
         ):
-            exit_code = module.run_pre_commit_gate(repo_root, "start")
+            exit_code = module.run_pre_commit_gate(repo_root, "open")
         assert exit_code == 1
         assert status_path.read_bytes() == original_bytes
         assert any(
@@ -1009,8 +1009,7 @@ def _gate_start_recovery_requires_explicit_manual_tests() -> None:
         ), lines
         assert any(
             (
-                "devcovenant run" in line
-                and "devcovenant gate --start" in line
+                "devcovenant run" in line and "devcovenant gate --open" in line
                 for line in lines
             )
         ), lines
@@ -1019,8 +1018,8 @@ def _gate_start_recovery_requires_explicit_manual_tests() -> None:
         ), lines
 
 
-def _gate_start_recovery_allows_fresh_explicit_manual_tests() -> None:
-    """Recovery start should proceed when runs are already fresh."""
+def _gate_open_recovery_allows_fresh_explicit_manual_tests() -> None:
+    """Recovery open should proceed when runs are already fresh."""
     module = importlib.import_module(MODULE)
     with tempfile.TemporaryDirectory() as tmpdir:
         repo_root = Path(tmpdir)
@@ -1030,7 +1029,7 @@ def _gate_start_recovery_allows_fresh_explicit_manual_tests() -> None:
         snapshot_rel = _write_gate_session_snapshot(
             repo_root,
             {
-                "session_end_snapshot": {"sample.py": "old"},
+                "session_close_snapshot": {"sample.py": "old"},
                 "workflow_run_snapshots": {"tests": {"sample.py": "same"}},
             },
         )
@@ -1047,8 +1046,8 @@ def _gate_start_recovery_allows_fresh_explicit_manual_tests() -> None:
                 {
                     "session_id": "closed-1",
                     "session_state": "closed",
-                    "session_end_epoch": 100.0,
-                    "session_end_utc": "2026-02-25T11:00:00+00:00",
+                    "session_close_epoch": 100.0,
+                    "session_close_utc": "2026-02-25T11:00:00+00:00",
                     "session_snapshot_file": snapshot_rel,
                 },
                 indent=2,
@@ -1090,20 +1089,20 @@ def _gate_start_recovery_allows_fresh_explicit_manual_tests() -> None:
                 side_effect=[{"sample.py": "same"}, {"sample.py": "same"}],
             ),
         ):
-            exit_code = module.run_pre_commit_gate(repo_root, "start")
+            exit_code = module.run_pre_commit_gate(repo_root, "open")
         assert exit_code == 0
         updated = json.loads(status_path.read_text(encoding="utf-8"))
         snapshot_payload = _read_gate_session_snapshot(repo_root)
         assert updated.get("session_state") == "open"
-        assert float(updated.get("pre_commit_start_epoch") or 0.0) > 0.0
-        assert snapshot_payload.get("session_start_snapshot") == {
+        assert float(updated.get("pre_commit_open_epoch") or 0.0) > 0.0
+        assert snapshot_payload.get("session_open_snapshot") == {
             "sample.py": "same"
         }
 
 
-def _gate_end_requires_explicit_run_and_rerun_on_hook_changes() -> None:
+def _gate_close_requires_explicit_run_and_rerun_on_hook_changes() -> None:
     """
-    End gate should require explicit run/rerun steps after hook changes.
+    Close gate should require explicit run/rerun steps after hook changes.
     """
     module = importlib.import_module(MODULE)
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -1151,7 +1150,7 @@ def _gate_end_requires_explicit_run_and_rerun_on_hook_changes() -> None:
                 return_value={
                     "session_id": "open-1",
                     "session_state": "open",
-                    "session_start_epoch": 10.0,
+                    "session_open_epoch": 10.0,
                     "last_run_epoch": 20.0,
                 },
             ),
@@ -1164,22 +1163,23 @@ def _gate_end_requires_explicit_run_and_rerun_on_hook_changes() -> None:
                 module, "runtime_print", side_effect=_capture_runtime_print
             ),
         ):
-            exit_code = module.run_pre_commit_gate(repo_root, "end")
+            exit_code = module.run_pre_commit_gate(repo_root, "close")
         assert exit_code == 1
         assert any(
             ("hook-induced file changes" in line for line in lines)
         ), lines
         assert any(
             (
-                "devcovenant run" in line and "devcovenant gate --end" in line
+                "devcovenant run" in line
+                and "devcovenant gate --close" in line
                 for line in lines
             )
         ), lines
         assert not any(("no internal reruns" in line for line in lines)), lines
 
 
-def _gate_end_requires_explicit_run_and_rerun_on_stale_tests() -> None:
-    """End gate should require `run` when the configured tests run is stale."""
+def _gate_close_requires_explicit_run_and_rerun_on_stale_tests() -> None:
+    """Close gate should require `run` when tests are stale."""
     module = importlib.import_module(MODULE)
     with tempfile.TemporaryDirectory() as tmpdir:
         repo_root = Path(tmpdir)
@@ -1233,7 +1233,7 @@ def _gate_end_requires_explicit_run_and_rerun_on_stale_tests() -> None:
                 return_value={
                     "session_id": "open-2",
                     "session_state": "open",
-                    "session_start_epoch": 10.0,
+                    "session_open_epoch": 10.0,
                     "last_run_epoch": 20.0,
                 },
             ),
@@ -1246,22 +1246,23 @@ def _gate_end_requires_explicit_run_and_rerun_on_stale_tests() -> None:
                 module, "runtime_print", side_effect=_capture_runtime_print
             ),
         ):
-            exit_code = module.run_pre_commit_gate(repo_root, "end")
+            exit_code = module.run_pre_commit_gate(repo_root, "close")
         assert exit_code == 1
         assert any(
             ("fresh workflow runs before closure" in line for line in lines)
         ), lines
         assert any(
             (
-                "devcovenant run" in line and "devcovenant gate --end" in line
+                "devcovenant run" in line
+                and "devcovenant gate --close" in line
                 for line in lines
             )
         ), lines
         assert not any(("no internal reruns" in line for line in lines)), lines
 
 
-def _gate_end_reports_blocking_devcov_failure_clearly() -> None:
-    """End gate should report blocking DevCovenant failures plainly."""
+def _gate_close_reports_blocking_devcov_failure_clearly() -> None:
+    """Close gate should report blocking DevCovenant failures plainly."""
     module = importlib.import_module(MODULE)
     with tempfile.TemporaryDirectory() as tmpdir:
         repo_root = Path(tmpdir)
@@ -1307,9 +1308,9 @@ def _gate_end_reports_blocking_devcov_failure_clearly() -> None:
             mock.patch(
                 load_status_target,
                 return_value={
-                    "session_id": "open-end-1",
+                    "session_id": "open-close-1",
                     "session_state": "open",
-                    "session_start_epoch": 10.0,
+                    "session_open_epoch": 10.0,
                     "last_run_epoch": 20.0,
                 },
             ),
@@ -1322,7 +1323,7 @@ def _gate_end_reports_blocking_devcov_failure_clearly() -> None:
                 module, "runtime_print", side_effect=_capture_runtime_print
             ),
         ):
-            exit_code = module.run_pre_commit_gate(repo_root, "end")
+            exit_code = module.run_pre_commit_gate(repo_root, "close")
         assert exit_code == 1
         assert any(
             (
@@ -1332,7 +1333,7 @@ def _gate_end_reports_blocking_devcov_failure_clearly() -> None:
         ), lines
         assert any(
             (
-                "Fix violations and rerun `devcovenant gate --end`." in line
+                "Fix violations and rerun `devcovenant gate --close`." in line
                 for line in lines
             )
         ), lines
@@ -1341,8 +1342,8 @@ def _gate_end_reports_blocking_devcov_failure_clearly() -> None:
         ), lines
 
 
-def _gate_mid_requires_open_session() -> None:
-    """Mid gate should require an active open session."""
+def _gate_verify_requires_open_session() -> None:
+    """Verify gate should require an active open session."""
     module = importlib.import_module(MODULE)
     with tempfile.TemporaryDirectory() as tmpdir:
         repo_root = Path(tmpdir)
@@ -1363,15 +1364,15 @@ def _gate_mid_requires_open_session() -> None:
         with mock.patch.object(
             module, "runtime_print", side_effect=_capture_runtime_print
         ):
-            exit_code = module.run_pre_commit_gate(repo_root, "mid")
+            exit_code = module.run_pre_commit_gate(repo_root, "verify")
         assert exit_code == 1
         assert not status_path.exists()
         assert any(("active open session" in line for line in lines)), lines
-        assert any(("gate --start" in line for line in lines)), lines
+        assert any(("gate --open" in line for line in lines)), lines
 
 
-def _gate_mid_runs_without_status_mutation() -> None:
-    """Mid gate should run hooks but avoid lifecycle writes to gate status."""
+def _gate_verify_runs_without_status_mutation() -> None:
+    """Verify gate should avoid lifecycle writes."""
     module = importlib.import_module(MODULE)
     with tempfile.TemporaryDirectory() as tmpdir:
         repo_root = Path(tmpdir)
@@ -1387,11 +1388,11 @@ def _gate_mid_runs_without_status_mutation() -> None:
         status_path.write_text(
             json.dumps(
                 {
-                    "session_id": "open-mid-1",
+                    "session_id": "open-verify-1",
                     "session_state": "open",
-                    "session_start_epoch": 10.0,
-                    "session_start_utc": "2026-02-26T18:00:00+00:00",
-                    "pre_commit_start_epoch": 10.0,
+                    "session_open_epoch": 10.0,
+                    "session_open_utc": "2026-02-26T18:00:00+00:00",
+                    "pre_commit_open_epoch": 10.0,
                 },
                 indent=2,
             )
@@ -1403,7 +1404,7 @@ def _gate_mid_runs_without_status_mutation() -> None:
             {
                 "schema_version": 1,
                 "workflow_contract_schema_version": 1,
-                "session_id": "open-mid-1",
+                "session_id": "open-verify-1",
                 "session_state": "open",
                 "run_ids": ["tests"],
                 "anchors": {},
@@ -1451,7 +1452,7 @@ def _gate_mid_runs_without_status_mutation() -> None:
                 module, "runtime_print", side_effect=_capture_runtime_print
             ),
         ):
-            exit_code = module.run_pre_commit_gate(repo_root, "mid")
+            exit_code = module.run_pre_commit_gate(repo_root, "verify")
         assert exit_code == 0
         assert captured["managed_stage"] == "managed"
         hook_env = captured["hook_env"]
@@ -1468,8 +1469,8 @@ def _gate_mid_runs_without_status_mutation() -> None:
         ), lines
 
 
-def _gate_mid_reports_blocking_devcov_failure() -> None:
-    """Mid gate should classify blocking DevCovenant hook failures clearly."""
+def _gate_verify_reports_blocking_devcov_failure() -> None:
+    """Verify gate should classify blocking DevCovenant failures."""
     module = importlib.import_module(MODULE)
     with tempfile.TemporaryDirectory() as tmpdir:
         repo_root = Path(tmpdir)
@@ -1485,9 +1486,9 @@ def _gate_mid_reports_blocking_devcov_failure() -> None:
         status_path.write_text(
             json.dumps(
                 {
-                    "session_id": "open-mid-2",
+                    "session_id": "open-verify-2",
                     "session_state": "open",
-                    "session_start_epoch": 10.0,
+                    "session_open_epoch": 10.0,
                 },
                 indent=2,
             )
@@ -1499,7 +1500,7 @@ def _gate_mid_reports_blocking_devcov_failure() -> None:
             {
                 "schema_version": 1,
                 "workflow_contract_schema_version": 1,
-                "session_id": "open-mid-2",
+                "session_id": "open-verify-2",
                 "session_state": "open",
                 "run_ids": ["tests"],
                 "anchors": {},
@@ -1535,7 +1536,7 @@ def _gate_mid_reports_blocking_devcov_failure() -> None:
                 module, "runtime_print", side_effect=_capture_runtime_print
             ),
         ):
-            exit_code = module.run_pre_commit_gate(repo_root, "mid")
+            exit_code = module.run_pre_commit_gate(repo_root, "verify")
         assert exit_code == 1
         assert status_path.read_bytes() == original_bytes
         assert any(
@@ -1544,7 +1545,7 @@ def _gate_mid_reports_blocking_devcov_failure() -> None:
                 for line in lines
             )
         ), lines
-        assert any(("gate --mid" in line for line in lines)), lines
+        assert any(("gate --verify" in line for line in lines)), lines
 
 
 def _gate_show_gate_status_reports_open_session_read_only() -> None:
@@ -1563,8 +1564,8 @@ def _gate_show_gate_status_reports_open_session_read_only() -> None:
         status_payload = {
             "session_id": "abc123",
             "session_state": "open",
-            "pre_commit_start_epoch": 10.0,
-            "pre_commit_start_utc": "2026-02-25T11:00:00+00:00",
+            "pre_commit_open_epoch": 10.0,
+            "pre_commit_open_utc": "2026-02-25T11:00:00+00:00",
             "last_run_epoch": 20.0,
             "last_run_utc": "2026-02-25T11:05:00+00:00",
         }
@@ -1628,7 +1629,7 @@ def _gate_show_gate_status_reports_open_session_read_only() -> None:
         assert "Gate Status: open" in lines
         assert "Session ID: abc123" in lines
         assert "Last Stage: run" in lines
-        assert "Session Start: 2026-02-25T11:00:00+00:00" in lines
+        assert "Session Open: 2026-02-25T11:00:00+00:00" in lines
         assert "Last Workflow Run: 2026-02-25T11:05:00+00:00" in lines
         assert any(
             (
@@ -1671,8 +1672,8 @@ def _gate_show_gate_status_handles_missing_and_malformed_status() -> None:
         assert any((line.startswith("Error: ") for line in malformed_lines))
 
 
-def _gate_show_gate_status_reports_mid_stage() -> None:
-    """`show_gate_status` should report the public `mid` lifecycle stage."""
+def _gate_show_gate_status_reports_verify_stage() -> None:
+    """`show_gate_status` should report the public `verify` lifecycle stage."""
     module = importlib.import_module(MODULE)
     with tempfile.TemporaryDirectory() as tmpdir:
         repo_root = Path(tmpdir)
@@ -1687,10 +1688,10 @@ def _gate_show_gate_status_reports_mid_stage() -> None:
         status_path.write_text(
             json.dumps(
                 {
-                    "session_id": "mid-1",
+                    "session_id": "verify-1",
                     "session_state": "open",
-                    "pre_commit_start_epoch": 10.0,
-                    "pre_commit_start_utc": "2026-02-25T11:00:00+00:00",
+                    "pre_commit_open_epoch": 10.0,
+                    "pre_commit_open_utc": "2026-02-25T11:00:00+00:00",
                 },
                 indent=2,
             )
@@ -1708,15 +1709,15 @@ def _gate_show_gate_status_reports_mid_stage() -> None:
             json.dumps(
                 {
                     "schema_version": 1,
-                    "session_id": "mid-1",
+                    "session_id": "verify-1",
                     "session_state": "open",
                     "anchors": {
-                        "mid": {
-                            "id": "mid",
+                        "verify": {
+                            "id": "verify",
                             "status": "passed",
                             "last_run_utc": "2026-02-25T11:02:00+00:00",
                             "last_run_epoch": 12.0,
-                            "commands": ["devcovenant gate --mid"],
+                            "commands": ["devcovenant gate --verify"],
                         }
                     },
                     "runs": {},
@@ -1734,8 +1735,8 @@ def _gate_show_gate_status_reports_mid_stage() -> None:
             exit_code = module.show_gate_status(repo_root)
         assert exit_code == 0
         assert "Gate Status: open" in lines
-        assert "Session ID: mid-1" in lines
-        assert "Last Stage: mid" in lines
+        assert "Session ID: verify-1" in lines
+        assert "Last Stage: verify" in lines
 
 
 def _gate_status_pointer_skips_current_gate_status_run() -> None:
@@ -1792,13 +1793,13 @@ def _gate_show_gate_status_reports_closed_session() -> None:
                 {
                     "session_id": "closed-1",
                     "session_state": "closed",
-                    "pre_commit_start_epoch": 10.0,
-                    "pre_commit_start_utc": "2026-02-25T11:00:00+00:00",
+                    "pre_commit_open_epoch": 10.0,
+                    "pre_commit_open_utc": "2026-02-25T11:00:00+00:00",
                     "last_run_epoch": 20.0,
                     "last_run_utc": "2026-02-25T11:10:00+00:00",
-                    "pre_commit_end_epoch": 30.0,
-                    "pre_commit_end_utc": "2026-02-25T11:20:00+00:00",
-                    "session_end_utc": "2026-02-25T11:20:01+00:00",
+                    "pre_commit_close_epoch": 30.0,
+                    "pre_commit_close_utc": "2026-02-25T11:20:00+00:00",
+                    "session_close_utc": "2026-02-25T11:20:01+00:00",
                 },
                 indent=2,
             )
@@ -1813,8 +1814,8 @@ def _gate_show_gate_status_reports_closed_session() -> None:
         assert exit_code == 0
         assert "Gate Status: closed" in lines
         assert "Session ID: closed-1" in lines
-        assert "Last Stage: end" in lines
-        assert "Session End: 2026-02-25T11:20:01+00:00" in lines
+        assert "Last Stage: close" in lines
+        assert "Session Close: 2026-02-25T11:20:01+00:00" in lines
 
 
 class GateRuntimeGateTests(unittest.TestCase):
@@ -1828,17 +1829,17 @@ class GateRuntimeGateTests(unittest.TestCase):
         """Run module public-symbol sanity check."""
         _gate_module_has_public_symbols()
 
-    def test_start_clears_stale_pre_commit_end(self):
-        """Run start-gate stale end evidence cleanup check."""
-        _gate_start_clears_stale_pre_commit_end()
+    def test_open_clears_stale_pre_commit_close(self):
+        """Run open-gate stale close evidence cleanup check."""
+        _gate_open_clears_stale_pre_commit_close()
 
-    def test_start_injects_check_orchestration_env(self):
-        """Run start-gate env injection assertions for local check hooks."""
-        _gate_start_injects_check_orchestration_env()
+    def test_open_injects_check_orchestration_env(self):
+        """Run open-gate env injection assertions for local check hooks."""
+        _gate_open_injects_check_orchestration_env()
 
-    def test_start_respects_autofix_enabled_config(self):
-        """Run start-gate autofix toggle assertions from config."""
-        _gate_start_respects_autofix_enabled_config()
+    def test_open_respects_autofix_enabled_config(self):
+        """Run open-gate autofix toggle assertions from config."""
+        _gate_open_respects_autofix_enabled_config()
 
     def test_gate_child_output_streams_in_normal_mode(self):
         """Run gate-child normal-mode streaming policy assertions."""
@@ -1852,61 +1853,61 @@ class GateRuntimeGateTests(unittest.TestCase):
         """Run gate-child verbose-mode streaming policy assertions."""
         _gate_gate_child_output_streams_in_verbose_mode()
 
-    def test_start_targets_snapshot_files_for_pre_commit(self):
-        """Run start-gate snapshot target coverage assertions."""
-        _gate_start_targets_snapshot_files_for_pre_commit()
+    def test_open_targets_snapshot_files_for_pre_commit(self):
+        """Run open-gate snapshot target coverage assertions."""
+        _gate_open_targets_snapshot_files_for_pre_commit()
 
-    def test_start_resolves_managed_python_module_pre_commit(self):
-        """Run start-gate managed-python module-resolution assertions."""
-        _gate_start_resolves_managed_python_module_pre_commit()
+    def test_open_resolves_managed_python_module_pre_commit(self):
+        """Run open-gate managed-python module-resolution assertions."""
+        _gate_open_resolves_managed_python_module_pre_commit()
 
-    def test_start_avoids_pre_commit_console_script_shims(self):
-        """Run start-gate console-script-independence assertions."""
-        _gate_start_avoids_pre_commit_console_script_shims()
+    def test_open_avoids_pre_commit_console_script_shims(self):
+        """Run open-gate console-script-independence assertions."""
+        _gate_open_avoids_pre_commit_console_script_shims()
 
-    def test_start_reports_hook_induced_drift_explicitly(self):
-        """Run start-gate explicit drift-reporting assertions."""
-        _gate_start_reports_hook_induced_drift_explicitly()
+    def test_open_reports_hook_induced_drift_explicitly(self):
+        """Run open-gate explicit drift-reporting assertions."""
+        _gate_open_reports_hook_induced_drift_explicitly()
 
-    def test_mid_targets_snapshot_files_for_pre_commit(self):
-        """Run mid-gate snapshot target coverage assertions."""
-        _gate_mid_targets_snapshot_files_for_pre_commit()
+    def test_verify_targets_snapshot_files_for_pre_commit(self):
+        """Run verify-gate snapshot target coverage assertions."""
+        _gate_verify_targets_snapshot_files_for_pre_commit()
 
-    def test_end_targets_snapshot_files_for_pre_commit(self):
-        """Run end-gate snapshot target coverage assertions."""
-        _gate_end_targets_snapshot_files_for_pre_commit()
+    def test_close_targets_snapshot_files_for_pre_commit(self):
+        """Run close-gate snapshot target coverage assertions."""
+        _gate_close_targets_snapshot_files_for_pre_commit()
 
-    def test_start_recovery_requires_explicit_manual_tests(self):
-        """Run start-recovery explicit-test instruction assertions."""
-        _gate_start_recovery_requires_explicit_manual_tests()
+    def test_open_recovery_requires_explicit_manual_tests(self):
+        """Run open-recovery explicit-test instruction assertions."""
+        _gate_open_recovery_requires_explicit_manual_tests()
 
-    def test_start_recovery_allows_fresh_explicit_manual_tests(self):
-        """Run start-recovery success assertions when tests are fresh."""
-        _gate_start_recovery_allows_fresh_explicit_manual_tests()
+    def test_open_recovery_allows_fresh_explicit_manual_tests(self):
+        """Run open-recovery success assertions when tests are fresh."""
+        _gate_open_recovery_allows_fresh_explicit_manual_tests()
 
-    def test_end_requires_explicit_run_and_rerun_on_hook_changes(self):
-        """Run end-gate explicit run/rerun assertions for hook changes."""
-        _gate_end_requires_explicit_run_and_rerun_on_hook_changes()
+    def test_close_requires_explicit_run_and_rerun_on_hook_changes(self):
+        """Run close-gate explicit run/rerun assertions for hook changes."""
+        _gate_close_requires_explicit_run_and_rerun_on_hook_changes()
 
-    def test_end_requires_explicit_run_and_rerun_on_stale_tests(self):
-        """Run end-gate stale-stage explicit run/rerun assertions."""
-        _gate_end_requires_explicit_run_and_rerun_on_stale_tests()
+    def test_close_requires_explicit_run_and_rerun_on_stale_tests(self):
+        """Run close-gate stale-stage explicit run/rerun assertions."""
+        _gate_close_requires_explicit_run_and_rerun_on_stale_tests()
 
-    def test_end_reports_blocking_devcov_failure_clearly(self):
-        """Run end-gate blocking-DevCovenant message clarity assertions."""
-        _gate_end_reports_blocking_devcov_failure_clearly()
+    def test_close_reports_blocking_devcov_failure_clearly(self):
+        """Run close-gate blocking-DevCovenant message clarity assertions."""
+        _gate_close_reports_blocking_devcov_failure_clearly()
 
-    def test_mid_requires_open_session(self):
-        """Run mid-gate open-session requirement assertions."""
-        _gate_mid_requires_open_session()
+    def test_verify_requires_open_session(self):
+        """Run verify-gate open-session requirement assertions."""
+        _gate_verify_requires_open_session()
 
-    def test_mid_runs_without_status_mutation(self):
-        """Run mid-gate non-lifecycle hook sweep assertions."""
-        _gate_mid_runs_without_status_mutation()
+    def test_verify_runs_without_status_mutation(self):
+        """Run verify-gate non-lifecycle hook sweep assertions."""
+        _gate_verify_runs_without_status_mutation()
 
-    def test_mid_reports_blocking_devcov_failure(self):
-        """Run mid-gate blocking-DevCovenant failure messaging assertions."""
-        _gate_mid_reports_blocking_devcov_failure()
+    def test_verify_reports_blocking_devcov_failure(self):
+        """Run verify-gate blocking failure assertions."""
+        _gate_verify_reports_blocking_devcov_failure()
 
     def test_show_gate_status_reports_open_session_read_only(self):
         """Run gate-status open-session read-only reporting assertions."""
@@ -1916,9 +1917,9 @@ class GateRuntimeGateTests(unittest.TestCase):
         """Run gate-status missing/malformed read-only handling assertions."""
         _gate_show_gate_status_handles_missing_and_malformed_status()
 
-    def test_show_gate_status_reports_mid_stage(self):
-        """Run gate-status `mid` reporting assertions."""
-        _gate_show_gate_status_reports_mid_stage()
+    def test_show_gate_status_reports_verify_stage(self):
+        """Run gate-status `verify` reporting assertions."""
+        _gate_show_gate_status_reports_verify_stage()
 
     def test_status_pointer_skips_current_gate_status_run(self):
         """Run strict-pointer assertions for current `gate --status` runs."""
@@ -2061,15 +2062,15 @@ def _snapshot_public_session_snapshot_helpers_are_deterministic() -> None:
             {"a.py": "x\ta.py"}
         )
         normalized = module.normalize_snapshot_rows(
-            {"a.py": " hash\ta.py "}, field_name="session_start_snapshot"
+            {"a.py": " hash\ta.py "}, field_name="session_open_snapshot"
         )
         assert normalized == {"a.py": "hash\ta.py"}
         try:
             module.normalize_snapshot_rows(
-                [], field_name="session_start_snapshot"
+                [], field_name="session_open_snapshot"
             )
         except ValueError as exc:
-            assert "session_start_snapshot" in str(exc)
+            assert "session_open_snapshot" in str(exc)
         else:
             raise AssertionError("Expected normalize_snapshot_rows to fail")
         session_delta = module.session_delta_paths(
@@ -2083,11 +2084,11 @@ def _snapshot_public_session_snapshot_helpers_are_deterministic() -> None:
                 repo_root,
                 {"legacy.py": "1\t1\tlegacy.py"},
                 current_snapshot,
-                session_start_epoch=1.0,
+                session_open_epoch=1.0,
             )
         except ValueError as exc:
             assert "legacy snapshot rows" in str(exc)
-            assert "gate --start" in str(exc)
+            assert "gate --open" in str(exc)
         else:
             raise AssertionError(
                 "Expected legacy snapshot rows to be rejected."
@@ -2128,7 +2129,7 @@ def _snapshot_public_session_snapshot_helpers_are_deterministic() -> None:
 
 
 def _snapshot_active_profile_ignore_dirs_are_honored() -> None:
-    """Profile ignore dirs should affect gate-start snapshot collection."""
+    """Profile ignore dirs should affect gate-open snapshot collection."""
     module = importlib.import_module(MODULE)
     with tempfile.TemporaryDirectory() as tmpdir:
         repo_root = Path(tmpdir)
@@ -2287,8 +2288,8 @@ def _status_gate_status_summary_lines_report_open_session() -> None:
             {
                 "session_id": "open-1",
                 "session_state": "open",
-                "pre_commit_start_epoch": 10.0,
-                "pre_commit_start_utc": "2026-02-27T06:00:00+00:00",
+                "pre_commit_open_epoch": 10.0,
+                "pre_commit_open_utc": "2026-02-27T06:00:00+00:00",
                 "last_run_epoch": 20.0,
                 "last_run_utc": "2026-02-27T06:05:00+00:00",
             },
@@ -2343,7 +2344,7 @@ def _status_gate_status_summary_lines_report_open_session() -> None:
         assert "Gate Status: open" in lines
         assert "Session ID: open-1" in lines
         assert "Last Stage: run" in lines
-        assert "Session Start: 2026-02-27T06:00:00+00:00" in lines
+        assert "Session Open: 2026-02-27T06:00:00+00:00" in lines
         assert "Last Workflow Run: 2026-02-27T06:05:00+00:00" in lines
         assert any(
             (
@@ -2353,33 +2354,33 @@ def _status_gate_status_summary_lines_report_open_session() -> None:
         )
 
 
-def _status_gate_status_summary_lines_report_mid_stage() -> None:
-    """Summary lines should report `mid` from workflow-session anchors."""
+def _status_gate_status_summary_lines_report_verify_stage() -> None:
+    """Summary lines should report `verify` from workflow-session anchors."""
     module = importlib.import_module(MODULE)
     with tempfile.TemporaryDirectory() as tmpdir:
         repo_root = Path(tmpdir)
         _write_status_payload(
             repo_root,
             {
-                "session_id": "open-mid-1",
+                "session_id": "open-verify-1",
                 "session_state": "open",
-                "pre_commit_start_epoch": 10.0,
-                "pre_commit_start_utc": "2026-02-27T06:00:00+00:00",
+                "pre_commit_open_epoch": 10.0,
+                "pre_commit_open_utc": "2026-02-27T06:00:00+00:00",
             },
         )
         _write_status_workflow_session(
             repo_root,
             {
                 "schema_version": 1,
-                "session_id": "open-mid-1",
+                "session_id": "open-verify-1",
                 "session_state": "open",
                 "anchors": {
-                    "mid": {
-                        "id": "mid",
+                    "verify": {
+                        "id": "verify",
                         "status": "passed",
                         "last_run_utc": "2026-02-27T06:02:00+00:00",
                         "last_run_epoch": 12.0,
-                        "commands": ["devcovenant gate --mid"],
+                        "commands": ["devcovenant gate --verify"],
                     }
                 },
                 "runs": {},
@@ -2388,8 +2389,8 @@ def _status_gate_status_summary_lines_report_mid_stage() -> None:
         )
         lines = module._gate_status_summary_lines(repo_root)
         assert "Gate Status: open" in lines
-        assert "Session ID: open-mid-1" in lines
-        assert "Last Stage: mid" in lines
+        assert "Session ID: open-verify-1" in lines
+        assert "Last Stage: verify" in lines
 
 
 class GateRuntimeStatusTests(unittest.TestCase):
@@ -2411,9 +2412,9 @@ class GateRuntimeStatusTests(unittest.TestCase):
         """Run gate-status summary line assertions for open sessions."""
         _status_gate_status_summary_lines_report_open_session()
 
-    def test_gate_status_summary_lines_report_mid_stage(self):
-        """Run gate-status summary line assertions for `mid` sessions."""
-        _status_gate_status_summary_lines_report_mid_stage()
+    def test_gate_status_summary_lines_report_verify_stage(self):
+        """Run gate-status summary line assertions for `verify` sessions."""
+        _status_gate_status_summary_lines_report_verify_stage()
 
 
 MODULE = "devcovenant.core.gate_runtime"
@@ -2509,7 +2510,7 @@ def _workflow_session_workflow_session_round_trip_uses_runtime_registry() -> (
             "schema_version": module.SCHEMA_VERSION,
             "session_id": "demo-session",
             "session_state": "open",
-            "anchors": {"start": {"status": "passed"}},
+            "anchors": {"open": {"status": "passed"}},
             "runs": {"tests": {"status": "passed"}},
             "run_ids": ["tests"],
         }
@@ -2518,7 +2519,7 @@ def _workflow_session_workflow_session_round_trip_uses_runtime_registry() -> (
         assert written == module.workflow_session_path(repo_root)
         assert written.exists()
         assert loaded["session_id"] == "demo-session"
-        assert loaded["anchors"] == {"start": {"status": "passed"}}
+        assert loaded["anchors"] == {"open": {"status": "passed"}}
         assert loaded["runs"] == {"tests": {"status": "passed"}}
         assert loaded["run_ids"] == ["tests"]
 
@@ -2554,12 +2555,12 @@ def _workflow_session_workflow_session_write_drops_removed_fields() -> None:
             "session_id": "demo-session",
             "session_state": "open",
             "anchors": {
-                "start": {
+                "open": {
                     "status": "passed",
                     "last_run_utc": "2026-03-26T12:00:00+00:00",
-                    "commands": ["devcovenant gate --start"],
+                    "commands": ["devcovenant gate --open"],
                     "last_run": "2026-03-26T12:00:00+00:00",
-                    "command": "devcovenant gate --start",
+                    "command": "devcovenant gate --open",
                 }
             },
             "runs": {
@@ -2578,14 +2579,14 @@ def _workflow_session_workflow_session_write_drops_removed_fields() -> None:
         loaded = module.load_workflow_session(repo_root)
         written_payload = written.read_text(encoding="utf-8")
         assert (
-            loaded["anchors"]["start"]["last_run_utc"]
+            loaded["anchors"]["open"]["last_run_utc"]
             == "2026-03-26T12:00:00+00:00"
         )
-        assert loaded["anchors"]["start"]["commands"] == [
-            "devcovenant gate --start"
+        assert loaded["anchors"]["open"]["commands"] == [
+            "devcovenant gate --open"
         ]
-        assert "last_run" not in loaded["anchors"]["start"]
-        assert "command" not in loaded["anchors"]["start"]
+        assert "last_run" not in loaded["anchors"]["open"]
+        assert "command" not in loaded["anchors"]["open"]
         assert (
             loaded["runs"]["tests"]["last_run_utc"]
             == "2026-03-26T12:05:00+00:00"

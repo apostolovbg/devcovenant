@@ -13,7 +13,7 @@ import argparse
 
 import devcovenant.core.cli_support as cli_args_module
 
-START_GATE_REMINDER_MESSAGE = (
+OPEN_GATE_REMINDER_MESSAGE = (
     "AI agents work in silence and only provide a summary after work is "
     "complete."
 )
@@ -27,20 +27,20 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument(
-        "--start",
+        "--open",
         action="store_true",
-        help="Run pre-commit and record gate session start evidence.",
+        help="Run pre-commit and record gate session open evidence.",
     )
     group.add_argument(
-        "--end",
+        "--close",
         action="store_true",
-        help="Run pre-commit and record gate session end evidence.",
+        help="Run pre-commit and record gate session close evidence.",
     )
     group.add_argument(
-        "--mid",
+        "--verify",
         action="store_true",
         help=(
-            "Run a non-lifecycle mid-session pre-commit sweep "
+            "Run a non-lifecycle verification pre-commit sweep "
             "(mutating checks/autofix may apply)."
         ),
     )
@@ -70,21 +70,21 @@ def run(args: argparse.Namespace) -> int:
     if getattr(args, "status", False):
         return show_gate_status(repo_root)
 
-    if getattr(args, "start", False):
-        stage = "start"
-    elif getattr(args, "mid", False):
-        stage = "mid"
+    if getattr(args, "open", False):
+        stage = "open"
+    elif getattr(args, "verify", False):
+        stage = "verify"
     else:
-        stage = "end"
+        stage = "close"
 
     print_banner("Devflow gate", "🚦")
     print_step(f"Running `{stage}` pre-commit gate", "▶️")
-    if stage == "start":
-        print_step(START_GATE_REMINDER_MESSAGE, "•")
+    if stage == "open":
+        print_step(OPEN_GATE_REMINDER_MESSAGE, "•")
     exit_code = run_pre_commit_gate(repo_root, stage)
     if exit_code == 0:
-        if stage == "mid":
-            print_step("Mid gate completed", "✅")
+        if stage == "verify":
+            print_step("Verify gate completed", "✅")
         else:
             print_step(f"{stage.capitalize()} gate recorded", "✅")
     return exit_code

@@ -521,8 +521,8 @@ def _unit_test_asset_help_is_command_scoped() -> None:
     )
     assert "Optional Desktop filename override." in result.stdout
     assert "--overwrite" in result.stdout
-    assert "--start" not in result.stdout
-    assert "--end" not in result.stdout
+    assert "--open" not in result.stdout
+    assert "--close" not in result.stdout
 
 
 def _unit_test_check_help_shows_check_only_options() -> None:
@@ -538,8 +538,8 @@ def _unit_test_check_help_shows_check_only_options() -> None:
     assert "read-only DevCovenant audit checks" in result.stdout
     assert "--nofix" not in result.stdout
     assert "--norefresh" not in result.stdout
-    assert "--start" not in result.stdout
-    assert "--end" not in result.stdout
+    assert "--open" not in result.stdout
+    assert "--close" not in result.stdout
 
 
 def _unit_test_install_help_shows_command_scope() -> None:
@@ -586,8 +586,12 @@ def _unit_test_gate_help_is_command_scoped() -> None:
     )
     assert result.returncode == 0
     assert "gate session lifecycle commands" in result.stdout
-    assert "--start" in result.stdout
-    assert "--end" in result.stdout
+    assert "--open" in result.stdout
+    assert "--verify" in result.stdout
+    assert "--close" in result.stdout
+    assert "--start" not in result.stdout
+    assert "--mid" not in result.stdout
+    assert "--end" not in result.stdout
     assert "short gate session status" in result.stdout
     assert "--nofix" not in result.stdout
     assert "--norefresh" not in result.stdout
@@ -614,8 +618,8 @@ def _unit_test_custom_help_is_command_scoped() -> None:
     assert "--profile" in result.stdout
     assert "--do" in result.stdout
     assert "--undo" in result.stdout
-    assert "--start" not in result.stdout
-    assert "--end" not in result.stdout
+    assert "--open" not in result.stdout
+    assert "--close" not in result.stdout
 
 
 def _unit_test_root_command_modules_exist() -> None:

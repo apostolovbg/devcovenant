@@ -16,7 +16,7 @@ A profile can contribute:
 6. translator declarations
 7. CI fragments through `ci_and_test`
 8. ignore-directory hints that feed generated `.gitignore`, pre-commit
-   excludes, and the `gate --start` snapshot walk
+   excludes, and the `gate --open` snapshot walk
 
 Profiles do not directly turn policies on or off.
 Policy activation still lives in `policy_state`.
@@ -72,7 +72,7 @@ The rule is strict:
 That is why copied same-name shadow profiles should stay thin.
 Keep inherited values inherited from the other active profiles instead of
 restating them in the copied profile, and copy only the owned assets,
-translators, helpers, or tests that the shadow profile now replaces.
+translators, helpers, or tests that the shadow profile replaces.
 
 ## Builtin Profile Test Blueprints
 Builtin profile packages can ship a sibling `test_blueprints.yaml` file when
@@ -142,7 +142,7 @@ Python `.venv` starting point:
 - expected paths and interpreters
 - required commands for the standard gate/runtime surface
 - manual guidance that uses `{current_python}` and `{managed_python}`
-- bootstrap-stage and start-stage bootstrap commands for lifecycle commands
+- bootstrap-stage and open-stage bootstrap commands for lifecycle commands
 
 The normal installed repository baseline keeps
 `policy_state.managed-environment: false`.
@@ -183,7 +183,7 @@ scan so the profile only governs repo-owned source and custom mirrors.
 
 Profiles may also contribute `ignore_dirs` for disposable local outputs that
 should stay out of generated `.gitignore`, out of pre-commit's all-files
-scan, and out of the startup snapshot walk used by `gate --start`.
+scan, and out of the startup snapshot walk used by `gate --open`.
 Typical examples are temporary build directories, cache roots, declared
 environment folders, or other data trees that should not count as
 user-owned source files during the gate session snapshot.

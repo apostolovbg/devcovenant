@@ -117,7 +117,7 @@ current interpreter until the target environment exists, set
 missing target environment as an explicit failure instead of silently masking
 an incomplete profile.
 Those profile-level `ignore_dirs` also feed the startup snapshot walk used by
-`gate --start`, so disposable trees stay out of the recorded session state as
+`gate --open`, so disposable trees stay out of the recorded session state as
 well as generated `.gitignore` and pre-commit excludes.
 
 The shipped user baseline keeps `github` active by default.

@@ -81,7 +81,7 @@ def _unit_test_resolve_stage_returns_none_when_disabled(
     ) == (None, None)
 
 
-def _unit_test_start_prepends_command_search_paths(
+def _unit_test_open_prepends_command_search_paths(
     monkeypatch: MonkeyPatch,
 ) -> None:
     """Managed environments should prepend declared command search paths."""
@@ -116,7 +116,7 @@ def _unit_test_start_prepends_command_search_paths(
         resolved_env, resolved_python = (
             module.resolve_managed_environment_for_stage(
                 repo_root,
-                "start",
+                "open",
                 base_env={"PATH": ""},
             )
         )
@@ -151,11 +151,11 @@ def _unit_test_write_managed_stage_runs_uses_run_token() -> None:
 
     module._write_managed_stage_runs(
         env,
-        {"start", "run", "end", "bootstrap", "managed", "all"},
+        {"open", "run", "close", "bootstrap", "managed", "all"},
     )
 
     assert env[module._MANAGED_STAGE_RUNS_ENV] == (
-        "start,run,end,bootstrap,managed,all"
+        "open,run,close,bootstrap,managed,all"
     )
 
 
@@ -177,7 +177,7 @@ def _unit_test_stage_bootstrap_dedupes_on_reexec(
                 "metadata": {
                     "expected_paths": [".venv"],
                     "expected_interpreters": [".venv/bin/python"],
-                    "managed_commands": ["start=>python3 -m venv .venv"],
+                    "managed_commands": ["open=>python3 -m venv .venv"],
                 },
             },
         )
@@ -222,30 +222,30 @@ def _unit_test_stage_bootstrap_dedupes_on_reexec(
 
         first_env, first_python = module.resolve_managed_environment_for_stage(
             repo_root,
-            "start",
+            "open",
             base_env={},
         )
         assert first_env is not None
         assert first_python == str(managed_python)
-        assert stage_calls == ["start"]
-        assert first_env.get(module._MANAGED_STAGE_RUNS_ENV) == "start"
+        assert stage_calls == ["open"]
+        assert first_env.get(module._MANAGED_STAGE_RUNS_ENV) == "open"
 
         second_env, second_python = (
             module.resolve_managed_environment_for_stage(
                 repo_root,
-                "start",
+                "open",
                 base_env=first_env,
             )
         )
         assert second_env is not None
         assert second_python == str(managed_python)
-        assert stage_calls == ["start"]
+        assert stage_calls == ["open"]
 
 
-def _unit_test_start_reuses_ready_current_interpreter(
+def _unit_test_open_reuses_ready_current_interpreter(
     monkeypatch: MonkeyPatch,
 ) -> None:
-    """Start should reuse a matching ready interpreter without bootstrap."""
+    """Open should reuse a matching ready interpreter without bootstrap."""
     module = importlib.import_module(MODULE)
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir)
@@ -266,7 +266,7 @@ def _unit_test_start_reuses_ready_current_interpreter(
                     "expected_interpreters": [".venv/bin/python"],
                     "required_commands": ["python3"],
                     "managed_commands": [
-                        "start=>python3 -m venv .venv",
+                        "open=>python3 -m venv .venv",
                     ],
                 },
             },
@@ -282,7 +282,7 @@ def _unit_test_start_reuses_ready_current_interpreter(
         def _fail_if_bootstrap_runs(*args, **kwargs):
             """Record any unexpected bootstrap call for assertions."""
             del args, kwargs
-            stage_calls.append("start")
+            stage_calls.append("open")
             return {}, True
 
         monkeypatch.setattr(
@@ -294,7 +294,7 @@ def _unit_test_start_reuses_ready_current_interpreter(
         resolved_env, resolved_python = (
             module.resolve_managed_environment_for_stage(
                 repo_root,
-                "start",
+                "open",
                 base_env={},
             )
         )
@@ -302,11 +302,11 @@ def _unit_test_start_reuses_ready_current_interpreter(
     assert resolved_env is not None
     assert resolved_python == str(managed_python)
     assert resolved_env["DEVCOV_MANAGED_PYTHON"] == str(managed_python)
-    assert resolved_env[module._MANAGED_STAGE_RUNS_ENV] == "start"
+    assert resolved_env[module._MANAGED_STAGE_RUNS_ENV] == "open"
     assert stage_calls == []
 
 
-def _unit_test_start_reuses_symlinked_environment_interpreter(
+def _unit_test_open_reuses_symlinked_environment_interpreter(
     monkeypatch: MonkeyPatch,
 ) -> None:
     """Symlinked env interpreters should keep the env-local launcher path."""
@@ -338,7 +338,7 @@ def _unit_test_start_reuses_symlinked_environment_interpreter(
                     "expected_interpreters": [".venv/bin/python"],
                     "required_commands": ["python3"],
                     "managed_commands": [
-                        "start=>python3 -m venv .venv",
+                        "open=>python3 -m venv .venv",
                     ],
                 },
             },
@@ -354,7 +354,7 @@ def _unit_test_start_reuses_symlinked_environment_interpreter(
         def _fail_if_bootstrap_runs(*args, **kwargs):
             """Record any unexpected bootstrap call for assertions."""
             del args, kwargs
-            stage_calls.append("start")
+            stage_calls.append("open")
             return {}, True
 
         monkeypatch.setattr(
@@ -366,7 +366,7 @@ def _unit_test_start_reuses_symlinked_environment_interpreter(
         resolved_env, resolved_python = (
             module.resolve_managed_environment_for_stage(
                 repo_root,
-                "start",
+                "open",
                 base_env={},
             )
         )
@@ -380,11 +380,11 @@ def _unit_test_start_reuses_symlinked_environment_interpreter(
     assert resolved_env["PATH"].split(os.pathsep)[0] == str(
         managed_python.parent
     )
-    assert resolved_env[module._MANAGED_STAGE_RUNS_ENV] == "start"
+    assert resolved_env[module._MANAGED_STAGE_RUNS_ENV] == "open"
     assert stage_calls == []
 
 
-def _unit_test_start_reuses_external_environment_root(
+def _unit_test_open_reuses_external_environment_root(
     monkeypatch: MonkeyPatch,
 ) -> None:
     """Managed roots may live outside the repository tree."""
@@ -410,7 +410,7 @@ def _unit_test_start_reuses_external_environment_root(
                     "expected_interpreters": [str(managed_python)],
                     "required_commands": ["python3"],
                     "managed_commands": [
-                        f"start=>{managed_python} -m pip --version",
+                        f"open=>{managed_python} -m pip --version",
                     ],
                 },
             },
@@ -426,7 +426,7 @@ def _unit_test_start_reuses_external_environment_root(
         def _fail_if_bootstrap_runs(*args, **kwargs):
             """Record any unexpected bootstrap call for assertions."""
             del args, kwargs
-            stage_calls.append("start")
+            stage_calls.append("open")
             return {}, True
 
         monkeypatch.setattr(
@@ -438,7 +438,7 @@ def _unit_test_start_reuses_external_environment_root(
         resolved_env, resolved_python = (
             module.resolve_managed_environment_for_stage(
                 repo_root,
-                "start",
+                "open",
                 base_env={},
             )
         )
@@ -452,14 +452,14 @@ def _unit_test_start_reuses_external_environment_root(
     assert resolved_env["PATH"].split(os.pathsep)[0] == str(
         managed_python.parent
     )
-    assert resolved_env[module._MANAGED_STAGE_RUNS_ENV] == "start"
+    assert resolved_env[module._MANAGED_STAGE_RUNS_ENV] == "open"
     assert stage_calls == []
 
 
-def _unit_test_start_does_not_reuse_unrelated_host_interpreter(
+def _unit_test_open_does_not_reuse_unrelated_host_interpreter(
     monkeypatch: MonkeyPatch,
 ) -> None:
-    """Start should bootstrap instead of reusing an unrelated host Python."""
+    """Open should bootstrap instead of reusing an unrelated host Python."""
     module = importlib.import_module(MODULE)
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir)
@@ -478,7 +478,7 @@ def _unit_test_start_does_not_reuse_unrelated_host_interpreter(
                     "expected_interpreters": [".venv/bin/python"],
                     "required_commands": ["python3"],
                     "managed_commands": [
-                        "start=>python3 -m venv .venv",
+                        "open=>python3 -m venv .venv",
                     ],
                 },
             },
@@ -501,7 +501,7 @@ def _unit_test_start_does_not_reuse_unrelated_host_interpreter(
             expected_paths: list[Path],
             include_all_stage: bool,
         ) -> tuple[dict[str, str], bool]:
-            """Create the managed interpreter during start bootstrap."""
+            """Create the managed interpreter during open bootstrap."""
             del repo_root
             del managed_commands
             del expected_interpreters
@@ -522,7 +522,7 @@ def _unit_test_start_does_not_reuse_unrelated_host_interpreter(
         resolved_env, resolved_python = (
             module.resolve_managed_environment_for_stage(
                 repo_root,
-                "start",
+                "open",
                 base_env={},
             )
         )
@@ -530,14 +530,14 @@ def _unit_test_start_does_not_reuse_unrelated_host_interpreter(
     assert resolved_env is not None
     assert resolved_python == str(managed_python)
     assert resolved_env["DEVCOV_MANAGED_PYTHON"] == str(managed_python)
-    assert resolved_env[module._MANAGED_STAGE_RUNS_ENV] == "start"
-    assert stage_calls == ["start"]
+    assert resolved_env[module._MANAGED_STAGE_RUNS_ENV] == "open"
+    assert stage_calls == ["open"]
 
 
 def _unit_test_run_bootstraps_when_environment_is_missing(
     monkeypatch: MonkeyPatch,
 ) -> None:
-    """Non-start stages should bootstrap once when no valid env exists yet."""
+    """Non-open stages should bootstrap once when no valid env exists yet."""
     module = importlib.import_module(MODULE)
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir)
@@ -553,7 +553,7 @@ def _unit_test_run_bootstraps_when_environment_is_missing(
                     "expected_paths": [".venv"],
                     "expected_interpreters": [".venv/bin/python"],
                     "managed_commands": [
-                        "start=>python3 -m venv .venv",
+                        "open=>python3 -m venv .venv",
                     ],
                 },
             },
@@ -584,13 +584,13 @@ def _unit_test_run_bootstraps_when_environment_is_missing(
             expected_paths: list[Path],
             include_all_stage: bool,
         ) -> tuple[dict[str, str], bool]:
-            """Create the missing interpreter only during start bootstrap."""
+            """Create the missing interpreter only during open bootstrap."""
             del repo_root
             del managed_commands
             del expected_interpreters
             del expected_paths
             del include_all_stage
-            if target_stage != "start":
+            if target_stage != "open":
                 return dict(env), False
             stage_calls.append(target_stage)
             managed_python.parent.mkdir(parents=True, exist_ok=True)
@@ -615,8 +615,8 @@ def _unit_test_run_bootstraps_when_environment_is_missing(
     assert resolved_env is not None
     assert resolved_python == str(managed_python)
     assert resolved_env["DEVCOV_MANAGED_PYTHON"] == str(managed_python)
-    assert resolved_env[module._MANAGED_STAGE_RUNS_ENV] == "start"
-    assert stage_calls == ["start"]
+    assert resolved_env[module._MANAGED_STAGE_RUNS_ENV] == "open"
+    assert stage_calls == ["open"]
 
 
 def _unit_test_bootstrap_stage_uses_current_interpreter_with_flag(
@@ -743,7 +743,7 @@ def _unit_test_bootstrap_stage_does_not_mask_declared_bootstrap_contract(
                     "expected_paths": [".venv"],
                     "expected_interpreters": [".venv/bin/python"],
                     "managed_commands": [
-                        "start=>{current_python} -m venv .venv",
+                        "open=>{current_python} -m venv .venv",
                     ],
                 },
             },
@@ -1101,11 +1101,11 @@ class GeneratedUnittestCases(unittest.TestCase):
         finally:
             monkeypatch.undo()
 
-    def test_start_prepends_command_search_paths(self):
+    def test_open_prepends_command_search_paths(self):
         """Run command search path prepending assertions."""
         monkeypatch = MonkeyPatch()
         try:
-            _unit_test_start_prepends_command_search_paths(monkeypatch)
+            _unit_test_open_prepends_command_search_paths(monkeypatch)
         finally:
             monkeypatch.undo()
 
@@ -1125,37 +1125,37 @@ class GeneratedUnittestCases(unittest.TestCase):
         finally:
             monkeypatch.undo()
 
-    def test_start_reuses_ready_current_interpreter(self):
-        """Run start-stage environment reuse assertions."""
+    def test_open_reuses_ready_current_interpreter(self):
+        """Run open-stage environment reuse assertions."""
         monkeypatch = MonkeyPatch()
         try:
-            _unit_test_start_reuses_ready_current_interpreter(monkeypatch)
+            _unit_test_open_reuses_ready_current_interpreter(monkeypatch)
         finally:
             monkeypatch.undo()
 
-    def test_start_reuses_symlinked_environment_interpreter(self):
+    def test_open_reuses_symlinked_environment_interpreter(self):
         """Run symlinked-interpreter environment reuse assertions."""
         monkeypatch = MonkeyPatch()
         try:
-            _unit_test_start_reuses_symlinked_environment_interpreter(
+            _unit_test_open_reuses_symlinked_environment_interpreter(
                 monkeypatch
             )
         finally:
             monkeypatch.undo()
 
-    def test_start_reuses_external_environment_root(self):
+    def test_open_reuses_external_environment_root(self):
         """Run external-environment-root reuse assertions."""
         monkeypatch = MonkeyPatch()
         try:
-            _unit_test_start_reuses_external_environment_root(monkeypatch)
+            _unit_test_open_reuses_external_environment_root(monkeypatch)
         finally:
             monkeypatch.undo()
 
-    def test_start_does_not_reuse_unrelated_host_interpreter(self):
+    def test_open_does_not_reuse_unrelated_host_interpreter(self):
         """Run unrelated-host interpreter bootstrap assertions."""
         monkeypatch = MonkeyPatch()
         try:
-            _unit_test_start_does_not_reuse_unrelated_host_interpreter(
+            _unit_test_open_does_not_reuse_unrelated_host_interpreter(
                 monkeypatch
             )
         finally:

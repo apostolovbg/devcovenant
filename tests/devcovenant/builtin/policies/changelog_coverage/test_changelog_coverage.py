@@ -54,7 +54,7 @@ def _write_gate_status(
     reset_baseline: bool = False,
     session_snapshot: dict[str, object] | None = None,
 ) -> None:
-    """Write gate-status fixture with a changelog start snapshot."""
+    """Write gate-status fixture with a changelog open snapshot."""
     status_path = (
         tmp_path / "devcovenant" / "registry" / "runtime" / "gate_status.json"
     )
@@ -71,9 +71,9 @@ def _write_gate_status(
         encoding="utf-8",
     )
     payload = {
-        "changelog_start_top_entry_fingerprint": fingerprint,
-        "changelog_start_top_entry_present": bool(fingerprint),
-        "changelog_start_top_version": top_version,
+        "changelog_open_top_entry_fingerprint": fingerprint,
+        "changelog_open_top_entry_present": bool(fingerprint),
+        "changelog_open_top_version": top_version,
         "session_state": session_state,
         "session_id": session_id,
         "session_snapshot_file": _SESSION_SNAPSHOT_REL,
@@ -116,7 +116,7 @@ def _set_scoped_changed_files(
     def _scoped_changed_files(_self, context):
         """Resolve changed paths using session state when provided."""
         state = context.change_state
-        if state.stage == "start":
+        if state.stage == "open":
             return []
         if state.session_valid:
             return list(state.session_paths)
@@ -784,7 +784,7 @@ def _unit_test_line_continuation_paths(
     violations = checker.check(context)
 
     assert not any(
-        "changelog_start_diff_numstat" in item.message for item in violations
+        "changelog_open_diff_numstat" in item.message for item in violations
     )
 
 
@@ -819,7 +819,7 @@ def _unit_test_managed_doc_changes_inside_managed_blocks_are_ignored(
     violations = checker.check(context)
 
     assert not any(
-        "changelog_start_diff_numstat" in item.message for item in violations
+        "changelog_open_diff_numstat" in item.message for item in violations
     )
 
 
@@ -894,7 +894,7 @@ def _unit_test_any_file_changes_inside_managed_blocks_are_ignored(
     violations = checker.check(context)
 
     assert not any(
-        "changelog_start_diff_numstat" in item.message for item in violations
+        "changelog_open_diff_numstat" in item.message for item in violations
     )
 
 
@@ -922,7 +922,7 @@ def _unit_test_managed_yml_regen_changes_are_ignored_in_open_session(
         repo_root=tmp_path,
         all_files=[],
         change_state=ChangeState(
-            stage="end",
+            stage="close",
             gate_status_path="devcovenant/registry/runtime/gate_status.json",
             session_valid=True,
             session_paths=[workflow_path],
@@ -935,7 +935,7 @@ def _unit_test_managed_yml_regen_changes_are_ignored_in_open_session(
                         content=old_workflow,
                     )
                 },
-                "session_start_snapshot": {rel_path: f"1\t1\t{rel_path}"},
+                "session_open_snapshot": {rel_path: f"1\t1\t{rel_path}"},
             },
         ),
     )
@@ -968,7 +968,7 @@ def _unit_test_managed_yaml_regen_changes_are_ignored_in_open_session(
         repo_root=tmp_path,
         all_files=[],
         change_state=ChangeState(
-            stage="end",
+            stage="close",
             gate_status_path="devcovenant/registry/runtime/gate_status.json",
             session_valid=True,
             session_paths=[workflow_path],
@@ -981,7 +981,7 @@ def _unit_test_managed_yaml_regen_changes_are_ignored_in_open_session(
                         content=old_workflow,
                     )
                 },
-                "session_start_snapshot": {rel_path: f"1\t1\t{rel_path}"},
+                "session_open_snapshot": {rel_path: f"1\t1\t{rel_path}"},
             },
         ),
     )
@@ -1019,7 +1019,7 @@ def _unit_test_mixed_yml_managed_and_visible_changes_require_changelog(
         repo_root=tmp_path,
         all_files=[],
         change_state=ChangeState(
-            stage="end",
+            stage="close",
             gate_status_path="devcovenant/registry/runtime/gate_status.json",
             session_valid=True,
             session_paths=[workflow_path],
@@ -1032,7 +1032,7 @@ def _unit_test_mixed_yml_managed_and_visible_changes_require_changelog(
                         content=old_workflow,
                     )
                 },
-                "session_start_snapshot": {rel_path: f"1\t1\t{rel_path}"},
+                "session_open_snapshot": {rel_path: f"1\t1\t{rel_path}"},
             },
         ),
     )
@@ -1119,12 +1119,12 @@ def _unit_test_deleted_files_listed_in_changelog_are_tolerated(
         repo_root=tmp_path,
         all_files=[],
         change_state=ChangeState(
-            stage="end",
+            stage="close",
             gate_status_path="devcovenant/registry/runtime/gate_status.json",
             session_valid=True,
             current_snapshot_numstat={"src/module.py": "hash\tsrc/module.py"},
             session_snapshot_payload={
-                "session_start_snapshot": {
+                "session_open_snapshot": {
                     "src/module.py": "old\tsrc/module.py",
                     "docs/retired.md": "old\tdocs/retired.md",
                 }
@@ -1147,7 +1147,7 @@ def _unit_test_stage_start_ignores_head_deleted_paths(
     context = CheckContext(
         repo_root=tmp_path,
         all_files=[],
-        change_state=ChangeState(stage="start", session_valid=True),
+        change_state=ChangeState(stage="open", session_valid=True),
     )
     violations = checker.check(context)
 
@@ -1157,7 +1157,7 @@ def _unit_test_stage_start_ignores_head_deleted_paths(
 def _unit_test_deleted_files_are_scoped_to_gate_start_snapshot(
     tmp_path: Path, monkeypatch: MonkeyPatch
 ):
-    """Open-session deleted files should come from gate-start snapshot only."""
+    """Open-session deleted files should come from gate-open snapshot only."""
     today = utc_today()
     (tmp_path / "src").mkdir(parents=True, exist_ok=True)
     (tmp_path / "src" / "module.py").write_text("x = 1\n", encoding="utf-8")
@@ -1180,13 +1180,13 @@ def _unit_test_deleted_files_are_scoped_to_gate_start_snapshot(
         repo_root=tmp_path,
         all_files=[],
         change_state=ChangeState(
-            stage="end",
+            stage="close",
             gate_status_path="devcovenant/registry/runtime/gate_status.json",
             session_valid=True,
             session_paths=[tmp_path / "src" / "module.py"],
             current_snapshot_numstat={"src/module.py": "1\t1\tsrc/module.py"},
             session_snapshot_payload={
-                "session_start_snapshot": {
+                "session_open_snapshot": {
                     "src/module.py": "old",
                     "docs/current-deleted.md": "old",
                 }
@@ -1266,7 +1266,7 @@ def _unit_test_document_header_only_changes_are_ignored(
     violations = checker.check(context)
 
     assert not any(
-        "changelog_start_diff_numstat" in item.message for item in violations
+        "changelog_open_diff_numstat" in item.message for item in violations
     )
 
 
@@ -1309,7 +1309,7 @@ def _unit_test_header_and_managed_block_changes_are_ignored(
     violations = checker.check(context)
 
     assert not any(
-        "changelog_start_diff_numstat" in item.message for item in violations
+        "changelog_open_diff_numstat" in item.message for item in violations
     )
 
 
@@ -1385,7 +1385,7 @@ def _unit_test_non_document_header_like_changes_require_changelog(
 def _unit_test_gate_snapshot_requires_new_top_entry(
     tmp_path: Path, monkeypatch: MonkeyPatch
 ):
-    """Current top entry must differ from the gate-start snapshot."""
+    """Current top entry must differ from the gate-open snapshot."""
     today = utc_today()
     top_entry = (
         f"- {today}:\n" f"{_summary_block()}" "  Files:\n" "  src/module.py\n"
@@ -1402,8 +1402,7 @@ def _unit_test_gate_snapshot_requires_new_top_entry(
     violations = checker.check(context)
 
     assert any(
-        "matches the gate-start snapshot" in item.message
-        for item in violations
+        "matches the gate-open snapshot" in item.message for item in violations
     )
 
 
@@ -1411,7 +1410,7 @@ def _unit_test_session_scope_ignores_preexisting_dirty_paths(
     tmp_path: Path,
     monkeypatch: MonkeyPatch,
 ):
-    """Session checks should ignore files already dirty at gate start."""
+    """Session checks should ignore files already dirty at gate open."""
     today = utc_today()
     new_top = (
         f"- {today}:\n"
@@ -1440,7 +1439,7 @@ def _unit_test_session_scope_ignores_preexisting_dirty_paths(
     violations = checker.check(context)
 
     assert not any(
-        "changelog_start_diff_numstat" in item.message for item in violations
+        "changelog_open_diff_numstat" in item.message for item in violations
     )
 
 
@@ -1477,7 +1476,7 @@ def _unit_test_gate_snapshot_requires_previous_entry_preserved(
 def _unit_test_gate_snapshot_allows_previous_entry_anywhere_below(
     tmp_path: Path, monkeypatch: MonkeyPatch
 ):
-    """Gate-start entry may remain anywhere below the fresh top entry."""
+    """Gate-open entry may remain anywhere below the fresh top entry."""
     today = utc_today()
     previous_top = (
         f"- {today}:\n"
@@ -1545,8 +1544,7 @@ def _unit_test_gate_snapshot_blocks_entry_checks_until_new_entry(
     violations = checker.check(context)
 
     assert any(
-        "matches the gate-start snapshot" in item.message
-        for item in violations
+        "matches the gate-open snapshot" in item.message for item in violations
     )
     assert not any("Files: block" in item.message for item in violations)
 
@@ -1910,7 +1908,7 @@ def _unit_test_version_bump_reset_baseline_allows_history_rebuild(
     violations = checker.check(context)
 
     assert not any(
-        "Gate-start changelog snapshot was edited or removed" in item.message
+        "Gate-open changelog snapshot was edited or removed" in item.message
         or "prior top version section directly below it" in item.message
         or "must remain the first entry under the previous version section"
         in item.message
@@ -1974,7 +1972,7 @@ _RESET_BASELINE_RUNTIME_ACTION = (
 def _unit_test_gate_snapshot_empty_requires_new_entry(
     tmp_path: Path, monkeypatch: MonkeyPatch
 ):
-    """When start snapshot has no entry, current run must add one."""
+    """When open snapshot has no entry, current run must add one."""
     (tmp_path / "CHANGELOG.md").write_text(
         "## Version 1.0.0\n",
         encoding="utf-8",
@@ -1995,7 +1993,7 @@ def _unit_test_gate_snapshot_empty_requires_new_entry(
 def _unit_test_session_requires_start_numstat_snapshot(
     tmp_path: Path, monkeypatch: MonkeyPatch
 ):
-    """Gate status no longer requires `changelog_start_diff_numstat`."""
+    """Gate status no longer requires `changelog_open_diff_numstat`."""
     today = utc_today()
     entry = (
         f"- {today}:\n"
@@ -2020,7 +2018,7 @@ def _unit_test_session_requires_start_numstat_snapshot(
     violations = checker.check(context)
 
     assert not any(
-        "changelog_start_diff_numstat" in item.message for item in violations
+        "changelog_open_diff_numstat" in item.message for item in violations
     )
 
 
@@ -2048,9 +2046,9 @@ def _unit_test_session_rejects_invalid_start_numstat_payload(
     status_path.write_text(
         json.dumps(
             {
-                "changelog_start_top_entry_fingerprint": _fingerprint(entry),
-                "changelog_start_top_entry_present": True,
-                "changelog_start_diff_numstat": [],
+                "changelog_open_top_entry_fingerprint": _fingerprint(entry),
+                "changelog_open_top_entry_present": True,
+                "changelog_open_diff_numstat": [],
             }
         ),
         encoding="utf-8",
@@ -2062,7 +2060,7 @@ def _unit_test_session_rejects_invalid_start_numstat_payload(
     violations = checker.check(context)
 
     assert not any(
-        "changelog_start_diff_numstat" in item.message for item in violations
+        "changelog_open_diff_numstat" in item.message for item in violations
     )
 
 
@@ -2081,7 +2079,7 @@ def _unit_test_start_stage_ignores_preexisting_dirty_tree(
         repo_root=tmp_path,
         all_files=[],
         change_state=ChangeState(
-            stage="start",
+            stage="open",
             current_snapshot_paths=[tmp_path / "src" / "preexisting.py"],
         ),
     )
@@ -2416,7 +2414,7 @@ class GeneratedUnittestCases(unittest.TestCase):
             monkeypatch.undo()
 
     def test_stage_start_ignores_head_deleted_paths(self):
-        """Run start-stage deleted-path scoping assertions."""
+        """Run open-stage deleted-path scoping assertions."""
         monkeypatch = MonkeyPatch()
         try:
             with tempfile.TemporaryDirectory() as temp_dir:
@@ -2763,11 +2761,11 @@ class GeneratedUnittestCases(unittest.TestCase):
                 status_path.write_text(
                     json.dumps(
                         {
-                            "changelog_start_top_entry_fingerprint": (
+                            "changelog_open_top_entry_fingerprint": (
                                 _fingerprint(entry)
                             ),
-                            "changelog_start_top_entry_present": True,
-                            "changelog_start_diff_numstat": {
+                            "changelog_open_top_entry_present": True,
+                            "changelog_open_diff_numstat": {
                                 "src/module.py": ""
                             },
                         }
@@ -2779,7 +2777,7 @@ class GeneratedUnittestCases(unittest.TestCase):
                 context = CheckContext(repo_root=tmp_path, all_files=[])
                 violations = checker.check(context)
                 assert not any(
-                    "changelog_start_diff_numstat" in item.message
+                    "changelog_open_diff_numstat" in item.message
                     for item in violations
                 )
         finally:

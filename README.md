@@ -25,8 +25,8 @@ In practice, DevCovenant gives a repository four things:
 
 1. A required workflow.
 
-   The normal work slice is `gate --start`, edit, `gate --mid`, `run`,
-   `gate --end`.
+   The normal work slice is `gate --open`, edit, `gate --verify`, `run`,
+   `gate --close`.
 
 2. Executable policy rules.
 
@@ -117,13 +117,13 @@ devcovenant deploy
 # one manual equivalent is installing `requirements.lock` into that
 # declared environment
 python3 -m pip install -r requirements.lock
-# gate --start can also run the declared bootstrap commands
+# gate --open can also run the declared bootstrap commands
 # and honors active-profile ignore dirs before the snapshot
-devcovenant gate --start
+devcovenant gate --open
 # make your edits
-devcovenant gate --mid
+devcovenant gate --verify
 devcovenant run
-devcovenant gate --end
+devcovenant gate --close
 ```
 
 What those steps mean:
@@ -177,9 +177,8 @@ What those steps mean:
 
 6. The first full gate cycle proves the reviewed setup actually works.
 
-Use a source checkout instead of `pipx` only when you are developing
-DevCovenant itself or testing unreleased changes.
-In that case, work from a full source checkout and use its managed environment.
+Use a local checkout instead of `pipx` only when you intentionally need local
+source behavior instead of the installed CLI.
 If the console script is unavailable there, use `python3 -m devcovenant ...`.
 On Windows, `py -m devcovenant ...` is the common equivalent form.
 
@@ -187,11 +186,11 @@ On Windows, `py -m devcovenant ...` is the common equivalent form.
 The standard repository workflow is:
 
 ```bash
-devcovenant gate --start
+devcovenant gate --open
 # edit files and clear complaints while working
-devcovenant gate --mid
+devcovenant gate --verify
 devcovenant run
-devcovenant gate --end
+devcovenant gate --close
 ```
 
 Use the commands this way:
@@ -202,12 +201,12 @@ Use the commands this way:
   It inspects the repository and writes logs, but it does not open or close a
   gate session.
 
-- `gate --start`
+- `gate --open`
 
   Opens a work session and records the starting state for the slice after
   honoring active-profile ignore dirs and engine ignores.
 
-- `gate --mid`
+- `gate --verify`
 
   Required pre-run check.
   It catches hook changes and DevCovenant-managed updates before `run`.
@@ -216,7 +215,7 @@ Use the commands this way:
 
   Runs the declared workflow steps in order and records the results.
 
-- `gate --end`
+- `gate --close`
 
   Runs the closing pre-commit pass and closes the session when the required
   evidence is fresh and passing.
@@ -236,10 +235,10 @@ Most operators only need a small command set day to day:
 ```bash
 devcovenant check
 devcovenant gate --status
-devcovenant gate --start
-devcovenant gate --mid
+devcovenant gate --open
+devcovenant gate --verify
 devcovenant run
-devcovenant gate --end
+devcovenant gate --close
 devcovenant asset SPEC.md
 devcovenant refresh
 devcovenant deploy
@@ -278,7 +277,7 @@ The most important first-review settings in `devcovenant/config.yaml` are:
 2. `developer_mode`
 
    `false` for a normal repository using DevCovenant.
-   `true` only when the repository is being used to develop DevCovenant itself.
+   `true` only when the repository owns DevCovenant development surfaces.
 
 3. `profiles.active`
 

@@ -166,7 +166,7 @@ def workflow_session_path_from_option(
 
 
 SCHEMA_VERSION = 4
-ANCHOR_IDS = ("start", "mid", "end")
+ANCHOR_IDS = ("open", "verify", "close")
 DEFAULT_PRE_COMMIT_COMMAND = "pre-commit run --all-files"
 _FRESHNESS_KINDS = {"ignore_paths", "any_change"}
 _RUNNER_KINDS = {
@@ -313,11 +313,11 @@ def _normalize_run_entry(
     enabled = _normalize_bool(raw_entry.get("enabled"), default=True)
     after = _normalize_position_reference(
         raw_entry.get("after"),
-        default="mid",
+        default="verify",
     )
     before = _normalize_position_reference(
         raw_entry.get("before"),
-        default="end",
+        default="close",
     )
     order = _normalize_int(raw_entry.get("order"), default=100)
 
@@ -634,12 +634,12 @@ def _resolve_positioned_runs(
     valid_ids = [*ANCHOR_IDS, *sorted(run_map)]
     graph = {node_id: set() for node_id in [*ANCHOR_IDS, *sorted(run_map)]}
     indegree = {node_id: 0 for node_id in graph}
-    _add_position_edge(graph, indegree, "start", "mid")
-    _add_position_edge(graph, indegree, "mid", "end")
+    _add_position_edge(graph, indegree, "open", "verify")
+    _add_position_edge(graph, indegree, "verify", "close")
 
     for run_id, run in run_map.items():
-        after_id = _position_token(run, "after", default="mid")
-        before_id = _position_token(run, "before", default="end")
+        after_id = _position_token(run, "after", default="verify")
+        before_id = _position_token(run, "before", default="close")
         if after_id not in graph:
             raise _position_reference_error(
                 run_id,
@@ -950,7 +950,7 @@ def _as_epoch(raw: object) -> float:
 def check_workflow_contract(
     context: CheckContext,
 ) -> list[Violation]:
-    """Enforce the recorded start, mid, run, and end workflow contract."""
+    """Enforce the recorded open, verify, run, and close workflow contract."""
     violations: list[Violation] = []
     status_path = _resolve_status_path(context)
     status_rel = status_path.relative_to(context.repo_root)
@@ -961,7 +961,7 @@ def check_workflow_contract(
 
     if in_pre_commit and not stage:
         return violations
-    if stage == "start":
+    if stage == "open":
         return violations
 
     try:
@@ -992,9 +992,10 @@ def check_workflow_contract(
                 severity="error",
                 file_path=status_rel,
                 message=(
-                    "Gate status is missing. Run `devcovenant gate --start`, "
-                    "then `devcovenant gate --mid`, then `devcovenant run`, "
-                    "then `devcovenant gate --end`."
+                    "Gate status is missing. Run `devcovenant gate --open`, "
+                    "then `devcovenant gate --verify`, then "
+                    "`devcovenant run`, "
+                    "then `devcovenant gate --close`."
                 ),
             )
         ]
@@ -1006,7 +1007,7 @@ def check_workflow_contract(
     ).strip()
     has_unsessioned_edits = (
         not context.change_state.session_valid
-        and session_reason_code == "unsessioned_edits_after_end"
+        and session_reason_code == "unsessioned_edits_after_close"
     )
     if not session_id:
         if has_unsessioned_edits:
@@ -1017,13 +1018,13 @@ def check_workflow_contract(
                     file_path=status_rel,
                     message=(
                         "Changes exist without a recorded session. Run "
-                        "`devcovenant gate --start` before edits."
+                        "`devcovenant gate --open` before edits."
                     ),
                 )
             ]
         return violations
 
-    if stage == "end":
+    if stage == "close":
         if session_state != "open":
             violations.append(
                 Violation(
@@ -1031,8 +1032,8 @@ def check_workflow_contract(
                     severity="error",
                     file_path=status_rel,
                     message=(
-                        "End gate requires an active open session. Run "
-                        "`devcovenant gate --start` first."
+                        "Close gate requires an active open session. Run "
+                        "`devcovenant gate --open` first."
                     ),
                 )
             )
@@ -1046,7 +1047,7 @@ def check_workflow_contract(
                     file_path=status_rel,
                     message=(
                         "Session is still open. Complete the workflow with "
-                        "`devcovenant gate --end`."
+                        "`devcovenant gate --close`."
                     ),
                 )
             )
@@ -1058,7 +1059,7 @@ def check_workflow_contract(
                     file_path=status_rel,
                     message=(
                         "Detected edits outside an active session. Run "
-                        "`devcovenant gate --start` before edits."
+                        "`devcovenant gate --open` before edits."
                     ),
                 )
             )
@@ -1108,41 +1109,41 @@ def check_workflow_contract(
                 file_path=workflow_session_rel,
                 message=(
                     "Workflow session is missing. Run `devcovenant "
-                    "gate --start`, then `devcovenant gate --mid`, then "
+                    "gate --open`, then `devcovenant gate --verify`, then "
                     "execute workflow runs with `devcovenant run`, then "
-                    "`devcovenant gate --end`."
+                    "`devcovenant gate --close`."
                 ),
             )
         ]
 
     pre_commit_command = _required_pre_commit_command(context)
-    start_ts = _as_epoch(status.get("pre_commit_start_epoch"))
-    end_ts = _as_epoch(status.get("pre_commit_end_epoch"))
-    if start_ts <= 0.0:
+    open_ts = _as_epoch(status.get("pre_commit_open_epoch"))
+    close_ts = _as_epoch(status.get("pre_commit_close_epoch"))
+    if open_ts <= 0.0:
         violations.append(
             Violation(
                 policy_id=CHECK_ID,
                 severity="error",
                 file_path=status_rel,
                 message=(
-                    "Session start pre-commit run is missing. Run "
-                    "`devcovenant gate --start` before edits."
+                    "Session open pre-commit run is missing. Run "
+                    "`devcovenant gate --open` before edits."
                 ),
             )
         )
-    start_command = _normalize_pre_commit_command(
-        status.get("pre_commit_start_command") or ""
+    open_command = _normalize_pre_commit_command(
+        status.get("pre_commit_open_command") or ""
     )
-    if pre_commit_command and start_command != pre_commit_command:
+    if pre_commit_command and open_command != pre_commit_command:
         violations.append(
             Violation(
                 policy_id=CHECK_ID,
                 severity="error",
                 file_path=status_rel,
                 message=(
-                    "Session start pre-commit command is missing or does "
+                    "Session open pre-commit command is missing or does "
                     f"not include `{pre_commit_command}`. Re-run "
-                    "`devcovenant gate --start`."
+                    "`devcovenant gate --open`."
                 ),
             )
         )
@@ -1159,12 +1160,12 @@ def check_workflow_contract(
                 file_path=workflow_session_rel,
                 message=(
                     "Workflow session id does not match gate status. "
-                    "Re-run `devcovenant gate --start`."
+                    "Re-run `devcovenant gate --open`."
                 ),
             )
         )
         return violations
-    if stage == "end":
+    if stage == "close":
         if workflow_session_state != "open":
             violations.append(
                 Violation(
@@ -1173,7 +1174,7 @@ def check_workflow_contract(
                     file_path=workflow_session_rel,
                     message=(
                         "Workflow session must be open during "
-                        "`devcovenant gate --end`."
+                        "`devcovenant gate --close`."
                     ),
                 )
             )
@@ -1186,7 +1187,7 @@ def check_workflow_contract(
                 file_path=workflow_session_rel,
                 message=(
                     "Workflow session is still open. Complete the "
-                    "workflow with `devcovenant gate --end`."
+                    "workflow with `devcovenant gate --close`."
                 ),
             )
         )
@@ -1221,44 +1222,44 @@ def check_workflow_contract(
             )
         )
 
-    if stage != "end":
-        if end_ts <= 0.0:
+    if stage != "close":
+        if close_ts <= 0.0:
             violations.append(
                 Violation(
                     policy_id=CHECK_ID,
                     severity="error",
                     file_path=status_rel,
                     message=(
-                        "Session end pre-commit run is missing. Run "
-                        "`devcovenant gate --end`."
+                        "Session close pre-commit run is missing. Run "
+                        "`devcovenant gate --close`."
                     ),
                 )
             )
-        elif start_ts > 0.0 and end_ts < start_ts:
+        elif open_ts > 0.0 and close_ts < open_ts:
             violations.append(
                 Violation(
                     policy_id=CHECK_ID,
                     severity="error",
                     file_path=status_rel,
                     message=(
-                        "Session end timestamp predates session start. "
-                        "Re-run `devcovenant gate --end`."
+                        "Session close timestamp predates session open. "
+                        "Re-run `devcovenant gate --close`."
                     ),
                 )
             )
-        end_command = _normalize_pre_commit_command(
-            status.get("pre_commit_end_command") or ""
+        close_command = _normalize_pre_commit_command(
+            status.get("pre_commit_close_command") or ""
         )
-        if pre_commit_command and end_command != pre_commit_command:
+        if pre_commit_command and close_command != pre_commit_command:
             violations.append(
                 Violation(
                     policy_id=CHECK_ID,
                     severity="error",
                     file_path=status_rel,
                     message=(
-                        "Session end pre-commit command is missing or does "
+                        "Session close pre-commit command is missing or does "
                         f"not include `{pre_commit_command}`. Re-run "
-                        "`devcovenant gate --end`."
+                        "`devcovenant gate --close`."
                     ),
                 )
             )

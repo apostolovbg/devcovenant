@@ -271,7 +271,7 @@ alone are not enough.
 That scanner ownership should stay inside policy metadata, not in raw CI
 commands or repo-only shell glue.
 
-The builtin `security-scanner` policy now supports structured `scanners`
+The builtin `security-scanner` policy supports structured `scanners`
 metadata.
 The builtin `python` profile uses that path to contribute a Bandit backend
 plus the default `bandit.yaml` asset.
@@ -533,7 +533,7 @@ Keep descriptor prose, remediation messages, and policy docs aligned on
 repository-relative terminology so generated outputs stay consistent.
 
 That includes builtin dependency-maintenance behavior. The shared
-`dependency-management` runtime now expands supported
+`dependency-management` runtime expands supported
 `requirements.in` includes when it builds license inventories, not only
 when it compiles locks, so surfaces that compose other lockfiles expose
 the same dependency inventory their generated reports and license texts

@@ -42,8 +42,8 @@ Registry regeneration occurs during full-refresh paths:
 - `devcovenant refresh`
 - `devcovenant deploy`
 - `devcovenant upgrade`
-- gate pre-commit stages (`devcovenant gate --start`, required non-lifecycle
-  `devcovenant gate --mid`, and `devcovenant gate --end`) through gate-owned
+- gate pre-commit stages (`devcovenant gate --open`, required non-lifecycle
+  `devcovenant gate --verify`, and `devcovenant gate --close`) through gate-owned
   check orchestration
 
 Ownership model:
@@ -55,7 +55,7 @@ Ownership model:
 If integrity checks report registry drift:
 1. Run `devcovenant refresh`.
 2. Re-run `devcovenant run`.
-3. Re-run `devcovenant gate --end`.
+3. Re-run `devcovenant gate --close`.
 
 If drift persists, compare AGENTS policy block content against
 `devcovenant/registry/registry.yaml` and verify descriptor/profile edits were
@@ -66,5 +66,5 @@ refreshed.
 2. Confirm `devcovenant/registry/registry.yaml` is regenerated when inputs
    changed.
 3. Use `devcovenant/registry/runtime/` only for live runtime inspection.
-4. Run `devcovenant gate --mid` before `devcovenant run` in active sessions.
+4. Run `devcovenant gate --verify` before `devcovenant run` in active sessions.
 5. Validate with tests and end gate.

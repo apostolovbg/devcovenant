@@ -171,11 +171,11 @@ def _unit_test_handles_non_utf_related_tests():
         )
 
 
-def _unit_test_start_stage_skips_checks():
-    """Start stage should skip tests-coverage enforcement."""
+def _unit_test_open_stage_skips_checks():
+    """Open stage should skip tests-coverage enforcement."""
     with tempfile.TemporaryDirectory() as tmpdir:
         repo_root = Path(tmpdir)
-        context = _context(repo_root, stage="start")
+        context = _context(repo_root, stage="open")
         assert _policy().check(context) == []
 
 
@@ -242,9 +242,9 @@ class GeneratedUnittestCases(unittest.TestCase):
         """Run test_handles_non_utf_related_tests."""
         _unit_test_handles_non_utf_related_tests()
 
-    def test_start_stage_skips_checks(self):
-        """Run test_start_stage_skips_checks."""
-        _unit_test_start_stage_skips_checks()
+    def test_open_stage_skips_checks(self):
+        """Run test_open_stage_skips_checks."""
+        _unit_test_open_stage_skips_checks()
 
     def test_flags_missing_symbol_level_assertions(self):
         """Run test_flags_missing_symbol_level_assertions."""
