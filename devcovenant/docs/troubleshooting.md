@@ -1,6 +1,6 @@
 # Troubleshooting
-**Last Updated:** 2026-04-07
-**Project Version:** 1.0.1b2
+**Last Updated:** 2026-04-15
+**Project Version:** 1.0.1b3
 
 ## Overview
 Use this guide when DevCovenant is blocking work and you need the fastest clean

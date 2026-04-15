@@ -1,9 +1,9 @@
 # devcovenant
 **Doc ID:** README
 **Doc Type:** repo-readme
-**Project Version:** 1.0.1b2
-**Last Updated:** 2026-04-08
-**DevCovenant Version:** 1.0.1b2
+**Project Version:** 1.0.1b3
+**Last Updated:** 2026-04-15
+**DevCovenant Version:** 1.0.1b3
 
 <!-- DEVCOV:BEGIN -->
 

@@ -15,6 +15,7 @@ managed_block: |-
   Add one entry for each substantive change under the current version header.
   Keep entries newest-first and record dates in ISO format (`YYYY-MM-DD`).
   Each entry must include Change/Why/Impact summary lines with action verbs.
+  Keep one blank line after each version heading and between dated entries.
   Example:
   ```
   ## Version 1.2.3

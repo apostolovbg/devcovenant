@@ -1,6 +1,6 @@
 # Registry
-**Last Updated:** 2026-04-14
-**Project Version:** 1.0.1b2
+**Last Updated:** 2026-04-15
+**Project Version:** 1.0.1b3
 
 ## Overview
 DevCovenant uses `devcovenant/registry/` for generated state.

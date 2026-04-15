@@ -1,13 +1,13 @@
 # DevCovenant Development Guide
 **Doc ID:** AGENTS
 **Doc Type:** policy-source
-**Project Version:** 1.0.1b2
+**Project Version:** 1.0.1b3
 **Project Stage:** stable
 **Maintenance Stance:** active
 **Compatibility Policy:** forward-only
 **Versioning Mode:** versioned
-**Last Updated:** 2026-04-14
-**DevCovenant Version:** 1.0.1b2
+**Last Updated:** 2026-04-15
+**DevCovenant Version:** 1.0.1b3
 
 <!-- DEVCOV:BEGIN -->
 # Message from DevCovenant's Human (Read First)
@@ -202,7 +202,7 @@ directly.
 <!-- DEVCOV:BEGIN -->
 ## Project Governance
 This block reflects the repository's active project-governance state.
-- Project Version: 1.0.1b2
+- Project Version: 1.0.1b3
 - Project Stage: stable
 - Maintenance Stance: active
 - Compatibility Policy: forward-only
@@ -592,8 +592,10 @@ resolving changed paths from the active gate session. If the top version
 changes during the session, the new version section must be prepended above
 the preserved previous top version section and that preserved pre-session
 top entry must remain first in the previous section instead of relabeling
-old entries. This rule depends on section placement, not on bump wording
-inside the entry text.
+old entries. Recognized version headings must be followed by a blank line
+before the first dated entry, and consecutive dated entries in the same
+section must be separated by a blank line. This rule depends on section
+placement, not on bump wording inside the entry text.
 Collection prefixes (when enabled) must be logged in their own changelog;
 prefixed files may not appear in the root changelog. This keeps release
 notes daily, file-complete, and traceable.

@@ -587,6 +587,55 @@ def _find_order_violation(section: str) -> tuple[str, str] | None:
     return None
 
 
+def _find_spacing_violation(
+    section: str,
+    *,
+    release_headings: list[str],
+) -> tuple[str, str, str | None] | None:
+    """Return the first missing-blank-line issue inside one section."""
+    lines = section.splitlines()
+    entry_indexes = [
+        index for index, line in enumerate(lines) if _DATE_PATTERN.match(line)
+    ]
+    if not entry_indexes:
+        return None
+
+    heading_index = None
+    for index, line in enumerate(lines[: entry_indexes[0]]):
+        stripped = line.strip()
+        if any(stripped.startswith(heading) for heading in release_headings):
+            heading_index = index
+            break
+
+    first_entry_match = _DATE_PATTERN.match(lines[entry_indexes[0]])
+    first_entry_date = (
+        first_entry_match.group(1) if first_entry_match else "dated entry"
+    )
+    if (
+        heading_index is not None
+        and entry_indexes[0] > heading_index
+        and lines[entry_indexes[0] - 1].strip()
+    ):
+        return ("heading", first_entry_date, None)
+
+    for previous_index, current_index in zip(
+        entry_indexes,
+        entry_indexes[1:],
+    ):
+        if not lines[current_index - 1].strip():
+            continue
+        previous_match = _DATE_PATTERN.match(lines[previous_index])
+        current_match = _DATE_PATTERN.match(lines[current_index])
+        previous_date = (
+            previous_match.group(1) if previous_match else "previous entry"
+        )
+        current_date = (
+            current_match.group(1) if current_match else "current entry"
+        )
+        return ("between", previous_date, current_date)
+    return None
+
+
 def _find_entry_location(
     ordered_sections: list[tuple[str, str]],
     fingerprint: str,
@@ -606,7 +655,7 @@ class ChangelogCoverageCheck(PolicyCheck):
     """Verify that modified files land in the appropriate changelog."""
 
     policy_id = "changelog-coverage"
-    version = "2.4.0"
+    version = "2.4.1"
 
     def run_runtime_action(
         self,
@@ -945,6 +994,41 @@ class ChangelogCoverageCheck(PolicyCheck):
             else (None, "")
         )
         if root_section:
+            spacing_issue = _find_spacing_violation(
+                root_section,
+                release_headings=release_headings,
+            )
+            if spacing_issue:
+                issue_kind, previous_date, current_date = spacing_issue
+                if issue_kind == "heading":
+                    message = (
+                        "The latest changelog version section must include "
+                        "a blank line after the version heading before the "
+                        f"first entry ({previous_date})."
+                    )
+                    suggestion = (
+                        "Insert a blank line between the version heading "
+                        "and the first dated entry."
+                    )
+                else:
+                    message = (
+                        "Changelog entries must be separated by a blank "
+                        f"line. Found {current_date} immediately after "
+                        f"{previous_date}."
+                    )
+                    suggestion = (
+                        "Insert a blank line between those dated entries."
+                    )
+                violations.append(
+                    Violation(
+                        policy_id=self.policy_id,
+                        severity="error",
+                        file_path=root_changelog,
+                        message=message,
+                        suggestion=suggestion,
+                        can_auto_fix=False,
+                    )
+                )
             order_issue = _find_order_violation(root_section)
             if order_issue:
                 older, newer = order_issue
@@ -1356,6 +1440,43 @@ class ChangelogCoverageCheck(PolicyCheck):
                 else (None, "")
             )
             if changelog_section:
+                spacing_issue = _find_spacing_violation(
+                    changelog_section,
+                    release_headings=release_headings,
+                )
+                if spacing_issue:
+                    issue_kind, previous_date, current_date = spacing_issue
+                    if issue_kind == "heading":
+                        message = (
+                            "The latest changelog version section must "
+                            "include a blank line after the version "
+                            f"heading before the first entry "
+                            f"({previous_date})."
+                        )
+                        suggestion = (
+                            "Insert a blank line between the version "
+                            "heading and the first dated entry."
+                        )
+                    else:
+                        message = (
+                            "Changelog entries must be separated by a "
+                            f"blank line. Found {current_date} "
+                            f"immediately after {previous_date}."
+                        )
+                        suggestion = (
+                            "Insert a blank line between those dated "
+                            "entries."
+                        )
+                    violations.append(
+                        Violation(
+                            policy_id=self.policy_id,
+                            severity="error",
+                            file_path=changelog_path,
+                            message=message,
+                            suggestion=suggestion,
+                            can_auto_fix=False,
+                        )
+                    )
                 order_issue = _find_order_violation(changelog_section)
                 if order_issue:
                     older, newer = order_issue

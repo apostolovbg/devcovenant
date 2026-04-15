@@ -1,7 +1,7 @@
 # Installation and Lifecycle
-**Last Updated:** 2026-04-14
+**Last Updated:** 2026-04-15
 
-**Project Version:** 1.0.1b2
+**Project Version:** 1.0.1b3
 
 ## Overview
 This page explains how to install DevCovenant, when to use `pipx` versus a

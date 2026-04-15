@@ -1,7 +1,7 @@
 # Policies
-**Last Updated:** 2026-04-14
+**Last Updated:** 2026-04-15
 
-**Project Version:** 1.0.1b2
+**Project Version:** 1.0.1b3
 
 ## Overview
 Policies are the named rule units in DevCovenant.
@@ -212,7 +212,9 @@ One good example is `changelog-coverage`: it works from the active gate slice,
 not from raw git history. When the top changelog version changes during an
 open slice, it expects a new version section above the preserved previous top
 section, and it expects the preserved pre-session top entry to stay first in
-that older section instead of relabeling old entries. It tracks that
+that older section instead of relabeling old entries. It also requires a
+blank line after each version heading and between dated entries so the live
+changelog matches the documented example format. It tracks that
 preserved entry by fingerprint, so the rule does not depend on bump wording
 inside the entry text.
 If you intentionally rebuild changelog history, run

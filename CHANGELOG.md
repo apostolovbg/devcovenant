@@ -1,13 +1,13 @@
 # Changelog
 **Doc ID:** CHANGELOG
 **Doc Type:** changelog
-**Project Version:** 1.0.1b2
+**Project Version:** 1.0.1b3
 **Project Stage:** stable
 **Maintenance Stance:** active
 **Compatibility Policy:** forward-only
 **Versioning Mode:** versioned
-**Last Updated:** 2026-04-14
-**DevCovenant Version:** 1.0.1b2
+**Last Updated:** 2026-04-15
+**DevCovenant Version:** 1.0.1b3
 
 <!-- DEVCOV:BEGIN -->
 ## DevCovenant Change Logging Rules
@@ -16,6 +16,7 @@ use DevCovenant.
 Add one entry for each substantive change under the current version header.
 Keep entries newest-first and record dates in ISO format (`YYYY-MM-DD`).
 Each entry must include Change/Why/Impact summary lines with action verbs.
+Keep one blank line after each version heading and between dated entries.
 Example:
 ```
 ## Version 1.2.3
@@ -57,6 +58,55 @@ Example:
 <!-- DEVCOV:END -->
 
 ## Log changes here
+
+## Version 1.0.1b3
+
+- 2026-04-15:
+  Change: Added changelog blank-line enforcement, updated the managed
+  changelog template text, and bumped DevCovenant to `1.0.1b3`.
+  Why: Align the enforced changelog layout with the documented examples while
+  keeping extra entry metadata flexible, and publish the fix under a new
+  canonical version.
+  Impact: Rejects compact changelog sections that omit blank lines after
+  version headings or between dated entries, updates the policy docs and
+  managed changelog guidance, and records the `1.0.1b3` release surfaces for
+  immediate testing.
+  Files:
+  CHANGELOG.md
+  AGENTS.md
+  CONTRIBUTING.md
+  PLAN.md
+  POLICY_MAP.md
+  PRIVACY.md
+  PROFILE_MAP.md
+  README.md
+  SECURITY.md
+  SPEC.md
+  SUPPORT.md
+  devcovenant/VERSION
+  devcovenant/README.md
+  devcovenant/builtin/policies/changelog_coverage/test_blueprints.yaml
+  pyproject.toml
+  devcovenant/builtin/policies/changelog_coverage/changelog_coverage.py
+  devcovenant/builtin/policies/changelog_coverage/changelog_coverage.yaml
+  devcovenant/builtin/profiles/global/assets/CHANGELOG.yaml
+  devcovenant/docs/policies.md
+  devcovenant/licenses/THIRD_PARTY_LICENSES.md
+  devcovenant/licenses/packaging-26.0.txt
+  devcovenant/licenses/packaging-26.1.txt
+  devcovenant/runtime-requirements.lock
+  licenses/THIRD_PARTY_LICENSES.md
+  licenses/filelock-3.25.2.txt
+  licenses/filelock-3.28.0.txt
+  licenses/packaging-26.0.txt
+  licenses/packaging-26.1.txt
+  licenses/rich-14.3.4.txt
+  licenses/rich-15.0.0.txt
+  licenses/virtualenv-21.2.1.txt
+  licenses/virtualenv-21.2.4.txt
+  requirements.lock
+  tests/devcovenant/builtin/policies/changelog_coverage/\
+    test_changelog_coverage.py
 
 ## Version 1.0.1b2
 

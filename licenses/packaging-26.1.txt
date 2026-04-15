@@ -1,7 +1,7 @@
-# packaging 26.0
+# packaging 26.1
 
 This file aggregates the upstream license texts resolved for
-`packaging==26.0`.
+`packaging==26.1`.
 
 Resolved from: installed distribution metadata
 

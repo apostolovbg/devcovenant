@@ -523,7 +523,7 @@ def _unit_test_summary_root_matches_inflected_forms(
 
     today = utc_today()
     changelog_text = (
-        "## Version 1.0.0\n"
+        "## Version 1.0.0\n\n"
         f"- {today}:\n"
         "  Change: Updated behavior here\n"
         "  Why: Updating guidance keeps contributors aligned\n"
@@ -583,7 +583,7 @@ def _unit_test_rng_changelog_entry_found(
     rng_changelog.parent.mkdir(parents=True, exist_ok=True)
     today = utc_today()
     rng_text = (
-        "## Version 1.0.0\n"
+        "## Version 1.0.0\n\n"
         f"- {today}:\n"
         f"{_summary_block()}"
         "  Files:\n"
@@ -613,7 +613,7 @@ def _unit_test_rng_files_not_logged_in_root(
     root_changelog = tmp_path / "CHANGELOG.md"
     today = utc_today()
     rng_entry = (
-        "## Version 1.0.0\n"
+        "## Version 1.0.0\n\n"
         f"- {today}:\n"
         f"{_summary_block()}"
         "  Files:\n"
@@ -652,9 +652,11 @@ def _unit_test_rng_entries_ignore_old_root_sections(
         dedent(
             """
             ## Version 2.0.0
+
             - entry about docs/readme.md
 
             ## Version 1.0.0
+
             - 2026-01-07:
               Change: Updated rng event behavior
               Why: Clarified event logging for QA
@@ -668,7 +670,7 @@ def _unit_test_rng_entries_ignore_old_root_sections(
     today = utc_today()
     rng_changelog.write_text(
         (
-            "## Version 2.0.0\n"
+            "## Version 2.0.0\n\n"
             f"- {today}:\n"
             f"{_summary_block()}"
             "  Files:\n"
@@ -1502,7 +1504,12 @@ def _unit_test_gate_snapshot_allows_previous_entry_anywhere_below(
         "  src/module.py\n"
     )
     (tmp_path / "CHANGELOG.md").write_text(
-        f"## Version 1.0.0\n{new_top}{inserted_middle}{previous_top}",
+        (
+            "## Version 1.0.0\n\n"
+            f"{new_top}\n"
+            f"{inserted_middle}\n"
+            f"{previous_top}"
+        ),
         encoding="utf-8",
     )
     _write_gate_status(tmp_path, _fingerprint(previous_top))
@@ -1571,6 +1578,93 @@ def _unit_test_gate_snapshot_ignores_changelog_only_sessions(
     assert violations == []
 
 
+def _unit_test_requires_blank_line_after_version_heading(
+    tmp_path: Path, monkeypatch: MonkeyPatch
+):
+    """The first dated entry must be separated from the version heading."""
+    today = utc_today()
+    top_entry = (
+        f"- {today}:\n" f"{_summary_block()}" "  Files:\n" "  src/module.py\n"
+    )
+    (tmp_path / "CHANGELOG.md").write_text(
+        f"## Version 1.0.0\n{top_entry}",
+        encoding="utf-8",
+    )
+    _write_gate_status(tmp_path, "")
+    _set_git_diff(monkeypatch, "src/module.py\n")
+
+    checker = _make_checker(tmp_path)
+    context = CheckContext(repo_root=tmp_path, all_files=[])
+    violations = checker.check(context)
+
+    assert any(
+        "blank line after the version heading" in item.message
+        for item in violations
+    )
+
+
+def _unit_test_requires_blank_line_between_dated_entries(
+    tmp_path: Path, monkeypatch: MonkeyPatch
+):
+    """Consecutive dated entries must be separated by a blank line."""
+    today = utc_today()
+    top_entry = (
+        f"- {today}:\n" f"{_summary_block()}" "  Files:\n" "  src/module.py\n"
+    )
+    previous_entry = (
+        "- 2026-04-14:\n"
+        "  Change: Updated earlier release notes\n"
+        "  Why: Clarified the older release summary\n"
+        "  Impact: Reviewers can still inspect the earlier change\n"
+        "  Files:\n"
+        "  docs/older.md\n"
+    )
+    (tmp_path / "CHANGELOG.md").write_text(
+        f"## Version 1.0.0\n\n{top_entry}{previous_entry}",
+        encoding="utf-8",
+    )
+    _write_gate_status(tmp_path, "")
+    _set_git_diff(monkeypatch, "src/module.py\n")
+
+    checker = _make_checker(tmp_path)
+    context = CheckContext(repo_root=tmp_path, all_files=[])
+    violations = checker.check(context)
+
+    assert any(
+        "entries must be separated by a blank line" in item.message
+        for item in violations
+    )
+
+
+def _unit_test_allows_extra_labeled_lines_inside_entry(
+    tmp_path: Path, monkeypatch: MonkeyPatch
+):
+    """Extra labeled metadata lines may appear before the Files block."""
+    today = utc_today()
+    top_entry = (
+        f"- {today}:\n"
+        "  Change: Updated module behavior\n"
+        "  Why: Clarified expectations for contributors\n"
+        "  Impact: Users see updated guidance in docs\n"
+        "  Semver: patch\n"
+        "  Ticket: DC-123\n"
+        "  Files:\n"
+        "  src/module.py\n"
+    )
+    (tmp_path / "CHANGELOG.md").write_text(
+        f"## Version 1.0.0\n\n{top_entry}",
+        encoding="utf-8",
+    )
+    _write_gate_status(tmp_path, "")
+    _set_git_diff(monkeypatch, "src/module.py\n")
+
+    checker = _make_checker(tmp_path)
+    context = CheckContext(repo_root=tmp_path, all_files=[])
+    violations = checker.check(context)
+
+    assert violations == []
+
+
 def _unit_test_gate_snapshot_allows_prepended_entry(
     tmp_path: Path, monkeypatch: MonkeyPatch
 ):
@@ -1593,7 +1687,7 @@ def _unit_test_gate_snapshot_allows_prepended_entry(
         "  src/module.py\n"
     )
     (tmp_path / "CHANGELOG.md").write_text(
-        f"## Version 1.0.0\n{new_top}{previous_top}",
+        "## Version 1.0.0\n\n" f"{new_top}\n" f"{previous_top}",
         encoding="utf-8",
     )
     _write_gate_status(tmp_path, _fingerprint(previous_top))
@@ -1698,10 +1792,11 @@ def _unit_test_version_bump_allows_previous_entry_in_previous_section(
     )
     (tmp_path / "CHANGELOG.md").write_text(
         (
-            "## Version 1.0.1\n"
+            "## Version 1.0.1\n\n"
             f"{new_top}"
-            "## Version 1.0.0\n"
-            f"{previous_top}{older_entry}"
+            "\n## Version 1.0.0\n\n"
+            f"{previous_top}\n"
+            f"{older_entry}"
         ),
         encoding="utf-8",
     )
@@ -1861,6 +1956,15 @@ _VERSION_BUMP_REQUIRES_PREVIOUS_TOP_FIRST = (
 )
 _VERSION_BUMP_RESET_BASELINE = (
     _unit_test_version_bump_reset_baseline_allows_history_rebuild
+)
+_REQUIRES_BLANK_LINE_AFTER_VERSION_HEADING = (
+    _unit_test_requires_blank_line_after_version_heading
+)
+_REQUIRES_BLANK_LINE_BETWEEN_DATED_ENTRIES = (
+    _unit_test_requires_blank_line_between_dated_entries
+)
+_ALLOWS_EXTRA_LABELED_LINES_INSIDE_ENTRY = (
+    _unit_test_allows_extra_labeled_lines_inside_entry
 )
 _RESET_BASELINE_RUNTIME_ACTION = (
     _unit_test_run_runtime_action_reset_baseline_marks_open_session
@@ -2474,6 +2578,42 @@ class GeneratedUnittestCases(unittest.TestCase):
                 tmp_path = Path(temp_dir).resolve()
                 _unit_test_gate_snapshot_ignores_changelog_only_sessions(
                     tmp_path=tmp_path, monkeypatch=monkeypatch
+                )
+        finally:
+            monkeypatch.undo()
+
+    def test_requires_blank_line_after_version_heading(self):
+        """Run changelog heading-spacing coverage."""
+        monkeypatch = MonkeyPatch()
+        try:
+            with tempfile.TemporaryDirectory() as temp_dir:
+                _REQUIRES_BLANK_LINE_AFTER_VERSION_HEADING(
+                    Path(temp_dir).resolve(),
+                    monkeypatch,
+                )
+        finally:
+            monkeypatch.undo()
+
+    def test_requires_blank_line_between_dated_entries(self):
+        """Run changelog inter-entry spacing coverage."""
+        monkeypatch = MonkeyPatch()
+        try:
+            with tempfile.TemporaryDirectory() as temp_dir:
+                _REQUIRES_BLANK_LINE_BETWEEN_DATED_ENTRIES(
+                    Path(temp_dir).resolve(),
+                    monkeypatch,
+                )
+        finally:
+            monkeypatch.undo()
+
+    def test_allows_extra_labeled_lines_inside_entry(self):
+        """Run changelog extra-metadata coverage."""
+        monkeypatch = MonkeyPatch()
+        try:
+            with tempfile.TemporaryDirectory() as temp_dir:
+                _ALLOWS_EXTRA_LABELED_LINES_INSIDE_ENTRY(
+                    Path(temp_dir).resolve(),
+                    monkeypatch,
                 )
         finally:
             monkeypatch.undo()

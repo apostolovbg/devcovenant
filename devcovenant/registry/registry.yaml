@@ -1,12 +1,12 @@
 metadata:
   schema_version: 1
   registry_layout: single-root
-  policy_registry_input_hash: 3b027d75737cc970bba92bb5642ca55dde492891627b78bd76c33984d1e9f6fd
+  policy_registry_input_hash: 2c1a6159d93b91aa3ea9bfc47069fe46c536b44df1a480e0b2c65a2ebb87b1ae
 project-governance:
   project_name: devcovenant
   project_description: devcovenant is a repository governance framework.
   copyright_notice: 2026 Black Epsilon Ltd. and Apostol Apostolov
-  project_version: 1.0.1b2
+  project_version: 1.0.1b3
   stage: stable
   maintenance_stance: active
   compatibility_policy: forward-only
@@ -204,8 +204,10 @@ policies:
       changes during the session, the new version section must be prepended above
       the preserved previous top version section and that preserved pre-session
       top entry must remain first in the previous section instead of relabeling
-      old entries. This rule depends on section placement, not on bump wording
-      inside the entry text.
+      old entries. Recognized version headings must be followed by a blank line
+      before the first dated entry, and consecutive dated entries in the same
+      section must be separated by a blank line. This rule depends on section
+      placement, not on bump wording inside the entry text.
       Collection prefixes (when enabled) must be logged in their own changelog;
       prefixed files may not appear in the root changelog. This keeps release
       notes daily, file-complete, and traceable.
@@ -1990,7 +1992,7 @@ policies:
     - pip-wheel-metadata/**
     origin: builtin
     script_exists: true
-    hash: 691f8a9ebc4758120422354bb230b8779f73434e15cbd723f8d8721f35bc1653
+    hash: c776fbaaa971e7f8e125b079fc43b533f84e42fac5b6352c951fd8117e20eab0
     script_path: builtin/changelog_coverage.py
   devcov-raw-string-escapes:
     enabled: true
@@ -12740,17 +12742,17 @@ policies:
     runtime_state:
       surfaces:
         devcovenant_runtime:
-          input_fingerprint: 0f6e17bcf9cdd1c7a2ab9cfbfcd46d4d12e277b93e93a09591a977abdac95fa5
+          input_fingerprint: 2c84f2a80f0e0b7f6f57d571ccdb1cc80d4aff3bc3be492f426f7de3fc3b21ff
           output_fingerprints:
-            lock_file: 3e4fe23d7ed7ce59daf44d1974997e6cbd8cae8eca13912202c633f2083363a7
-            third_party_file: 5906ad40a2add5a3505788c10a2d65f7992e04e56cc2f77447406d52ddddf273
-            licenses_dir: d7960db504d2b4a7ed5c35c909341ef1e9bad28368464b40249c64e6d1219828
+            lock_file: 323c1ea3e3ff6c4db6fd543680c706f3007fe689ccd7bae63d8d527e23df25e1
+            third_party_file: 1623c352644d9865a55b2cd3b78d5275f275fe0d03a2caa5d8f9e765da379eb1
+            licenses_dir: 06190896126fa14f5a6709865aebe544f08811f055d20b11c31259c36295cb07
         root_workspace:
-          input_fingerprint: 46b6eb8e218bd63c02e4ad160bd58f5d4dc37846b37555ec2ff626b62831fbe8
+          input_fingerprint: 5255b825bb8a0b6ebc7b724ce4eeabef06e93c84007c4997256fd85d78c76d03
           output_fingerprints:
-            lock_file: d8815c8db8ccb9fd83fd8a92ed1ad72e89e3d9c847286e11b5a2407ceb67e545
-            third_party_file: 482ba96df78110da355cde451b081ca32f10ace30dca25c7152116e5508a0610
-            licenses_dir: 2860852fb6d0b2bcaab3472df99cf300e49354f3f1d0d434e8253d09672368c5
+            lock_file: 665cbe34c84e975affc2b388ef4fe4f713a1e02f86f02e2a30b78fb0c5472a36
+            third_party_file: 8ae49d3a32ca3d68b169a7639de5cb5f9ccf20722e8cd2636f76d4f938460830
+            licenses_dir: 6fa94898c7e84ebe2411c1f754c7cf347cca410527cd8167092d091a78f00ca8
   package-artifact-mirror:
     enabled: true
     custom: false

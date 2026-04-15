@@ -1,7 +1,7 @@
-# filelock 3.25.2
+# rich 15.0.0
 
 This file aggregates the upstream license texts resolved for
-`filelock==3.25.2`.
+`rich==15.0.0`.
 
 Resolved from: installed distribution metadata
 
@@ -10,9 +10,7 @@ Included upstream files:
 
 ===== LICENSE =====
 
-MIT License
-
-Copyright (c) 2025 Bernát Gábor and contributors
+Copyright (c) 2020 Will McGugan
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

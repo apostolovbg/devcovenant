@@ -94,8 +94,8 @@ docutils==0.22.4 \
     --hash=sha256:d0013f540772d1420576855455d050a2180186c91c15779301ac2ccb3eeb68de
     # via -r requirements.in
 
-filelock==3.25.2 \
-    --hash=sha256:ca8afb0da15f229774c9ad1b455ed96e85a81373065fb10446672f64444ddf70
+filelock==3.28.0 \
+    --hash=sha256:de9af6712788e7171df1b28b15eba2446c69721433fa427a9bee07b17820a9db
     # via -r requirements.in
 
 fqdn==1.5.1 \
@@ -166,19 +166,19 @@ license-expression==30.4.4 \
     --hash=sha256:421788fdcadb41f049d2dc934ce666626265aeccefddd25e162a26f23bcbf8a4
     # via -r requirements.in
 
-lxml==6.0.3 \
-    --hash=sha256:2ce76d113a7c3bf42761ec1de7ca615b0cbf9d8ae478eb1d6c20111d9c9fc098 \
-    --hash=sha256:4b0f01fb8bdcaf4aa69cf55b2b2f8ef722e4423e1c020e7250dcb89a1d5db38e \
-    --hash=sha256:5b6913a68d98c58c673667c864500ba31bc9b0f462effac98914e9a92ebacd2e \
-    --hash=sha256:6289cb9145fbbc5b0e159c9fcd7fc09446dadc6b60b72c4d1012e80c7c727970 \
-    --hash=sha256:724b26a38cef98d6869d00a33cb66083bee967598e44f6a8e53f1dd283c851b0 \
-    --hash=sha256:7f753db5785ce019d7b25bb75638ef5a42a0e208aa9f19933262134e668ca6af \
-    --hash=sha256:8922a30704a4421d69a19e0499db5861da686c0bccc3a79cf3946e3155cf25f9 \
-    --hash=sha256:8b81ec1ecac3be8c1ff1e00ca1c1baf8122e87db9000cd2549963847bd5e3b41 \
-    --hash=sha256:8eeec925ad7f81886d413b3a1f8715551f75543519229a9b35e957771e1826d5 \
-    --hash=sha256:ac63a1ef1899ccadace10ac937c41321672771378374c254e931d001448ae372 \
-    --hash=sha256:b683665d0287308adafc90a5617a51a508d8af8c7040693693bb333b5f4474fe \
-    --hash=sha256:d8781d812bb8efd47c35651639da38980383ff0d0c1f3269ade23e3a90799079
+lxml==6.0.4 \
+    --hash=sha256:0132bb040e9bb5a199302e12bf942741defbc52922a2a06ce9ff7be0d0046483 \
+    --hash=sha256:03affcacfba4671ebc305813b02bfaf34d80b6a7c5b23eafc5d6da14a1a6e623 \
+    --hash=sha256:3b6245ee5241342d45e1a54a4a8bc52ef322333ada74f24aa335c4ab36f20161 \
+    --hash=sha256:7f32a27be5fb286febd16c0d13d4a3aee474d34417bd172e64d76c6a28e2dc14 \
+    --hash=sha256:a7d5a627a368a0e861350ccc567a70ec675d2bc4d8b3b54f48995ae78d8d530e \
+    --hash=sha256:b74d5b391fc49fc3cc213c930f87a7dedf2b4b0755aae4638e91e4501e278430 \
+    --hash=sha256:b8c7976c384dcab4bca42f371449fb711e20f1bfce99c135c9b25614aed80e55 \
+    --hash=sha256:b8efa9f681f15043e497293d58a4a63199564b253ed2291887d92bb3f74f59ab \
+    --hash=sha256:dc18bb975666b443ba23aedd2fcf57e9d0d97546b52a1de97a447c4061ba4110 \
+    --hash=sha256:e0cdcea2affa53fa17dc4bf5cefc0edf72583eac987d669493a019998a623fa3 \
+    --hash=sha256:fb04a997588c3980894ded9172c10c5a3e45d3f1c5410472733626d268683806 \
+    --hash=sha256:fbd7d14349413f5609c0b537b1a48117d6ccef1af37986af6b03766ad05bf43e
     # via -r requirements.in
 
 markdown-it-py==4.0.0 \
@@ -207,8 +207,8 @@ packageurl-python==0.17.6 \
     --hash=sha256:31a85c2717bc41dd818f3c62908685ff9eebcb68588213745b14a6ee9e7df7c9
     # via -r requirements.in
 
-packaging==26.0 \
-    --hash=sha256:b36f1fef9334a5588b4166f8bcd26a14e521f2b55e6b9de3aaa80d3ff7a37529
+packaging==26.1 \
+    --hash=sha256:5d9c0669c6285e491e0ced2eee587eaf67b670d94a19e94e3984a481aba6802f
     # via -r requirements.in
 
 pip==26.0.1 \
@@ -322,8 +322,8 @@ rfc3987-syntax==1.1.0 \
     --hash=sha256:6c3d97604e4c5ce9f714898e05401a0445a641cfa276432b0a648c80856f6a3f
     # via -r requirements.in
 
-rich==14.3.4 \
-    --hash=sha256:07e7adb4690f68864777b1450859253bed81a99a31ac321ac1817b2313558952
+rich==15.0.0 \
+    --hash=sha256:33bd4ef74232fb73fe9279a257718407f169c09b78a87ad3d296f548e27de0bb
     # via -r requirements.in
 
 rpds-py==0.30.0 \
@@ -389,8 +389,8 @@ userpath==1.9.2 \
     --hash=sha256:2cbf01a23d655a1ff8fc166dfb78da1b641d1ceabf0fe5f970767d380b14e89d
     # via -r requirements.in
 
-virtualenv==21.2.1 \
-    --hash=sha256:bd16b49c53562b28cf1a3ad2f36edb805ad71301dee70ddc449e5c88a9f919a2
+virtualenv==21.2.4 \
+    --hash=sha256:29d21e941795206138d0f22f4e45ff7050e5da6c6472299fb7103318763861ac
     # via -r requirements.in
 
 webcolors==25.10.0 \
@@ -401,6 +401,6 @@ wheel==0.46.3 \
     --hash=sha256:4b399d56c9d9338230118d705d9737a2a468ccca63d5e813e2a4fc7815d8bc4d
     # via -r requirements.in
 
-zipp==3.23.0 ; (sys_platform == "linux" and python_version == "3.11") or (sys_platform == "win32" and python_version == "3.11") or (sys_platform == "darwin" and python_version == "3.11") \
-    --hash=sha256:071652d6115ed432f5ce1d34c336c0adfd6a884660d1e9712a256d3d3bd4b14e
+zipp==3.23.1 ; (sys_platform == "linux" and python_version == "3.11") or (sys_platform == "win32" and python_version == "3.11") or (sys_platform == "darwin" and python_version == "3.11") \
+    --hash=sha256:0b3596c50a5c700c9cb40ba8d86d9f2cc4807e9bedb06bcdf7fac85633e444dc
     # via -r requirements.in
