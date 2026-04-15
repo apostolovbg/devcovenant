@@ -22,7 +22,7 @@
 # 3) set `install.config_reviewed: true`
 # 4) run `devcovenant deploy`
 # 5) prepare the repository's declared environment
-# 6) open normal work with
+# 6) start normal work with
 #    `gate --open` -> `gate --verify` -> `run` -> `gate --close`
 # -------------------------------------------------------------------
 

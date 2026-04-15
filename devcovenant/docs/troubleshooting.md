@@ -21,10 +21,10 @@ Ask these questions first:
 
 ## Gate Failures
 If `gate --open` fails, clear the reported problem before editing.
-A failed start gate is not a usable starting point.
-If start reports hook-changed paths or says managed files were refreshed, the
-checkout was not settled yet. Apply or clear those changes, then rerun
-`gate --open`.
+A failed `gate --open` is not a usable starting point.
+If `gate --open` reports hook-changed paths or says managed files were
+refreshed, the checkout was not settled yet. Apply or clear those changes,
+then rerun `gate --open`.
 
 If `gate --verify` fails, clear the issue and rerun `gate --verify` until it is
 clean before `run`.

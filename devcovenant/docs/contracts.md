@@ -33,11 +33,11 @@ Read more in:
 
 ### 2. Workflow Definition
 The workflow definition is the fixed gate/run sequence plus the declared runs
-that live between `mid` and `end`.
+that live between `verify` and `close`.
 It covers:
 
 - `gate --open`, `gate --verify`, `run`, `gate --close`
-- reserved anchors `start`, `mid`, `end`
+- reserved anchors `open`, `verify`, `close`
 - run ordering via `after`, `before`, and `order`
 - workflow freshness and evidence rules
 - CI mapping for the generated workflow file

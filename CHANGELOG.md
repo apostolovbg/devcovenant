@@ -62,6 +62,45 @@ Example:
 ## Version 1.0.1b3
 
 - 2026-04-15:
+  Change: Updated lifecycle wording across docs, templates, config comments,
+  tests, and historical changelog entries.
+  Why: The flag rename left stale `start`/`mid`/`end` gate references in
+  generated docs and templates, and some prose used gate words for work
+  itself instead of saying that work starts by opening the gate.
+  Impact: Documentation, templates, config scaffolding, tests, and changelog
+  history consistently describe `gate --open`, `gate --verify`, and
+  `gate --close` without confusing work-start semantics.
+  Files:
+  AGENTS.md
+  CHANGELOG.md
+  devcovenant/builtin/policies/changelog_coverage/test_blueprints.yaml
+  devcovenant/builtin/profiles/global/assets/AGENTS.yaml
+  devcovenant/builtin/profiles/global/assets/config.yaml
+  devcovenant/config.yaml
+  devcovenant/core/refresh_runtime.py
+  devcovenant/custom/profiles/userproject/assets/docs/config.md
+  devcovenant/custom/profiles/userproject/assets/docs/installation.md
+  devcovenant/custom/profiles/userproject/assets/docs/policies.md
+  devcovenant/custom/profiles/userproject/assets/docs/profiles.md
+  devcovenant/custom/profiles/userproject/assets/docs/refresh.md
+  devcovenant/custom/profiles/userproject/assets/docs/registry.md
+  devcovenant/custom/profiles/userproject/assets/docs/troubleshooting.md
+  devcovenant/custom/profiles/userproject/assets/docs/workflow.md
+  devcovenant/docs/architecture.md
+  devcovenant/docs/config.md
+  devcovenant/docs/contracts.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/troubleshooting.md
+  devcovenant/docs/workflow.md
+  devcovenant/registry/README.md
+  tests/devcovenant/builtin/policies/changelog_coverage/\
+    test_changelog_coverage.py
+  tests/devcovenant/core/test_workflow_support.py
+  tests/devcovenant/test_cli.py
+
+- 2026-04-15:
   Change: Renamed gate lifecycle flags to `--open`, `--verify`, and
   `--close`, removed release-timing wording from user-facing docs, and
   standardized historical changelog entry spacing.
@@ -224,7 +263,7 @@ Example:
 - 2026-04-14:
   Change: Renamed the managed-environment bootstrap bucket from
           `command` to `bootstrap`, kept the strict `managed` stage for
-          mid-gate validation, and regenerated the tracked registry and
+          verify-gate validation, and regenerated the tracked registry and
           blueprint artifacts.
   Why: Clarified the naming split because every invocation is still a
        command; `bootstrap` and `managed` make the execution split clearer
@@ -468,9 +507,9 @@ Example:
 - 2026-04-09:
   Change: Added a gate-start silence reminder in the command path and
           switched changelog coverage to UTC-based date comparison.
-  Why: Kept the start-gate message visible in normal and verbose mode while
+  Why: Kept the open-gate message visible in normal and verbose mode while
        eliminating local-time boundary mismatches in changelog checks.
-  Impact: `devcovenant gate --start` now prints the silence reminder, and
+  Impact: `devcovenant gate --open` now prints the silence reminder, and
           changelog coverage plus its generated tests compare against the UTC
           date.
   Files:
@@ -848,7 +887,7 @@ Example:
   Change: fixed gate-start snapshot scans to merge active profile ignore dirs
           before collecting filesystem paths.
   Why: profile-scoped data directories were still being walked during
-       `gate --start`, which kept disposable trees in the startup snapshot.
+       `gate --open`, which kept disposable trees in the startup snapshot.
   Impact: startup snapshots now honor active-profile ignore dirs directly,
           and the regression test and docs describe the new scan boundary.
   Files:
@@ -1480,7 +1519,7 @@ Example:
        from managed-environment guidance.
   Impact: aligned dependency surfaces to honor only the stated repo-relative
           inputs, enabled the seeded default stack to bootstrap `.venv` from
-          `gate --start`, and kept the source, generated, and live docs
+          `gate --open`, and kept the source, generated, and live docs
           truthful together.
   Files:
   AGENTS.md
@@ -2465,7 +2504,7 @@ Example:
     telling normal adopters to maintain DevCovenant's bundled runtime/license
     artifacts.
   Impact: proved the clean fresh wheel/user-repo bootstrap path through
-    managed `.venv` and `gate --start`, clarified packaged runtime/license
+    managed `.venv` and `gate --open`, clarified packaged runtime/license
     artifacts as shipped reference material instead of user-owned maintenance
     surfaces, and kept dependency artifacts traceable through the tracked
     registry.
@@ -3316,7 +3355,7 @@ Example:
     invalidate proof baselines.
   Why: exposed that GitHub Actions was still writing repo-local `.gha-pycache`
     and `*.pyc`
-    artifacts that `gate --start` treated as drift, while Publish still relied
+    artifacts that `gate --open` treated as drift, while Publish still relied
     on ambient runner Python instead of an explicit setup step.
   Impact: Governance and Build now route Python caches outside the checkout,
     snapshots and cleanup tolerate or remove leaked bytecode safely, Publish
@@ -3559,7 +3598,7 @@ Example:
   Change: enabled the baseline managed-environment policy, resolved gate
     pre-commit commands from the workflow contract, and updated owned GitHub
     Action refs to Node 24-capable releases.
-  Why: fixed the remaining pipx-proof `gate --start` failure at the real
+  Why: fixed the remaining pipx-proof `gate --open` failure at the real
     source boundary, removed command-source drift in gate execution, and
     cleared the Node 20 deprecation class across current CI and publish
     workflows.
@@ -3602,7 +3641,7 @@ Example:
     only reuses the current Python when it actually matches the declared
     managed environment, and added a regression for the GitHub-hosted
     `.../bin/python` case.
-  Why: fixed the governance-job start-gate failure where a host runner Python
+  Why: fixed the governance-job open-gate failure where a host runner Python
     under a generic `bin/` path was incorrectly treated as the repo's managed
     interpreter, which skipped `.venv` bootstrap and caused the pre-commit
     DevCovenant hook to fail its own managed-environment policy.
@@ -3789,16 +3828,16 @@ Example:
 - 2026-03-30:
   Change: added the `forward-only` compatibility policy, generated
     policy-specific AGENTS governance guidance, removed touched legacy
-    compatibility shims, and tightened `gate --start` to report managed drift
+    compatibility shims, and tightened `gate --open` to report managed drift
     explicitly instead of as a generic pre-commit failure.
   Why: aligned the repo around an explicit no-legacy-fallback stance,
     required project-governance review up front in the workflow, and removed
-    the remaining start-gate/reporting and workflow-validation bridges that
+    the remaining open-gate/reporting and workflow-validation bridges that
     were still hiding the real contract from operators.
   Impact: made `Compatibility Policy` an active workflow decision in
     `AGENTS.md`, switched this repo to `forward-only`, rejected old recorded
     `python -m pre_commit` evidence shapes, aligned config/profile/workflow
-    docs with that stance, and made start-gate drift failures identify the
+    docs with that stance, and made open-gate drift failures identify the
     changed paths and managed-file refresh cause directly.
   Files:
   AGENTS.md
@@ -3893,7 +3932,7 @@ Example:
     console-script shim is absent.
   Why: build and proof-repo gates were still failing because the runtime kept
     treating environment preparation and environment selection as the same
-    thing, which made `gate --start` too destructive and too dependent on a
+    thing, which made `gate --open` too destructive and too dependent on a
     direct `pre-commit` executable on PATH.
   Impact: stabilized DevCovenant behavior across repo `.venv`s, pre-seeded
     proof environments, and other configured interpreters, while the repo
@@ -3930,11 +3969,11 @@ Example:
 
 - 2026-03-30:
   Change: fixed managed-doc sync so `Last Updated` date rollover alone no
-    longer rewrites clean descriptor-backed docs during refresh or start gate.
-  Why: `gate --start` and CI were failing after UTC midnight because managed
+    longer rewrites clean descriptor-backed docs during refresh or open gate.
+  Why: `gate --open` and CI were failing after UTC midnight because managed
     docs rewrote only their header date, which mutated the baseline even when
     the repository content had not changed.
-  Impact: clean repositories now stay clean across day boundaries, start gate
+  Impact: clean repositories now stay clean across day boundaries, open gate
     no longer fails on date-only managed-doc churn, and real doc-content
     updates still sync normally.
   Files:
@@ -3948,10 +3987,10 @@ Example:
     `pre-commit run --all-files` launcher, normalized equivalent
     `python -m pre_commit` evidence in validation, and updated the matching
     config, docs, registry, and tests.
-  Why: GitHub Build proof repos were still failing `gate --start` when the
+  Why: GitHub Build proof repos were still failing `gate --open` when the
     hosted `python3` interpreter lacked `pre_commit`, even though the managed
     `.venv` and its `PATH` were the real execution contract.
-  Impact: start, mid, and end gates now execute pre-commit through the managed
+  Impact: open, verify, and close gates execute pre-commit through the managed
     environment across local work and artifact proofs, while older recorded
     gate evidence still validates as the same logical command.
   Files:
@@ -4010,7 +4049,8 @@ Example:
     were present in the proof environment.
   Impact: keeps the repo and Python-family profiles on one `pytest`-based
     Python test pass, and lets the `pipx` proof complete
-    `gate --start -> gate --mid -> run -> gate --end -> check` with the same
+    `gate --open -> gate --verify -> run -> gate --close -> check` with the
+    same
     runtime dependencies declared by the shipped artifact.
   Files:
   .github/workflows/ci.yml
@@ -4046,7 +4086,7 @@ Example:
   Change: hardened the shared PTY child-output runner to treat Linux EOF
     `EIO` races as normal command completion once the child exits, and added
     regression coverage plus workflow-doc wording for the CI proof path.
-  Why: the Build wheel proof hit a successful `gate --mid` path that still
+  Why: the Build wheel proof hit a successful `gate --verify` path that still
     raised `[Errno 5] Input/output error` at PTY EOF before the child exit had
     been reaped.
   Impact: successful proof-gate commands now finish cleanly in Linux CI
@@ -4061,7 +4101,7 @@ Example:
 
 - 2026-03-29:
   Change: updated workflow-validation guidance to teach the four-stage
-    `gate --start -> gate --mid -> run -> gate --end` contract, extended
+    `gate --open -> gate --verify -> run -> gate --close` contract, extended
     manual publish to verify `ci_run_attempt`, and reset `PLAN.md` to the
     generic managed template body.
   Why: the residual review found one stale operator-guidance surface, one
@@ -4134,7 +4174,7 @@ Example:
     the repo-managed `.venv`.
   Why: simplified the Actions surface back to `CI` plus manual `Publish`,
     removed the duplicate workflow split, and resolved the `pipx` proof
-    failure where `gate --start` launched `pre_commit` from the wrong
+    failure where `gate --open` launched `pre_commit` from the wrong
     interpreter path.
   Impact: GitHub Actions now shows `Governance` and dependent `Build` in one
     `CI` workflow, publish consumes the exact validated `CI` artifact, and
@@ -4167,7 +4207,7 @@ Example:
     avoid the multiline f-string parse failure in Python 3.11 and added a
     regression assertion for the rerun guidance.
   Why: the wheel proof exposed a Python 3.11 syntax error in that message
-    path and broke `gate --start`.
+    path and broke `gate --open`.
   Impact: keeps the missing-runs contract unchanged while restoring Build
     compatibility for installed-artifact proof on Python 3.11.
   Files:
@@ -4415,14 +4455,15 @@ Example:
 
 - 2026-03-29:
   Change: implemented real workflow-run ordering semantics with validated
-    `after` and `before` references, truthful `mid` status reporting, and
+    `after` and `before` references, truthful `verify` status reporting, and
     full packaged-workflow proof in the Build lifecycle.
   Why: fixed release-candidate contract drift where run positioning was
-    decorative, `gate --status` hid the public `mid` stage, and installed
+    decorative, `gate --status` hid the public `verify` stage, and installed
     artifact proof was narrower than the documented workflow.
   Impact: workflow contracts now reject unknown references and cycles, status
     reports the real four-stage lifecycle, Build proves the installed
-    `gate --start -> gate --mid -> run -> gate --end` workflow for wheel and
+    `gate --open -> gate --verify -> run -> gate --close` workflow for wheel
+    and
     sdist artifacts, and the last internal `phase` residue was removed.
   Files:
   .github/workflows/build.yml
@@ -4623,7 +4664,7 @@ Example:
     roadmap no longer teaches drifted one-run or optional-run behavior.
   Impact: aligned the plan with the intended workflow, documented
     per-command recording for `command_group` runs, and tightened the
-    file-check and end-gate language around all configured runs.
+    file-check and close-gate language around all configured runs.
   Files:
   CHANGELOG.md
   PLAN.md
@@ -4658,8 +4699,8 @@ Example:
 - 2026-03-28:
   Change: Removed the drifted duplicate workflow-run surface across the CLI,
     runtime, registry, docs, generated outputs, and tests.
-  Why: Removed drift between the intended `devcovenant gate --start ->
-    devcovenant gate --mid -> devcovenant run -> devcovenant gate --end`
+  Why: Removed drift between the intended `devcovenant gate --open ->
+    devcovenant gate --verify -> devcovenant run -> devcovenant gate --close`
     contract and the half-duplicated extra command/model implementation.
   Impact: Aligned the public command surface, tracked runtime schema,
     generated AGENTS/registry outputs, and tests on one `run` contract while
@@ -5335,8 +5376,8 @@ Example:
   Why: closed the stitched workflow boundary where core still hardcoded
   `devcovenant test` while the tracked workflow contract claimed a generic
   run model.
-  Impact: standardized DevCovenant on `gate --start -> gate --mid -> run ->
-  gate --end`, with explicit `run` reruns, profile-owned run
+  Impact: standardized DevCovenant on `gate --open -> gate --verify -> run ->
+  gate --close`, with explicit `run` reruns, profile-owned run
   declarations, and aligned docs/registry evidence instead of legacy
   `required_commands` test wiring.
   Files:
@@ -5487,7 +5528,7 @@ Example:
   on test-centric or policy-adjacent assumptions instead of one explicit
   profile-declared workflow interface.
   Impact: the Python profile now declares `tests` as the first real workflow
-  run, start and end gates enforce required runs generically, tracked
+  run, start and close gates enforce required runs generically, tracked
   registry state records the workflow contract, and the runtime records run
   evidence separately from the short gate lifecycle ledger.
   Files:
@@ -5529,7 +5570,7 @@ Example:
 - 2026-03-25:
   Change: rewrote the active release plan to formalize the intended
   workflow-run extension redesign, including run ownership, tracked and
-  runtime schemas, start-gate carry-forward rules, end-gate closure rules,
+  runtime schemas, open-gate carry-forward rules, close-gate closure rules,
   and the initial success-contract set.
   Why: captured the new workflow-boundary decision before implementation so
   gate mechanics no longer drift around customizable policy state and the
@@ -5701,10 +5742,10 @@ Example:
   Change: Sorted profile and policy-source discovery before refresh writes its
   tracked outputs, then added regression coverage and doc notes for that
   filesystem-order stability contract.
-  Why: Fixed the Linux-only CI start-gate churn where refresh could rewrite
+  Why: Fixed the Linux-only CI open-gate churn where refresh could rewrite
   generated files even though policy checks passed, because raw filesystem
   iteration order was leaking into tracked output order.
-  Impact: Stabilized `gate --start` across macOS, Linux, and Windows
+  Impact: Stabilized `gate --open` across macOS, Linux, and Windows
   filesystems, and the test suite now rejects a return to platform-dependent
   generated ordering.
   Files:
@@ -7981,7 +8022,7 @@ Example:
   Why: Completed the Item 1 registry move by routing tracked governance data
   through `devcovenant/registry/registry.yaml`, keeping runtime state under
   `devcovenant/registry/runtime/`, and clearing the fallout that the full test
-  suite and mid gate exposed.
+  suite and verify gate exposed.
   Impact: Refresh, install, upgrade, gate, clean, and documentation routing
   now align with the forward-only tracked-vs-runtime registry model, and the
   repo closes this slice without registry-layout drift.
@@ -8194,7 +8235,7 @@ Example:
     snapshot row formats explicitly.
   Why: Replaced the old `legacy_numstat` bridge with strict current-format
     validation so stale gate payloads now fail clearly and require a fresh
-    `devcovenant gate --start`.
+    `devcovenant gate --open`.
   Impact: Kept session scoping deterministic, removed hidden migration
     behavior, and aligned snapshot tests and docs to the current gate format.
   Files:
@@ -9750,7 +9791,7 @@ Example:
 
 - 2026-02-27:
   Change: Updated repository documentation through a full `.md` sweep,
-    standardized required `gate --mid` guidance across stale docs/templates,
+    standardized required `gate --verify` guidance across stale docs/templates,
     and removed the `audit_digest` runtime feature, code paths, and related
     tests from the refresh/registry surface.
   Why: Removed non-canonical drift artifacts and aligned release docs with the

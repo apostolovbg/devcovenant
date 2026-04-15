@@ -136,10 +136,10 @@ during command waits.
    150s, 180s, 240s, then every 60s.
    Do not narrate polling steps or cadence in routine progress updates
    unless the human explicitly asks.
-9. Before applying edits, clear open-gate complaints. Blocking violations
-   must be cleared; preferred behavior is to clear all complaints. When
-   DevCovenant run artifacts are available, inspect summaries/tails/logs
-   before rerunning commands.
+9. Before applying edits, clear complaints from `devcovenant gate --open`.
+   Blocking violations must be cleared; preferred behavior is to clear all
+   complaints. When DevCovenant run artifacts are available, inspect
+   summaries/tails/logs before rerunning commands.
 10. Apply edits while following policy text and metadata proactively.
 11. If any DevCovenant complaint appears (error, warning, or info), stop
    the requested task and clear blocking violations first. Use the latest
@@ -159,11 +159,11 @@ during command waits.
 15. Run `devcovenant gate --close`. Use the same artifact-first output
    discipline as workflow runs. Gate commands do not run required
    workflow runs internally.
-16. If close-gate hooks or checks produce additional changes or violations,
-   use `devcovenant gate --status` for lifecycle inspection and inspect
-   the latest run artifacts before rerunning required commands until the
-   repository is clean. When gates require workflow runs, run
-   `devcovenant run` explicitly and rerun the gate command.
+16. If `devcovenant gate --close` hooks or checks produce additional
+   changes or violations, use `devcovenant gate --status` for lifecycle
+   inspection and inspect the latest run artifacts before rerunning required
+   commands until the repository is clean. When gates require workflow runs,
+   run `devcovenant run` explicitly and rerun the gate command.
 17. Stage all changes after each completed work slice.
 
 Audits are not a separate workflow mode. The same gate discipline applies.

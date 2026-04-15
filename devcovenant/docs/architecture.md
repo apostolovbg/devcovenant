@@ -163,11 +163,11 @@ The main evidence locations are:
 Workflow shape is saved separately from policy state.
 Core owns the reserved anchors:
 
-- `start`
-- `mid`
-- `end`
+- `open`
+- `verify`
+- `close`
 
-Profiles own the declared workflow runs between `mid` and `end`.
+Profiles own the declared workflow runs between `verify` and `close`.
 Those runs define whether a run is enabled or required, how it executes,
 how freshness is checked, and how evidence is recorded.
 

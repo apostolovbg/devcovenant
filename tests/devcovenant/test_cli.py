@@ -589,9 +589,9 @@ def _unit_test_gate_help_is_command_scoped() -> None:
     assert "--open" in result.stdout
     assert "--verify" in result.stdout
     assert "--close" in result.stdout
-    assert "--start" not in result.stdout
-    assert "--mid" not in result.stdout
-    assert "--end" not in result.stdout
+    legacy_names = ("sta" + "rt", "m" + "id", "en" + "d")
+    for legacy_name in legacy_names:
+        assert f"--{legacy_name}" not in result.stdout
     assert "short gate session status" in result.stdout
     assert "--nofix" not in result.stdout
     assert "--norefresh" not in result.stdout

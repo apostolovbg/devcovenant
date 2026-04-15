@@ -844,7 +844,7 @@ class WorkflowSupportValidationTests(unittest.TestCase):
             self.assertIn("missing runs: tests", violations[0].message)
             self.assertIn("Run `devcovenant run`.", violations[0].message)
 
-    def test_missing_workflow_session_mentions_mid_gate(self):
+    def test_missing_workflow_session_mentions_verify_gate(self):
         """Missing workflow-session guidance should teach the full flow."""
         with tempfile.TemporaryDirectory() as temp_dir:
             tmp_path = Path(temp_dir).resolve()

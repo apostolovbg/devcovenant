@@ -38,7 +38,7 @@ how managed docs and license text are rendered.
 
 The tracked registry also records the resolved workflow definition.
 That includes:
-- the reserved anchors `start`, `mid`, and `end`
+- the reserved anchors `open`, `verify`, and `close`
 - the declared runs from active profiles
 - the run order DevCovenant must enforce
 - freshness and recording settings for those runs
@@ -204,7 +204,7 @@ Read `devcovenant/registry/registry.yaml` when you need to know:
 
 Read `devcovenant/registry/runtime/` when you need to know:
 - whether a gate session is open
-- whether `mid` or `end` has been satisfied
+- whether `verify` or `close` has been satisfied
 - whether workflow evidence is still fresh
 - which run failed most recently
 - which run-log folder belongs to the active slice

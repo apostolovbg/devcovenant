@@ -389,7 +389,8 @@ Each run may declare:
 - `recording`
 
 Ordering is real behavior, not decorative metadata.
-- `after` and `before` may reference reserved anchors: `start`, `mid`, `end`
+- `after` and `before` may reference reserved anchors: `open`, `verify`,
+  `close`
 - `after` and `before` may also reference other declared run ids
 - DevCovenant validates those references
 - DevCovenant rejects cycles instead of silently keeping broken rules

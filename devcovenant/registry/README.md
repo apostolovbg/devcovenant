@@ -67,4 +67,4 @@ refreshed.
    changed.
 3. Use `devcovenant/registry/runtime/` only for live runtime inspection.
 4. Run `devcovenant gate --verify` before `devcovenant run` in active sessions.
-5. Validate with tests and end gate.
+5. Validate with tests and `gate --close`.

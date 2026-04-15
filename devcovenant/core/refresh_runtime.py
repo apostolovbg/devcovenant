@@ -515,7 +515,7 @@ def _config_comment_header() -> str:
             "# 3) set `install.config_reviewed: true`",
             "# 4) run `devcovenant deploy`",
             "# 5) prepare the repository's declared environment",
-            "# 6) open normal work with",
+            "# 6) start normal work with",
             "#    `gate --open` -> `gate --verify` -> `run` -> `gate --close`",
             rule,
         ]
@@ -2237,7 +2237,7 @@ def refresh_repo(repo_root: Path) -> int:
         if ci_and_test_changed:
             print_step("Regenerated CI workflow", "✅")
 
-        pre_commit_started = time.perf_counter()
+        pre_commit_timer_started = time.perf_counter()
         try:
             pre_commit_changed = _refresh_pre_commit_config(
                 repo_root,
@@ -2251,7 +2251,7 @@ def refresh_repo(repo_root: Path) -> int:
         _record_phase_timing(
             phase_timings,
             "pre_commit",
-            pre_commit_started,
+            pre_commit_timer_started,
             changed=pre_commit_changed,
         )
         if pre_commit_changed:

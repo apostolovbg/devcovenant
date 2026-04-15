@@ -29,7 +29,7 @@
 #    lock automatically
 #    the manual equivalent is installing `requirements.lock` into the
 #    declared environment
-# 6) open normal work with
+# 6) start normal work with
 #    `gate --open` -> `gate --verify` -> `run` -> `gate --close`
 #
 # Three common starting situations:

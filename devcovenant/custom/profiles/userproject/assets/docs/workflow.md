@@ -1,5 +1,5 @@
 # Workflow
-**Project Version:** 1.0.1b2
+**Project Version:** 1.0.1b3
 
 ## Overview
 Use this page for the required command order, the meaning of each gate stage,
@@ -49,8 +49,8 @@ This is the middle of the workflow, not the whole workflow by itself.
 
 ### gate --close
 Runs the closing pre-commit pass and closes the session.
-If required workflow evidence is stale or failing, close-gate will tell you to
-refresh it before the session can close.
+If required workflow evidence is stale or failing, `gate --close` will tell
+you to refresh it before the session can close.
 
 ## Required Order
 The public workflow has four stages:
@@ -168,8 +168,8 @@ If the proof also activates an extra profile such as `python_venv`, reuse the
 existing `profiles.active` list-item indentation instead of reconstructing the
 YAML block shape from the `active:` key line.
 
-If you intentionally rebuild or re-baseline the changelog during an open work
-session, run `devcovenant policy changelog-coverage reset-baseline` after
+If you intentionally rebuild or re-baseline the changelog during an active
+work session, run `devcovenant policy changelog-coverage reset-baseline` after
 `devcovenant gate --open`. That command relaxes only the preserved-old-entry
 rule for the active session. Normal changelog entry shape, date, summary, and
 file-coverage checks still apply.
@@ -226,7 +226,7 @@ roots.
 
 ## Recovery Rules
 Use these recovery rules consistently:
-- if `gate --open` fails, fix the open-gate complaint before editing
+- if `gate --open` fails, fix the reported complaint before editing
 - if `gate --verify` fails, rerun `gate --verify` until clean before `run`
 - if `run` fails, inspect run logs first, fix the cause, then rerun `run`
 - if `gate --close` fails, inspect logs, refresh required workflow evidence,

@@ -199,6 +199,8 @@ descriptor, builtin tree, and custom mirror aligned.
 It reads `mirror_roots`, `blueprint_directories`, and `blueprint_name`
 metadata from its descriptor instead of hardcoding source and mirror path
 families, so the sync surface stays declarative.
+When tests carry public CLI wording, regenerate the owning blueprint so the
+packaged test copy uses the same lifecycle names as the live tests.
 
 ## Checks, Autofix, And Commands
 The boundary matters:

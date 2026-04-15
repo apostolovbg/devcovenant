@@ -1,5 +1,5 @@
 # Installation and Lifecycle
-**Project Version:** 1.0.1b2
+**Project Version:** 1.0.1b3
 
 ## Overview
 This page explains how to install DevCovenant and what each lifecycle command

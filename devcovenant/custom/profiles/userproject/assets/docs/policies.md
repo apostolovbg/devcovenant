@@ -1,5 +1,5 @@
 # Policies
-**Project Version:** 1.0.1b2
+**Project Version:** 1.0.1b3
 
 ## Overview
 Policies are the named rule units in DevCovenant.

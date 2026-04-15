@@ -1154,7 +1154,7 @@ def _unit_test_stage_start_ignores_head_deleted_paths(
     assert not violations
 
 
-def _unit_test_deleted_files_are_scoped_to_gate_start_snapshot(
+def _unit_test_deleted_files_are_scoped_to_gate_open_snapshot(
     tmp_path: Path, monkeypatch: MonkeyPatch
 ):
     """Open-session deleted files should come from gate-open snapshot only."""
@@ -2425,13 +2425,13 @@ class GeneratedUnittestCases(unittest.TestCase):
         finally:
             monkeypatch.undo()
 
-    def test_deleted_files_are_scoped_to_gate_start_snapshot(self):
+    def test_deleted_files_are_scoped_to_gate_open_snapshot(self):
         """Run session-scoped deleted-file coverage assertions."""
         monkeypatch = MonkeyPatch()
         try:
             with tempfile.TemporaryDirectory() as temp_dir:
                 tmp_path = Path(temp_dir).resolve()
-                _unit_test_deleted_files_are_scoped_to_gate_start_snapshot(
+                _unit_test_deleted_files_are_scoped_to_gate_open_snapshot(
                     tmp_path=tmp_path, monkeypatch=monkeypatch
                 )
         finally:

@@ -53,8 +53,8 @@ This is the middle of the workflow, not the whole workflow by itself.
 
 ### gate --close
 Runs the closing pre-commit pass and closes the session.
-If required workflow evidence is stale or failing, close-gate will tell you to
-refresh it before the session can close.
+If required workflow evidence is stale or failing, `gate --close` will tell
+you to refresh it before the session can close.
 
 ### custom
 Copies or removes a repo-owned shadow copy of one builtin policy or profile.
@@ -75,11 +75,11 @@ The public workflow has four stages:
 4. `gate --close`
 
 The reserved anchors are:
-- `start`
-- `mid`
-- `end`
+- `open`
+- `verify`
+- `close`
 
-Declared workflow runs live between `mid` and `end`.
+Declared workflow runs live between `verify` and `close`.
 Profiles contribute those runs through `workflow_runs`.
 DevCovenant validates and orders them with:
 - `after`
@@ -189,8 +189,8 @@ If the proof also activates an extra profile such as `python_venv`, reuse the
 existing `profiles.active` list-item indentation instead of reconstructing the
 YAML block shape from the `active:` key line.
 
-If you intentionally rebuild or re-baseline the changelog during an open work
-session, run `devcovenant policy changelog-coverage reset-baseline` after
+If you intentionally rebuild or re-baseline the changelog during an active
+work session, run `devcovenant policy changelog-coverage reset-baseline` after
 `devcovenant gate --open`. That command relaxes only the preserved-old-entry
 rule for the active session. Normal changelog entry shape, date, summary, and
 file-coverage checks still apply.
@@ -260,7 +260,7 @@ a console-script shim.
 
 ## Recovery Rules
 Use these recovery rules consistently:
-- if `gate --open` fails, fix the open-gate complaint before editing
+- if `gate --open` fails, fix the reported complaint before editing
 - if `gate --verify` fails, rerun `gate --verify` until clean before `run`
 - if `run` fails, inspect run logs first, fix the cause, then rerun `run`
 - if `gate --close` fails, inspect logs, refresh required workflow evidence,
