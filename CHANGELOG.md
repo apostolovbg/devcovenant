@@ -62,6 +62,20 @@ Example:
 ## Version 1.0.1b4
 
 - 2026-04-16:
+  Change: Moved the README docs map ahead of the deeper reference sections and
+  marked the first two onboarding items complete in `PLAN.md`.
+  Why: Readers needed an earlier, clearer path from the front door into the
+  docs set, and the planning baseline needed to reflect the work that already
+  landed.
+  Impact: Made the README front door more navigable, kept the root and package
+  READMEs in the same story order, and advanced the onboarding roadmap.
+  Files:
+  CHANGELOG.md
+  PLAN.md
+  README.md
+  devcovenant/README.md
+
+- 2026-04-16:
   Change: Rewrote the front-door `README.md` and corrected gate-open
   changelog snapshot capture to stop at version boundaries.
   Why: Clarified what DevCovenant is for readers who do not already know the

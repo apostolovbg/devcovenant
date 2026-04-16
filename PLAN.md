@@ -64,7 +64,7 @@ experience, not on already-completed hardening work.
 5. Add the first custom-policy / custom-profile onboarding path.
 
 ## Active Work
-1. [not done] Front-door README rewrite
+1. [done] Front-door README rewrite
    Goal:
    - Turn the READMEs into a public landing surface that explains DevCovenant
      to someone who has never heard the phrase "repository governance
@@ -109,7 +109,7 @@ experience, not on already-completed hardening work.
      repo-level governance, layered ownership, metadata API, dogfooding, and
      downstream adoption.
 
-2. [not done] Docs discoverability through the README front door
+2. [done] Docs discoverability through the README front door
    Goal:
    - Make the existing docs easy to find from the README without requiring
      install-time asset discovery or prior knowledge of the doc tree.

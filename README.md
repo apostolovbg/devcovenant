@@ -213,6 +213,45 @@ source behavior rather than the installed CLI.
 If the console script is unavailable there, use `python3 -m devcovenant ...`.
 On Windows, `py -m devcovenant ...` is the common equivalent form.
 
+If you want the deeper doc set, use the map below instead of hunting through
+the tree.
+
+## Docs Map
+Use the shorter map below instead of treating the README as the whole manual.
+
+- "How do I install it and get through first setup?"
+
+  Read [installation.md](devcovenant/docs/installation.md).
+
+- "What does the daily workflow look like?"
+
+  Read [workflow.md](devcovenant/docs/workflow.md).
+
+- "How does config and metadata actually work?"
+
+  Read [config.md](devcovenant/docs/config.md).
+
+- "How do I create or tune repository governance?"
+
+  Read [policies.md](devcovenant/docs/policies.md) and
+  [profiles.md](devcovenant/docs/profiles.md).
+
+- "What does refresh own?"
+
+  Read [refresh.md](devcovenant/docs/refresh.md).
+
+- "How is the system structured internally?"
+
+  Read [architecture.md](devcovenant/docs/architecture.md).
+
+- "What registry and runtime state does DevCovenant track?"
+
+  Read [registry.md](devcovenant/docs/registry.md).
+
+- "What do I do when something fails?"
+
+  Read [troubleshooting.md](devcovenant/docs/troubleshooting.md).
+
 ## Workflow
 The standard repository workflow is:
 
@@ -289,42 +328,6 @@ For the deeper authoring model, go straight to
 [policies.md](devcovenant/docs/policies.md),
 [profiles.md](devcovenant/docs/profiles.md), and
 [config.md](devcovenant/docs/config.md).
-
-## Docs Map
-Use the shorter map below instead of treating the README as the whole manual.
-
-- "How do I install it and get through first setup?"
-
-  Read [installation.md](devcovenant/docs/installation.md).
-
-- "What does the daily workflow look like?"
-
-  Read [workflow.md](devcovenant/docs/workflow.md).
-
-- "How does config and metadata actually work?"
-
-  Read [config.md](devcovenant/docs/config.md).
-
-- "How do I create or tune repository governance?"
-
-  Read [policies.md](devcovenant/docs/policies.md) and
-  [profiles.md](devcovenant/docs/profiles.md).
-
-- "What does refresh own?"
-
-  Read [refresh.md](devcovenant/docs/refresh.md).
-
-- "How is the system structured internally?"
-
-  Read [architecture.md](devcovenant/docs/architecture.md).
-
-- "What registry and runtime state does DevCovenant track?"
-
-  Read [registry.md](devcovenant/docs/registry.md).
-
-- "What do I do when something fails?"
-
-  Read [troubleshooting.md](devcovenant/docs/troubleshooting.md).
 
 <!-- REPO-ONLY:BEGIN -->
 ## Security, Privacy, And Support

@@ -213,6 +213,45 @@ source behavior rather than the installed CLI.
 If the console script is unavailable there, use `python3 -m devcovenant ...`.
 On Windows, `py -m devcovenant ...` is the common equivalent form.
 
+If you want the deeper doc set, use the map below instead of hunting through
+the tree.
+
+## Docs Map
+Use the shorter map below instead of treating the README as the whole manual.
+
+- "How do I install it and get through first setup?"
+
+  Read [installation.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b4/devcovenant/docs/installation.md).
+
+- "What does the daily workflow look like?"
+
+  Read [workflow.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b4/devcovenant/docs/workflow.md).
+
+- "How does config and metadata actually work?"
+
+  Read [config.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b4/devcovenant/docs/config.md).
+
+- "How do I create or tune repository governance?"
+
+  Read [policies.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b4/devcovenant/docs/policies.md) and
+  [profiles.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b4/devcovenant/docs/profiles.md).
+
+- "What does refresh own?"
+
+  Read [refresh.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b4/devcovenant/docs/refresh.md).
+
+- "How is the system structured internally?"
+
+  Read [architecture.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b4/devcovenant/docs/architecture.md).
+
+- "What registry and runtime state does DevCovenant track?"
+
+  Read [registry.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b4/devcovenant/docs/registry.md).
+
+- "What do I do when something fails?"
+
+  Read [troubleshooting.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b4/devcovenant/docs/troubleshooting.md).
+
 ## Workflow
 The standard repository workflow is:
 
@@ -289,42 +328,6 @@ For the deeper authoring model, go straight to
 [policies.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b4/devcovenant/docs/policies.md),
 [profiles.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b4/devcovenant/docs/profiles.md), and
 [config.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b4/devcovenant/docs/config.md).
-
-## Docs Map
-Use the shorter map below instead of treating the README as the whole manual.
-
-- "How do I install it and get through first setup?"
-
-  Read [installation.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b4/devcovenant/docs/installation.md).
-
-- "What does the daily workflow look like?"
-
-  Read [workflow.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b4/devcovenant/docs/workflow.md).
-
-- "How does config and metadata actually work?"
-
-  Read [config.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b4/devcovenant/docs/config.md).
-
-- "How do I create or tune repository governance?"
-
-  Read [policies.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b4/devcovenant/docs/policies.md) and
-  [profiles.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b4/devcovenant/docs/profiles.md).
-
-- "What does refresh own?"
-
-  Read [refresh.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b4/devcovenant/docs/refresh.md).
-
-- "How is the system structured internally?"
-
-  Read [architecture.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b4/devcovenant/docs/architecture.md).
-
-- "What registry and runtime state does DevCovenant track?"
-
-  Read [registry.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b4/devcovenant/docs/registry.md).
-
-- "What do I do when something fails?"
-
-  Read [troubleshooting.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b4/devcovenant/docs/troubleshooting.md).
 
 ## License
 DevCovenant is released under the MIT License.
