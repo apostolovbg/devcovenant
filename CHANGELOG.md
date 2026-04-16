@@ -1,13 +1,13 @@
 # Changelog
 **Doc ID:** CHANGELOG
 **Doc Type:** changelog
-**Project Version:** 1.0.1b3
+**Project Version:** 1.0.1b4
 **Project Stage:** stable
 **Maintenance Stance:** active
 **Compatibility Policy:** forward-only
 **Versioning Mode:** versioned
-**Last Updated:** 2026-04-15
-**DevCovenant Version:** 1.0.1b3
+**Last Updated:** 2026-04-16
+**DevCovenant Version:** 1.0.1b4
 
 <!-- DEVCOV:BEGIN -->
 ## DevCovenant Change Logging Rules
@@ -58,6 +58,51 @@ Example:
 <!-- DEVCOV:END -->
 
 ## Log changes here
+
+## Version 1.0.1b4
+
+- 2026-04-16:
+  Change: Bumped DevCovenant to 1.0.1b4 and rewrote `PLAN.md` into a detailed
+  onboarding, discoverability, `quickstart`, `demo`, and custom-governance
+  roadmap.
+  Why: The completed hardening backlog no longer matched the immediate product
+  need, which is a stronger front door, clearer docs entry path, and a more
+  concrete plan for evaluation and downstream adoption.
+  Impact: Defined the 1.0.1b4 onboarding work in dependency order and recorded
+  the new planning baseline across the versioned doc surface.
+  Files:
+  AGENTS.md
+  CHANGELOG.md
+  CONTRIBUTING.md
+  PLAN.md
+  POLICY_MAP.md
+  PRIVACY.md
+  PROFILE_MAP.md
+  README.md
+  SECURITY.md
+  SPEC.md
+  SUPPORT.md
+  devcovenant/README.md
+  devcovenant/VERSION
+  devcovenant/builtin/policies/README.md
+  devcovenant/builtin/profiles/README.md
+  devcovenant/core/README.md
+  devcovenant/custom/README.md
+  devcovenant/custom/policies/README.md
+  devcovenant/custom/profiles/README.md
+  devcovenant/docs/architecture.md
+  devcovenant/docs/config.md
+  devcovenant/docs/contracts.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/project_governance.md
+  devcovenant/docs/refresh.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/troubleshooting.md
+  devcovenant/docs/workflow.md
+  devcovenant/registry/README.md
+  pyproject.toml
 
 ## Version 1.0.1b3
 

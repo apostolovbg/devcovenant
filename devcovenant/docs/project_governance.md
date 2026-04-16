@@ -1,6 +1,6 @@
 # Project Governance
-**Last Updated:** 2026-04-15
-**Project Version:** 1.0.1b3
+**Last Updated:** 2026-04-16
+**Project Version:** 1.0.1b4
 
 ## Overview
 This document is the normative home for the `project-governance` contract.

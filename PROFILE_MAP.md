@@ -1,9 +1,9 @@
 # Profile Map
 **Doc ID:** PROFILE_MAP
 **Doc Type:** reference-map
-**Project Version:** 1.0.1b3
-**Last Updated:** 2026-04-15
-**DevCovenant Version:** 1.0.1b3
+**Project Version:** 1.0.1b4
+**Last Updated:** 2026-04-16
+**DevCovenant Version:** 1.0.1b4
 
 <!-- DEVCOV:BEGIN -->
 This opening section is managed by DevCovenant.

@@ -1,7 +1,7 @@
 # Profiles
-**Last Updated:** 2026-04-15
+**Last Updated:** 2026-04-16
 
-**Project Version:** 1.0.1b3
+**Project Version:** 1.0.1b4
 
 ## Overview
 Profiles tell DevCovenant what kind of repository it is working in and which

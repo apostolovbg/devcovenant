@@ -1,6 +1,6 @@
 # Custom Policies
-**Last Updated:** 2026-04-15
-**Project Version:** 1.0.1b3
+**Last Updated:** 2026-04-16
+**Project Version:** 1.0.1b4
 
 ## Table of Contents
 - [Overview](#overview)
