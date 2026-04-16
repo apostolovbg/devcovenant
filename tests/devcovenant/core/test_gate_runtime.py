@@ -108,6 +108,41 @@ def _changelog_latest_entry_skips_managed_and_fenced_blocks() -> None:
         assert "second change" not in entry
 
 
+def _changelog_latest_entry_stops_before_next_version_heading() -> None:
+    """Top-entry extraction should stop at the next version heading."""
+    module = importlib.import_module(MODULE)
+    with tempfile.TemporaryDirectory() as tmpdir:
+        repo_root = Path(tmpdir)
+        _write_changelog_registry(repo_root)
+        changelog_path = repo_root / "CHANGELOG.md"
+        changelog_path.write_text(
+            "\n".join(
+                [
+                    "# Changelog",
+                    "",
+                    "## Log changes here",
+                    "## Version 0.2.7",
+                    "- 2026-02-28",
+                    "  Change: add first change.",
+                    "  Why: add first why.",
+                    "  Impact: add first impact.",
+                    "",
+                    "## Version 0.2.6",
+                    "- 2026-02-27",
+                    "  Change: add second change.",
+                    "  Why: add second why.",
+                    "  Impact: add second impact.",
+                    "",
+                ]
+            ),
+            encoding="utf-8",
+        )
+        entry = module._latest_changelog_entry(repo_root)
+        assert entry.startswith("- 2026-02-28")
+        assert "## Version 0.2.6" not in entry
+        assert "second change" not in entry
+
+
 def _changelog_resolve_doc_exemption_options_normalizes_metadata() -> None:
     """Doc exemption metadata should normalize list/string/int payloads."""
     module = importlib.import_module(MODULE)
@@ -150,6 +185,10 @@ class GateRuntimeChangelogTests(unittest.TestCase):
     def test_latest_changelog_entry_skips_managed_and_fenced_blocks(self):
         """Run top-entry extraction filtering assertions."""
         _changelog_latest_entry_skips_managed_and_fenced_blocks()
+
+    def test_latest_changelog_entry_stops_before_next_version_heading(self):
+        """Run top-entry extraction boundary assertions."""
+        _changelog_latest_entry_stops_before_next_version_heading()
 
     def test_resolve_doc_exemption_options_normalizes_metadata(self):
         """Run metadata-normalization assertions for doc exemptions."""

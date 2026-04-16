@@ -11,99 +11,155 @@
 
 ![DevCovenant banner](https://raw.githubusercontent.com/apostolovbg/devcovenant/main/devcovenant/docs/banner.png)
 
-DevCovenant is a repository governance framework.
-It keeps workflow rules, policy rules, generated files, and command logs in one
-place so they stay in sync.
-
 ## Overview
-Use DevCovenant when a repository needs more than linting and style checks.
-It is built for repositories where the expensive mistakes are procedural:
-people skip steps, docs drift away from behavior, generated files go stale, and
-release work becomes hard to trust.
+DevCovenant is a repository governance framework.
+It gives a repository an explicit, executable contract for how work happens,
+what stays in sync, and what evidence development must leave behind.
+
+In plain language, repository governance means the repository itself owns the
+rules for how it is developed and maintained.
+That includes the work sequence, the active policy set, the generated and
+managed files, the dependency surfaces, and the run evidence.
+
+DevCovenant turns that contract into CLI-enforced behavior.
+Instead of leaving workflow law in scattered docs, shell snippets, CI glue, and
+private AI prompts, it keeps the contract inside the repository and makes it
+executable.
 
 In practice, DevCovenant gives a repository four things:
 
 1. A required workflow.
 
-   The normal work slice is `gate --open`, edit, `gate --verify`, `run`,
+   The standard work slice is `gate --open`, edit, `gate --verify`, `run`,
    `gate --close`.
 
 2. Executable policy rules.
 
-   Policies are configured in project files, shown in `AGENTS.md`, and
+   Policies are declared in project metadata, surfaced in `AGENTS.md`, and
    enforced by the CLI instead of living only as prose.
 
-3. Managed documents and generated files.
+3. Managed repository surfaces.
 
-   DevCovenant can keep selected docs, config sections, registry files,
+   DevCovenant can keep selected docs, config sections, generated files,
    workflow files, and policy blocks aligned.
 
-4. Command logs.
+4. Run evidence.
 
-   Each command writes summaries and logs so you can inspect what happened
-   instead of guessing.
+   Each governed command writes summaries and logs so operators can inspect
+   what happened instead of guessing.
 
-## Why It Exists
-Repositories usually fail in ordinary ways.
-A team forgets a required run.
-A generated file changes after the last verified run.
-A policy says one thing while the code does another.
-A changelog entry misses the files that actually changed.
+## Why Repositories Need It
+Most repositories do not fail because a formatter was missing.
+They fail in more expensive ways:
 
-DevCovenant makes those failures visible and repeatable to fix.
-It does that by making the workflow explicit, storing the active rule set in
-project files, and writing logs for each governed command.
+- people skip or reorder required steps
+- CI and local behavior drift apart
+- docs stop matching what the code and workflow actually do
+- generated or managed files are edited by hand and quietly drift
+- dependency surfaces look current until security or platform-specific failures
+  appear later
+- humans and AI tools follow different invisible rules in the same repository
 
-## Custom Governance
-Built-in policies and profiles are the shipped baseline, not the boundary.
-DevCovenant is designed so a repository can define its own governance model
-instead of waiting for the core project to add one built-in rule at a time.
+DevCovenant exists to make those failures visible, repeatable, and owned by the
+repository itself.
 
-A custom governance stack can combine:
+## Why It Is Different
+DevCovenant is not just another checker bundle.
 
-- custom policies under `devcovenant/custom/policies/`
-- custom profiles under `devcovenant/custom/profiles/`
-- `devcovenant custom --policy <policy-id> --do|--undo` and
-  `devcovenant custom --profile <profile-name> --do|--undo` for repo-owned
-  shadow copies
-- shipped builtin tests stored as `test_blueprints.yaml` descriptors and
-  materialized into `tests/devcovenant/custom/**` only when a builtin copy is
-  shadowed
-- structured metadata overlays and overrides in `devcovenant/config.yaml`
-- selector-role scopes for different file families inside one policy
-- translators from language profiles for language-aware checks
-- autofix helpers, runtime actions, and `devcovenant policy <policy-id> \
-  <command>` routines
-- workflow runs, CI fragments, managed docs, and managed-environment contracts
+1. It is not a linter.
 
-That means DevCovenant can govern much more than lint-style rules.
-A repository can encode API contracts, release evidence, generated-file
-ownership, environment layouts, dependency surfaces, documentation routes,
-naming conventions, support/trust docs, or stack-specific safety routines as
-first-class governed behavior.
+   A linter tells you a file is wrong.
+   DevCovenant tells you the repository contract is drifting, which owned
+   surfaces are involved, and which workflow step has to re-establish trust.
 
-The practical split is:
+2. It is not an IDE plugin.
 
-- policies define and enforce rules
-- profiles package reusable governance for a repository shape
-- translators provide language-aware facts
-- config tunes the active stack with local overlays and overrides
+   The contract does not live in one editor setup.
+   It lives in the repository and follows the repository everywhere.
 
-Customization is override-based by design:
-- a same-id custom policy fully shadows the builtin policy with that id
-- a same-name custom profile fully shadows the builtin profile with that name
-- when a custom entry shadows a builtin one, the builtin entry is ignored
-- the `custom` command follows the same managed-environment resolution as
-  the other lifecycle commands, so it does not assume a repo-local `.venv`
+3. It is not a model wrapper or prompt pack.
 
-For the deeper authoring model, go straight to
-[policies.md](devcovenant/docs/policies.md),
-[profiles.md](devcovenant/docs/profiles.md), and
-[config.md](devcovenant/docs/config.md).
+   DevCovenant does not depend on one AI account, one assistant, or one hidden
+   system prompt.
+
+4. It is repository-level and tool-agnostic.
+
+   If a team uses ChatGPT, Claude, Codex, Cursor, Copilot, Vim, VS Code,
+   PyCharm, terminals, or no AI at all, the governed repository contract stays
+   the same.
+
+5. Custom governance is first-class.
+
+   Builtin policies and profiles are the shipped baseline, not the limit.
+   A repository can define and own its own governance model.
+
+## Where It Came From
+DevCovenant was born inside Copernican.
+That repository already had written development law in `AGENTS.md`, but prose
+alone was not enough.
+The rules were real, yet too much of the operational contract still lived in
+habit, manual interpretation, and scattered tooling.
+
+DevCovenant came out of that pressure:
+repository law had to stop being only documentation and become executable,
+repo-owned behavior.
+
+## Metadata And Layered Ownership
+The metadata system is not decorative YAML.
+It is the authoring surface that tells DevCovenant what belongs together and
+who owns what.
+
+That layered ownership model is one of the main reasons DevCovenant reduces
+drift instead of just adding ceremony.
+Instead of throwing everything into one prose document, the system separates:
+
+- builtin policies and profiles
+- repo-owned custom policies and profiles
+- config overlays and overrides
+- managed documents and generated artifacts
+- tracked registry state
+- runtime registry state
+
+That separation matters.
+It makes it harder to edit the wrong layer by accident, and it makes it less
+likely that an AI tool will grab the canonical law surface and rewrite it just
+because it sees text that looks editable.
+
+It also makes the system more extensible over time.
+Metadata describes ownership, selectors, managed surfaces, runtime actions,
+autofix surfaces, blueprint materialization, dependency surfaces, and workflow
+composition.
+
+## Proof It Is Real
+DevCovenant is not a README-only concept.
+
+- It is dogfooded on itself: the DevCovenant repository is developed under
+  DevCovenant governance.
+- It already runs on multiple downstream repositories with different stack
+  shapes.
+- It already governs more than code style: workflow law, changelog discipline,
+  managed docs, dependency surfaces, security scanning, version propagation,
+  trust docs, and customization flow.
+
+That matters because it means the framework is being tested under real
+maintenance pressure, not only in toy examples.
+
+## Fast Evaluation
+DevCovenant is worth your attention if most of the following sound familiar:
+
+- you want humans and AI tools to follow the same repository-owned rules
+- you are tired of CI doing something different from local workflow
+- your repository has docs, generated files, or dependency artifacts that drift
+- you want repo-specific governance, not just a fixed builtin rule bundle
+- you need evidence and logs for workflow steps, not only pass/fail signals
+
+If that sounds right, read the quick start next.
+If you are specifically evaluating extensibility, skim
+[Custom Governance](#custom-governance) and then jump to the docs map.
 
 ## Quick Start
-For most users, the right start is an isolated machine install with `pipx`,
-followed by activation inside the repository you want to govern.
+For most users, the right first path is an isolated machine install with
+`pipx`, followed by activation inside the repository you want to govern.
 
 ```bash
 pipx install devcovenant
@@ -114,11 +170,7 @@ devcovenant install
 # set install.config_reviewed: true
 devcovenant deploy
 # prepare the environment declared by the active profile stack
-# one manual equivalent is installing `requirements.lock` into that
-# declared environment
 python3 -m pip install -r requirements.lock
-# gate --open can also run the declared bootstrap commands
-# and honors active-profile ignore dirs before the snapshot
 devcovenant gate --open
 # make your edits
 devcovenant gate --verify
@@ -128,57 +180,36 @@ devcovenant gate --close
 
 What those steps mean:
 
-1. `pipx install devcovenant` installs the CLI on your machine in its own
+1. `pipx install devcovenant` installs the CLI in its own machine-level
    application environment.
 
 2. `devcovenant install` adds DevCovenant to the target repository and writes
-   `devcovenant/config.yaml`.
+   the initial `devcovenant/config.yaml`.
 
 3. The config review is the human decision point.
 
    Start with `project-governance`, `developer_mode`, and `profiles.active`.
-   The seeded `devcovenant/config.yaml` is supposed to keep explanatory
-   comments for that first review, so use those comments as the first
-   checklist.
-   For most repositories, keep the standard stack with `devcovuser` active and
-   add a custom profile on top when the repository needs its own rules,
-   assets, or workflow additions.
-   A good starting point is copying
-   `devcovenant/builtin/profiles/userproject/` to
-   `devcovenant/custom/profiles/userproject/` and editing only the
-   repo-specific facts there.
-   Keep inherited values inherited.
-   Do not restate them in the copied profile.
-   Here, "inherited" means values from other active profiles.
-   When a custom and builtin profile share a profile name, the custom profile
-   fully shadows it and the builtin profile with that name is ignored.
-   Use direct overlays only for small local exceptions.
+   Builtin `devcovuser` is intentionally thin.
+   In most downstream repositories, the normal path is to customize
+   `devcovuser` with repo-owned values and, when needed, customize the
+   `python` profile too.
+   The copy-ready bootstrap template starts at
+   `devcovenant/builtin/profiles/userproject/` and becomes repo-owned when
+   copied to `devcovenant/custom/profiles/userproject/`.
 
-4. `deploy` writes the managed docs, generated files, and other DevCovenant
-   outputs, including dependency artifacts owned by the active surfaces.
-   Repo-owned custom policies and copied custom profiles stay in place during
-   that lifecycle work; the install/deploy/upgrade flow should not prune
-   `devcovenant/custom/**` content that belongs to the governed repository.
+4. `devcovenant deploy` writes the managed docs, generated files, and other
+   owned outputs for the active profile stack.
 
 5. Prepare the environment declared by the active profile stack before the
    first gate cycle.
 
-   If the active stack seeds a local `.venv`, `deploy` materializes the
-   workspace dependency artifacts and one manual equivalent is creating
-   `.venv` and installing `requirements.lock`.
-   On Windows, use `.venv\\Scripts\\python.exe -m pip install -r \
-   requirements.lock`.
-   That seeded `.venv` flow is only one starting point.
-   If the repository uses a system interpreter, bench-managed environment,
-   container-managed environment, or another layout, declare that environment
-   first through the profile stack or metadata overlays, then prepare it.
-   DevCovenant must either run from that declared managed context already or
-   be able to resolve the declared interpreter path or environment root.
+   That might be a local `.venv`, a system interpreter, a bench-managed
+   environment, a container-managed environment, or another declared layout.
 
 6. The first full gate cycle proves the reviewed setup actually works.
 
-Use a local checkout instead of `pipx` only when you intentionally need local
-source behavior instead of the installed CLI.
+Use a source checkout instead of `pipx` only when you intentionally need local
+source behavior rather than the installed CLI.
 If the console script is unavailable there, use `python3 -m devcovenant ...`.
 On Windows, `py -m devcovenant ...` is the common equivalent form.
 
@@ -193,6 +224,9 @@ devcovenant run
 devcovenant gate --close
 ```
 
+In `engine.tests_output_mode: normal`, test progress stays visible during
+workflow runs while ordinary command output remains concise.
+
 Use the commands this way:
 
 - `check`
@@ -203,13 +237,12 @@ Use the commands this way:
 
 - `gate --open`
 
-  Opens a work session and records the starting state for the slice after
-  honoring active-profile ignore dirs and engine ignores.
+  Opens a work session and records the starting state for the slice.
 
 - `gate --verify`
 
   Required pre-run check.
-  It catches hook changes and DevCovenant-managed updates before `run`.
+  It catches hook changes and DevCovenant-managed mutations before `run`.
 
 - `run`
 
@@ -222,161 +255,87 @@ Use the commands this way:
 
 When a command prints `Run logs: ...`, start with `summary.txt`.
 If that is not enough, inspect `tail.txt`, then `stdout.log` and `stderr.log`.
-For lifecycle commands such as `install`, `deploy`, `refresh`, `undeploy`,
-`uninstall`, and `upgrade`, the summary artifacts can also include phase
-timing details so you can see where time went before opening the full logs.
 
-In `engine.tests_output_mode: normal`, the declared `tests` run keeps console
-output short and leaves the full child output in the run logs.
+## Custom Governance
+Custom governance is one of DevCovenant's main differentiators.
+The framework is built so a repository can define and own its own law instead
+of waiting for the core project to ship one more builtin.
 
-## Commands
-Most operators only need a small command set day to day:
+A custom governance stack can combine:
 
-```bash
-devcovenant check
-devcovenant gate --status
-devcovenant gate --open
-devcovenant gate --verify
-devcovenant run
-devcovenant gate --close
-devcovenant asset SPEC.md
-devcovenant refresh
-devcovenant deploy
-devcovenant clean --all
-```
+- custom policies under `devcovenant/custom/policies/`
+- custom profiles under `devcovenant/custom/profiles/`
+- builtin shadow copies promoted through
+  `devcovenant custom --policy <policy-id> --do|--undo` and
+  `devcovenant custom --profile <profile-name> --do|--undo`
+- selector-role scopes for different file families inside one policy
+- translators for language-aware checks
+- runtime actions, autofix helpers, and policy-born commands
+- managed docs, workflow fragments, dependency surfaces, and environment
+  contracts
 
-Other lifecycle commands such as `upgrade`, `undeploy`, and `uninstall` are
-used less often, but they follow the same logging model.
-`devcovenant asset FILE.ext [OUTPUTNAME.ext]` writes a Desktop copy of a
-shipped asset or managed doc template. When the optional second argument is
-omitted, DevCovenant keeps the asset's original filename on the Desktop.
-`--overwrite` replaces an existing Desktop target.
-Exact target-path matches win over basename matches, and an ambiguous basename
-inside the winning profile must be rerun as an exact target path.
-Use `devcovenant --help` to see the command list and
-`devcovenant asset --help` for the asset-specific syntax.
-`clean --all` removes disposable build, cache, log, and runtime-registry files;
-its `registry` scope cleans only `devcovenant/registry/runtime/`, not the
-tracked `devcovenant/registry/registry.yaml`.
+The key point is that metadata is the authoring API.
+It describes what a policy or profile owns, what it may update, what files and
+surfaces it governs, where its tests materialize, and how it composes with the
+active repository stack.
 
-Keep machine installation and repository lifecycle separate:
+Customization is override-based by design:
 
-- use `pipx upgrade devcovenant` when you want a newer installed CLI
+- a same-id custom policy fully shadows the builtin policy with that id
+- a same-name custom profile fully shadows the builtin profile with that name
+- when a custom entry shadows a builtin one, the builtin entry is ignored
 
-- use `devcovenant upgrade` inside a repository where DevCovenant is already
-  installed and active
-
-## Configuration Checkpoints
-The most important first-review settings in `devcovenant/config.yaml` are:
-
-1. `project-governance`
-
-   Review the project name, stage, `compatibility_policy`, and
-   `versioning_mode` first.
-
-2. `developer_mode`
-
-   `false` for a normal repository using DevCovenant.
-   `true` only when the repository owns DevCovenant development surfaces.
-
-3. `profiles.active`
-
-   For most repositories, keep `devcovuser` in the stack and layer a custom
-   profile on top when the repository needs its own behavior.
-   The copy-ready `userproject` bootstrap template under
-   `devcovenant/builtin/profiles/userproject/` is the intended starting point
-   for that custom layer.
-
-4. `paths`
-
-   Choose where DevCovenant keeps its registry and local state files.
-
-5. `doc_assets`
-
-   Choose which managed docs are enabled.
-
-6. `workflow`
-
-   Review the pre-commit command and any skip globs.
-
-7. `policy_state`
-
-   Decide which configurable policies are on or off.
-
-8. `engine.*`
-
-   Review output mode, autofix behavior, log retention, and similar CLI
-   settings.
-
-## What DevCovenant Manages
-DevCovenant can manage several kinds of repository files.
-That can include:
-
-- selected documents
-- generated config sections
-- policy blocks in `AGENTS.md`
-- tracked registry state
-- runtime registry state
-- generated workflow files
-- generated `.gitignore` and pre-commit files
-
-The preservation rule is simple:
-missing docs can be created, very small placeholder docs can be replaced, and
-otherwise DevCovenant should only touch managed headers and managed blocks.
+For the deeper authoring model, go straight to
+[policies.md](devcovenant/docs/policies.md),
+[profiles.md](devcovenant/docs/profiles.md), and
+[config.md](devcovenant/docs/config.md).
 
 ## Docs Map
 Use the shorter map below instead of treating the README as the whole manual.
 
-- [installation.md](devcovenant/docs/installation.md)
+- "How do I install it and get through first setup?"
 
-  Install, deploy, upgrade, clean, undeploy, uninstall, and first-time setup.
+  Read [installation.md](devcovenant/docs/installation.md).
 
-- [workflow.md](devcovenant/docs/workflow.md)
+- "What does the daily workflow look like?"
 
-  Gate sequence, command order, logs, and recovery.
+  Read [workflow.md](devcovenant/docs/workflow.md).
 
-- [config.md](devcovenant/docs/config.md)
+- "How does config and metadata actually work?"
 
-  How to read `devcovenant/config.yaml`, including project settings,
-  profile stacks, workflow settings, policy activation, and metadata overlays
-  and overrides.
+  Read [config.md](devcovenant/docs/config.md).
 
-- [profiles.md](devcovenant/docs/profiles.md)
+- "How do I create or tune repository governance?"
 
-  Built-in profiles, custom profiles, translators, workflow runs, CI
-  fragments, and reusable governance stacks.
+  Read [policies.md](devcovenant/docs/policies.md) and
+  [profiles.md](devcovenant/docs/profiles.md).
 
-- [policies.md](devcovenant/docs/policies.md)
+- "What does refresh own?"
 
-  Built-in and custom policy authoring, selector roles, runtime actions,
-  autofixers, policy commands, and version-governance adapters.
+  Read [refresh.md](devcovenant/docs/refresh.md).
 
-- [refresh.md](devcovenant/docs/refresh.md)
+- "How is the system structured internally?"
 
-  What refresh rebuilds and which files it owns.
+  Read [architecture.md](devcovenant/docs/architecture.md).
 
-- [architecture.md](devcovenant/docs/architecture.md)
+- "What registry and runtime state does DevCovenant track?"
 
-  Internal structure and major code ownership boundaries.
+  Read [registry.md](devcovenant/docs/registry.md).
 
-- [registry.md](devcovenant/docs/registry.md)
+- "What do I do when something fails?"
 
-  Tracked registry, runtime registry, and gate state.
-
-- [troubleshooting.md](devcovenant/docs/troubleshooting.md)
-
-  Fast recovery paths for common failures.
+  Read [troubleshooting.md](devcovenant/docs/troubleshooting.md).
 
 <!-- REPO-ONLY:BEGIN -->
-## Security, Privacy, and Support
+## Security, Privacy, And Support
 Public trust docs live in the repository root:
 
 - [SECURITY.md](SECURITY.md)
 - [PRIVACY.md](PRIVACY.md)
 - [SUPPORT.md](SUPPORT.md)
 
-Use those docs for vulnerability reporting, local data-handling boundaries,
-and support expectations.
+Use those docs for vulnerability reporting, local data-handling boundaries, and
+support expectations.
 
 ## Repository Notes
 This repository is also the development repository for DevCovenant itself.
@@ -400,13 +359,11 @@ need.
 - `.github/workflows/publish.yml` stays repo-maintained and publishes only the
   validated CI artifacts and provenance it downloads.
 - Repository release proof covers the declared Python support floor and keeps
-  the
-  pipx proof on the installed CLI path end to end.
+  the pipx proof on the installed CLI path end to end.
 
 ## Repository Trust Docs
 - `SECURITY.md`, `PRIVACY.md`, and `SUPPORT.md` are repository-owned managed
-  docs
-  supplied by the active custom `userproject` profile.
+  docs supplied by the active custom `userproject` profile.
 - Those trust docs intentionally stay out of the project-governance header
   area.
 <!-- REPO-ONLY:END -->

@@ -62,6 +62,22 @@ Example:
 ## Version 1.0.1b4
 
 - 2026-04-16:
+  Change: Rewrote the front-door `README.md` and corrected gate-open
+  changelog snapshot capture to stop at version boundaries.
+  Why: Clarified what DevCovenant is for readers who do not already know the
+  lifecycle or repository-governance model and removed a false changelog
+  blocker from the verify gate.
+  Impact: Improved first-contact onboarding, aligned the package README sync
+  target with the new landing-page structure, and restored changelog
+  preservation checks for single-entry top sections.
+  Files:
+  CHANGELOG.md
+  README.md
+  devcovenant/README.md
+  devcovenant/core/gate_runtime.py
+  tests/devcovenant/core/test_gate_runtime.py
+
+- 2026-04-16:
   Change: Bumped DevCovenant to 1.0.1b4 and rewrote `PLAN.md` into a detailed
   onboarding, discoverability, `quickstart`, `demo`, and custom-governance
   roadmap.

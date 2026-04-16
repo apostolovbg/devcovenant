@@ -425,7 +425,9 @@ def _latest_changelog_entry(repo_root: Path) -> str:
 
     entry_end = len(lines)
     for index in range(entry_start + 1, len(lines)):
-        if _DATE_ENTRY_PATTERN.match(lines[index]):
+        if _DATE_ENTRY_PATTERN.match(
+            lines[index]
+        ) or _line_matches_release_heading(lines[index], release_headings):
             entry_end = index
             break
 
