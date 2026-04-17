@@ -6,7 +6,7 @@
 **Maintenance Stance:** active
 **Compatibility Policy:** forward-only
 **Versioning Mode:** versioned
-**Last Updated:** 2026-04-16
+**Last Updated:** 2026-04-17
 **DevCovenant Version:** 1.0.1b4
 
 <!-- DEVCOV:BEGIN -->
@@ -89,6 +89,9 @@ state, and release proof that can be audited afterward.
   then promote builtin policies and profiles into repo-owned custom copies
   with explicit test materialization when they need their own reusable
   behavior.
+- Give ordinary repositories a thin `devcovuser` baseline and a guided path
+  to their first repo-owned custom layer, usually `userproject` and often a
+  custom `python` or `python_venv` profile.
 - Keep operator-facing commands inspectable through stable run-log artifacts,
   concise summaries, and clear local state files.
 - Keep shipped package docs package-generic while leaving
@@ -556,6 +559,8 @@ Once answered, fold the answer into the relevant section above.
 - `README.md` for the shortest product overview and command map.
 - `devcovenant/docs/installation.md` for install, deploy, upgrade, clean,
   undeploy, and uninstall behavior.
+- `devcovenant/docs/customization.md` for the guided first custom profile and
+  policy path.
 - `devcovenant/docs/workflow.md` for gate sequencing, workflow runs, output
   modes, CI mapping, and recovery.
 - `devcovenant/docs/config.md` for `devcovenant/config.yaml` ownership and

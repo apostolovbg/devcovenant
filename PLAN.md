@@ -6,7 +6,7 @@
 **Maintenance Stance:** active
 **Compatibility Policy:** forward-only
 **Versioning Mode:** versioned
-**Last Updated:** 2026-04-16
+**Last Updated:** 2026-04-17
 **DevCovenant Version:** 1.0.1b4
 
 <!-- DEVCOV:BEGIN -->
@@ -210,7 +210,7 @@ experience, not on already-completed hardening work.
    - The demo is credible in beta testing and client conversations.
    - The demo shows repository-level governance, not just isolated checks.
 
-5. [not done] First custom-governance path
+5. [done] First custom-governance path
    Goal:
    - Turn custom policy/profile work from an underdocumented capability into a
      guided second-step onboarding path.

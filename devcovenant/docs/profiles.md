@@ -1,5 +1,5 @@
 # Profiles
-**Last Updated:** 2026-04-16
+**Last Updated:** 2026-04-17
 
 **Project Version:** 1.0.1b4
 
@@ -98,6 +98,11 @@ keep builtin and custom profile mirrors declarative rather than hardcoded.
 A custom profile is the normal way to package governance for one repository
 family so it travels as one coherent stack instead of a pile of one-off
 config edits.
+
+For a guided first custom profile path, start with
+[customization.md](customization.md). That page shows when the repo-owned
+`userproject` layer is the right place to put repository-specific values and
+when to add a custom `python` or `python_venv` layer.
 
 A custom profile can contribute:
 - metadata overlays for builtin or custom policies

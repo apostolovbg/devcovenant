@@ -1,5 +1,5 @@
 # Policies
-**Last Updated:** 2026-04-16
+**Last Updated:** 2026-04-17
 
 **Project Version:** 1.0.1b4
 
@@ -30,6 +30,10 @@ The runtime code enforces the rule.
 ## Custom Policies Are First-Class
 Built-in policies are the shipped baseline and a library of reference patterns.
 They are not the limit of what DevCovenant can govern.
+
+For a guided first custom policy path, start with
+[customization.md](customization.md). That page shows when to shadow a
+builtin policy and when to create a new one.
 
 A repository can define brand-new policy ids or replace builtin policies with
 custom ones under `devcovenant/custom/policies/<policy-id>/`.

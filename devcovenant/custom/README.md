@@ -1,5 +1,5 @@
 # Custom Extensions
-**Last Updated:** 2026-04-16
+**Last Updated:** 2026-04-17
 **Project Version:** 1.0.1b4
 
 ## Table of Contents
@@ -14,6 +14,8 @@
 
 Use this directory to add or override behavior without editing shipped builtin
 files. Everything here is project-specific and stays under repository control.
+If you are choosing a first custom path, start with
+[customization.md](../docs/customization.md).
 When the repository is shadowing a builtin policy or profile, use
 `devcovenant custom --policy <policy-id> --do` or
 `devcovenant custom --profile <profile-name> --do` to create the repo-owned
@@ -22,6 +24,12 @@ Use `--undo` to remove that copied tree and return to the builtin default.
 The command follows the same managed-environment resolution as the other
 lifecycle commands, so it works from whichever interpreter layout the
 repository has declared.
+
+The usual downstream shape is a thin builtin `devcovuser` layer, a repo-owned
+`userproject` layer for repository-specific values, and often a custom
+`python` or `python_venv` profile for environment ownership. That split keeps
+builtin layers generic and puts the real project law in repository-owned
+metadata.
 
 ## Policy Extensions
 Place custom policies under:

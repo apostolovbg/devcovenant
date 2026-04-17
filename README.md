@@ -2,7 +2,7 @@
 **Doc ID:** README
 **Doc Type:** repo-readme
 **Project Version:** 1.0.1b4
-**Last Updated:** 2026-04-16
+**Last Updated:** 2026-04-17
 **DevCovenant Version:** 1.0.1b4
 
 <!-- DEVCOV:BEGIN -->
@@ -239,6 +239,10 @@ Use the shorter map below instead of treating the README as the whole manual.
   Read [policies.md](devcovenant/docs/policies.md) and
   [profiles.md](devcovenant/docs/profiles.md).
 
+- "How do I make my first custom profile or policy?"
+
+  Read [customization.md](devcovenant/docs/customization.md).
+
 - "What does refresh own?"
 
   Read [refresh.md](devcovenant/docs/refresh.md).
@@ -302,6 +306,17 @@ If that is not enough, inspect `tail.txt`, then `stdout.log` and `stderr.log`.
 Custom governance is one of DevCovenant's main differentiators.
 The framework is built so a repository can define and own its own law instead
 of waiting for the core project to ship one more builtin.
+
+The normal downstream shape is a thin builtin `devcovuser` layer, a
+repo-owned `userproject` layer for repository-specific values, and often a
+custom `python` or `python_venv` profile for environment ownership. That split
+is deliberate: builtin layers stay generic while repository-owned metadata
+holds the real project law.
+
+If you want the guided first custom path, read
+[customization.md](devcovenant/docs/customization.md).
+It walks through the first custom profile path, the first custom policy path,
+shadowing and materialization, and which layer to edit and why.
 
 A custom governance stack can combine:
 

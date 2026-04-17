@@ -6,7 +6,7 @@
 **Maintenance Stance:** active
 **Compatibility Policy:** forward-only
 **Versioning Mode:** versioned
-**Last Updated:** 2026-04-16
+**Last Updated:** 2026-04-17
 **DevCovenant Version:** 1.0.1b4
 
 <!-- DEVCOV:BEGIN -->
@@ -60,6 +60,39 @@ Example:
 ## Log changes here
 
 ## Version 1.0.1b4
+
+- 2026-04-17:
+  Change: Reconciled `SPEC.md` with the new custom-governance front door and
+  customization guide.
+  Why: Keep the durable product spec aligned with the README and guided
+  first-custom-path wording after the onboarding re-audit.
+  Impact: Updated the spec to name the thin `devcovuser` baseline, the
+  repo-owned `userproject` path, the optional `python`/`python_venv` layer
+  pattern, and the customization pointer alongside the existing extension
+  requirements.
+  Files:
+  CHANGELOG.md
+  SPEC.md
+
+- 2026-04-17:
+  Change: Added a guided first custom-governance path with a dedicated
+  customization guide and linked the front door, extension docs, and plan to
+  it.
+  Why: Make the repo-owned extension surface easier to discover after the
+  quickstart/demo path and explain which layer to edit first for profile and
+  policy customization.
+  Impact: Readers can now start with a concrete profile-first or policy-first
+  path, understand `--do`/`--undo` shadowing, and reach the extension API
+  from the main docs and custom-surface landing page.
+  Files:
+  CHANGELOG.md
+  PLAN.md
+  README.md
+  devcovenant/README.md
+  devcovenant/custom/README.md
+  devcovenant/docs/customization.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/profiles.md
 
 - 2026-04-17:
   Change: Added the disposable `devcovenant demo` command, its retry-safe
