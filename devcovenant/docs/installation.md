@@ -15,6 +15,9 @@ DevCovenant separates setup from activation:
 The important human decision happens between those two commands.
 Review `devcovenant/config.yaml`, decide how the repository should work, and
 only then run `deploy`.
+If you want the canonical first-use path in one fixed terminal command, run
+`devcovenant quickstart`.
+If you want a disposable guided evaluation repo, run `devcovenant demo`.
 
 ## Before You Start
 You need:

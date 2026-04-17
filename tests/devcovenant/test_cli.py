@@ -27,6 +27,7 @@ ROOT_COMMANDS = (
     ("check", "check"),
     ("clean", "clean"),
     ("custom", "custom"),
+    ("demo", "demo"),
     ("gate", "gate"),
     ("run", "run"),
     ("install", "install"),
@@ -36,6 +37,7 @@ ROOT_COMMANDS = (
     ("uninstall", "uninstall"),
     ("undeploy", "undeploy"),
     ("policy", "policy"),
+    ("quickstart", "quickstart"),
 )
 
 
@@ -499,6 +501,8 @@ def _unit_test_root_help_lists_command_summaries() -> None:
         "Promote or retract builtin policy/profile custom copies and "
         "mirrored tests." in result.stdout
     )
+    assert "Run a disposable evaluation demo." in result.stdout
+    assert "Print the canonical first-use guide." in result.stdout
     assert (
         "Run `devcovenant <command> --help` for command-specific options."
         in result.stdout

@@ -61,6 +61,50 @@ Example:
 
 ## Version 1.0.1b4
 
+- 2026-04-17:
+  Change: Added the disposable `devcovenant demo` command, its retry-safe
+  disposable repo flow, and the supporting onboarding-doc updates.
+  Why: Give beta testers and prospects a repeatable ten-minute evaluation
+  path that shows repository governance rather than isolated checks.
+  Impact: Users can run `devcovenant demo` to see install, deploy, custom,
+  gate, run, and close in one disposable repo, while the README and quickstart
+  explain the same path.
+  Files:
+  CHANGELOG.md
+  PLAN.md
+  README.md
+  devcovenant/README.md
+  devcovenant/cli.py
+  devcovenant/demo.py
+  devcovenant/docs/installation.md
+  devcovenant/docs/workflow.md
+  devcovenant/quickstart.py
+  tests/devcovenant/test_cli.py
+  tests/devcovenant/test_demo.py
+  tests/devcovenant/test_quickstart.py
+
+- 2026-04-16:
+  Change: Added the fixed `devcovenant quickstart` command, extended CLI
+  help, aligned the onboarding docs with the new terminal guide, and marked
+  the onboarding plan item complete.
+  Why: Explained why newcomers needed a non-interactive, always-the-same
+  first-use path that explains the lifecycle without requiring a separate
+  onboarding wizard and kept the active plan aligned with that command.
+  Impact: Enabled users to discover the canonical quickstart from the root
+  CLI and the docs, while the command stays out of runtime setup and
+  managed-environment ceremony and the plan now reflects the shipped state.
+  Files:
+  CHANGELOG.md
+  README.md
+  devcovenant/README.md
+  devcovenant/cli.py
+  devcovenant/docs/installation.md
+  devcovenant/docs/workflow.md
+  devcovenant/quickstart.py
+  PLAN.md
+  tests/devcovenant/test_cli.py
+  tests/devcovenant/test_quickstart.py
+
 - 2026-04-16:
   Change: Moved the README docs map ahead of the deeper reference sections and
   marked the first two onboarding items complete in `PLAN.md`.

@@ -160,6 +160,9 @@ If you are specifically evaluating extensibility, skim
 ## Quick Start
 For most users, the right first path is an isolated machine install with
 `pipx`, followed by activation inside the repository you want to govern.
+If you want the canonical first-use path in one fixed terminal command, run
+`devcovenant quickstart`.
+If you want a disposable guided evaluation repo, run `devcovenant demo`.
 
 ```bash
 pipx install devcovenant

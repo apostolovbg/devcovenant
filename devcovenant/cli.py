@@ -21,6 +21,7 @@ _COMMAND_MODULES = {
     "clean": "devcovenant.clean",
     "gate": "devcovenant.gate",
     "custom": "devcovenant.custom",
+    "demo": "devcovenant.demo",
     "run": "devcovenant.run",
     "install": "devcovenant.install",
     "deploy": "devcovenant.deploy",
@@ -29,6 +30,7 @@ _COMMAND_MODULES = {
     "uninstall": "devcovenant.uninstall",
     "undeploy": "devcovenant.undeploy",
     "policy": "devcovenant.policy",
+    "quickstart": "devcovenant.quickstart",
 }
 
 _COMMAND_SUMMARIES = {
@@ -44,11 +46,13 @@ _COMMAND_SUMMARIES = {
         "mirrored tests."
     ),
     "deploy": "Deploy managed docs/assets in the current repository.",
+    "demo": "Run a disposable evaluation demo.",
     "gate": "Run DevCovenant gate session lifecycle commands.",
     "install": "Install DevCovenant into the current repository.",
     "policy": (
         "Run one explicit policy-born command declared by an enabled policy."
     ),
+    "quickstart": "Print the canonical first-use guide.",
     "refresh": "Run a full refresh.",
     "run": "Run all declared DevCovenant workflow runs.",
     "undeploy": "Remove deployed managed artifacts and keep core files.",
@@ -66,8 +70,11 @@ _MANAGED_REEXEC_BYPASS_COMMANDS = {
     "deploy",
     "undeploy",
     "uninstall",
+    "quickstart",
+    "demo",
 }
 _RUN_LOG_BYPASS_COMMANDS = {"uninstall"}
+_RUNTIME_SETUP_SKIP_COMMANDS = {"quickstart", "demo"}
 
 _execution_runtime_module: ModuleType | None = None
 _runtime_errors_module: ModuleType | None = None
@@ -446,7 +453,9 @@ def main(argv: list[str] | None = None) -> None:
         )
     os.environ[_TOP_LEVEL_COMMAND_ENV] = first
     subcommand_args = command_args[1:]
-    skip_runtime_setup = _should_skip_managed_reexec(subcommand_args)
+    skip_runtime_setup = first in _RUNTIME_SETUP_SKIP_COMMANDS or (
+        _should_skip_managed_reexec(subcommand_args)
+    )
     execution_runtime_module: ModuleType | None = None
     repo_root: Path | None = None
     if not skip_runtime_setup:

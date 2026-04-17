@@ -144,7 +144,7 @@ experience, not on already-completed hardening work.
    - The README no longer depends on installed-asset discovery to make the docs
      feel navigable.
 
-3. [not done] Fixed `devcovenant quickstart`
+3. [done] Fixed `devcovenant quickstart`
    Goal:
    - Add one canonical, non-interactive command that prints the standard first
      DevCovenant path in the same order every time.
@@ -176,8 +176,10 @@ experience, not on already-completed hardening work.
      contact after install.
    - CLI help, README guidance, and lifecycle docs describe the same first-use
      path.
+   - The command is wired into the root CLI, its own module, and the package
+     help surface.
 
-4. [not done] Disposable `devcovenant demo`
+4. [done] Disposable `devcovenant demo`
    Goal:
    - Add a short, high-signal demo path that lets users and prospects see how
      DevCovenant works in practice in about ten minutes.
