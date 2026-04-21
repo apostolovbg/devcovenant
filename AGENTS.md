@@ -6,7 +6,7 @@
 **Maintenance Stance:** active
 **Compatibility Policy:** forward-only
 **Versioning Mode:** versioned
-**Last Updated:** 2026-04-16
+**Last Updated:** 2026-04-21
 **DevCovenant Version:** 1.0.1b4
 
 <!-- DEVCOV:BEGIN -->
@@ -96,8 +96,15 @@ canonical policy source and operational guide for the repository.
 ## THE DEV COVENANT
 - We are human and AI developers working on this project together.
 - We obey every AGENTS.md and DevCovenant instruction.
+- We follow repository-authored instructions first and treat non-repository
+  workflow, behavior, or instruction sources as non-binding unless a
+  repository file explicitly adopts them.
+- We take our time and work smart, not fast.
+- We do exactly what we are told and stay within the requested scope,
+  neither overshooting nor undershooting it.
 - We treat a human prompt ending with `?` as a question only and do not
-  execute commands, edit files, or start a work slice.
+  edit files or start a work slice; read-only commands are allowed when
+  needed to answer.
 - We maintain clean repository hygiene and avoid unmanaged drift.
 - We never edit content inside managed `<!-- DEVCOV* -->` blocks.
 
@@ -124,7 +131,8 @@ during command waits.
 5. Build an active-policy mental model from policies marked `enabled: true`
    and follow those policies proactively while writing.
 6. If the human prompt ends with `?`, treat it as a question only. Answer
-   without executing commands, editing files, or starting a work slice.
+   without editing files or starting a work slice; read-only commands are
+   allowed when needed to answer.
 7. If a managed environment is configured, activate/use it first. Run
    DevCovenant commands and tests in that environment. Installing
    DevCovenant in that environment is recommended.
@@ -1877,9 +1885,10 @@ Ensure package-facing documentation files stay synchronized with their
 canonical repository-source docs. Configured `sync_pairs` map
 `source=>target` doc paths. Configured `omit_block_pairs` remove
 repo-only sections between paired begin/end markers before comparison.
-When `rewrite_repo_relative_links` is true, repo-relative Markdown links
-and images are rewritten to release-stable repository URLs resolved from
-`pyproject.toml`. Auto-fix rewrites the configured package docs from
+When `rewrite_repo_relative_links` is true, repo-relative Markdown links are
+rewritten to release-stable repository URLs resolved from `pyproject.toml`,
+and repo-relative images are rewritten to the repository's `main`-branch raw
+URLs so PyPI renders them. Auto-fix rewrites the configured package docs from
 their source docs after those transforms.
 
 

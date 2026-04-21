@@ -1,5 +1,5 @@
 # Policies
-**Last Updated:** 2026-04-17
+**Last Updated:** 2026-04-21
 
 **Project Version:** 1.0.1b4
 
@@ -231,11 +231,10 @@ rules.
 
 The package-facing builtin sync policies follow the same contract.
 `package-doc-sync` can synchronize one or more configured `source=>target`
-doc pairs, strip configured repo-only marker blocks, and rewrite repo-relative
-public links for packaged docs.
-That same rewrite step also normalizes same-repository absolute `main` or
-`master` public links into release-stable tagged URLs when the packaged doc
-should not depend on a moving branch head.
+doc pairs, strip configured repo-only marker blocks, rewrite repo-relative
+public links for packaged docs into release-stable tagged URLs, and keep
+package banner images on the repository `main` raw URL so PyPI can render
+them without depending on a version tag.
 `package-artifact-mirror` can keep configured file and directory mirrors
 inside the shipped package synchronized from their canonical repository-root
 sources.

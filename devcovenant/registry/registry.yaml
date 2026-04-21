@@ -1,12 +1,12 @@
 metadata:
   schema_version: 1
   registry_layout: single-root
-  policy_registry_input_hash: 4ecceba48dc48f7e1517ed00de60ef237dd53723099cac7f8ec691d13757dc0b
+  policy_registry_input_hash: 8b6bbf02e96557809506c7e36f0b199b8fb5e4d9d46be3422b8b6d7e73d75834
 project-governance:
   project_name: devcovenant
   project_description: devcovenant is a repository governance framework.
   copyright_notice: 2026 Black Epsilon Ltd. and Apostol Apostolov
-  project_version: 1.0.1b3
+  project_version: 1.0.1b4
   stage: stable
   maintenance_stance: active
   compatibility_policy: forward-only
@@ -12943,9 +12943,10 @@ policies:
       canonical repository-source docs. Configured `sync_pairs` map
       `source=>target` doc paths. Configured `omit_block_pairs` remove
       repo-only sections between paired begin/end markers before comparison.
-      When `rewrite_repo_relative_links` is true, repo-relative Markdown links
-      and images are rewritten to release-stable repository URLs resolved from
-      `pyproject.toml`. Auto-fix rewrites the configured package docs from
+      When `rewrite_repo_relative_links` is true, repo-relative Markdown links are
+      rewritten to release-stable repository URLs resolved from `pyproject.toml`,
+      and repo-relative images are rewritten to the repository's `main`-branch raw
+      URLs so PyPI renders them. Auto-fix rewrites the configured package docs from
       their source docs after those transforms.
     metadata:
       id: package-doc-sync
@@ -13128,7 +13129,7 @@ policies:
     - README.md=>devcovenant/README.md
     origin: builtin
     script_exists: true
-    hash: 8cf316089c465c80953d695035c2653cbe2f94a174778da7430b5620b2993b49
+    hash: cefc4713a40986ac8b9b9ecd38b665039078bd74ace161b0078a0db28e567b61
     script_path: builtin/package_doc_sync.py
   builtin-test-blueprint-sync:
     enabled: true

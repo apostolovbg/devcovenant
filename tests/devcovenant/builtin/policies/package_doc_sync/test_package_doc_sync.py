@@ -130,7 +130,7 @@ def _unit_test_reports_missing_repository_url_for_public_links() -> None:
         assert "project.urls.Repository" in violations[0].message
 
 
-def _unit_test_rewrites_repo_relative_images_to_release_stable_urls() -> None:
+def _unit_test_rewrites_repo_relative_images_to_main_urls() -> None:
     """Policy should rewrite repo-relative images for packaged README use."""
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir).resolve()
@@ -151,7 +151,7 @@ def _unit_test_rewrites_repo_relative_images_to_release_stable_urls() -> None:
             "# Root\n\n"
             "![Banner]("
             "https://raw.githubusercontent.com/example/devcovenant-fork/"
-            "v0.0.0/devcovenant/docs/banner.png)\n",
+            "main/devcovenant/docs/banner.png)\n",
             encoding="utf-8",
         )
 
@@ -161,8 +161,8 @@ def _unit_test_rewrites_repo_relative_images_to_release_stable_urls() -> None:
         assert violations == []
 
 
-def _unit_test_rewrites_absolute_main_images_to_release_stable_urls() -> None:
-    """Policy should rewrite same-repo absolute main image URLs."""
+def _unit_test_rewrites_absolute_main_images_to_main_urls() -> None:
+    """Policy should preserve same-repo absolute main image URLs."""
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir).resolve()
         packaged_readme = repo_root / "devcovenant" / "README.md"
@@ -184,7 +184,7 @@ def _unit_test_rewrites_absolute_main_images_to_release_stable_urls() -> None:
             "# Root\n\n"
             "![Banner]("
             "https://raw.githubusercontent.com/example/devcovenant-fork/"
-            "v0.0.0/devcovenant/docs/banner.png)\n",
+            "main/devcovenant/docs/banner.png)\n",
             encoding="utf-8",
         )
 
@@ -259,13 +259,13 @@ class GeneratedUnittestCases(unittest.TestCase):
         """Run test_reports_missing_repository_url_for_public_links."""
         _unit_test_reports_missing_repository_url_for_public_links()
 
-    def test_rewrites_repo_relative_images_to_release_stable_urls(self):
+    def test_rewrites_repo_relative_images_to_main_urls(self):
         """Run repo-relative packaged image rewrite assertions."""
-        _unit_test_rewrites_repo_relative_images_to_release_stable_urls()
+        _unit_test_rewrites_repo_relative_images_to_main_urls()
 
-    def test_rewrites_absolute_main_images_to_release_stable_urls(self):
+    def test_rewrites_absolute_main_images_to_main_urls(self):
         """Run absolute-main packaged image rewrite assertions."""
-        _unit_test_rewrites_absolute_main_images_to_release_stable_urls()
+        _unit_test_rewrites_absolute_main_images_to_main_urls()
 
     def test_supports_multiple_sync_pairs(self):
         """Run multiple sync-pair assertions."""

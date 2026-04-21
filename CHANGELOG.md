@@ -6,7 +6,7 @@
 **Maintenance Stance:** active
 **Compatibility Policy:** forward-only
 **Versioning Mode:** versioned
-**Last Updated:** 2026-04-17
+**Last Updated:** 2026-04-21
 **DevCovenant Version:** 1.0.1b4
 
 <!-- DEVCOV:BEGIN -->
@@ -60,6 +60,30 @@ Example:
 ## Log changes here
 
 ## Version 1.0.1b4
+
+- 2026-04-21:
+  Change: Updated package-doc image rewriting so the package README banner
+  stays on the repository `main` branch while links remain release-stable.
+  Why: Preserve PyPI-rendered images on the current branch without changing
+  the non-image package-doc link policy.
+  Impact: Updated DevCovenant to emit a main-branch raw banner URL,
+  document that behavior in the package-doc sync policy, and cover the new
+  image rewrite path in related tests.
+  Files:
+  CHANGELOG.md
+  AGENTS.md
+  README.md
+  devcovenant/builtin/profiles/global/assets/AGENTS.yaml
+  devcovenant/README.md
+  devcovenant/builtin/policies/package_doc_sync/package_doc_sync.py
+  devcovenant/builtin/policies/package_doc_sync/package_doc_sync.yaml
+  devcovenant/builtin/policies/package_doc_sync/test_blueprints.yaml
+  devcovenant/docs/policies.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/registry.md
+  devcovenant/registry/registry.yaml
+  tests/devcovenant/builtin/policies/package_doc_sync/test_package_doc_sync.py
+  tests/devcovenant/test_refresh.py
 
 - 2026-04-17:
   Change: Reconciled `SPEC.md` with the new custom-governance front door and

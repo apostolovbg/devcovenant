@@ -1,5 +1,5 @@
 # Profiles
-**Last Updated:** 2026-04-17
+**Last Updated:** 2026-04-21
 
 **Project Version:** 1.0.1b4
 
@@ -174,6 +174,11 @@ The built-in `devcovuser` profile is the normal user-repository layer.
 It keeps DevCovenant's own shipped runtime files out of ordinary app-code
 checks while still keeping `devcovenant/custom/**` in scope for
 repository-owned extensions.
+The global profile also owns the repository covenant text in `AGENTS.md`, so
+its question handling and work-style rules can say that repository-authored
+instructions come first, that read-only commands are acceptable when a human
+prompt is a question, and that work should stay deliberate instead of chasing
+speed.
 That same narrowing applies to mirrored test expectations and assertion
 coverage, so normal repositories keep DevCovenant internals out of scope
 while still enforcing `devcovenant/custom/**` and

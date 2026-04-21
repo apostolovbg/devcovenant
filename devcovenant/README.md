@@ -2,14 +2,14 @@
 **Doc ID:** README
 **Doc Type:** repo-readme
 **Project Version:** 1.0.1b4
-**Last Updated:** 2026-04-17
+**Last Updated:** 2026-04-21
 **DevCovenant Version:** 1.0.1b4
 
 <!-- DEVCOV:BEGIN -->
 
 <!-- DEVCOV:END -->
 
-![DevCovenant banner](https://raw.githubusercontent.com/apostolovbg/devcovenant/v1.0.1b4/devcovenant/docs/banner.png)
+![DevCovenant banner](https://raw.githubusercontent.com/apostolovbg/devcovenant/main/devcovenant/docs/banner.png)
 
 ## Overview
 DevCovenant is a repository governance framework.

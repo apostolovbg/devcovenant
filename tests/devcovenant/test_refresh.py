@@ -569,10 +569,10 @@ def _unit_test_release_metadata_keeps_support_floor_and_docs_truthful() -> (
     assert f"/blob/v{version}/devcovenant/docs/workflow.md" in packaged_readme
     assert (
         "https://raw.githubusercontent.com/apostolovbg/devcovenant/"
-        f"v{version}/devcovenant/docs/banner.png"
+        "main/devcovenant/docs/banner.png"
     ) in packaged_readme
     assert "blob/main" not in packaged_readme
-    assert "/main/devcovenant/docs/banner.png" not in packaged_readme
+    assert f"v{version}/devcovenant/docs/banner.png" not in packaged_readme
 
 
 def _unit_test_refresh_imports_same_version_header_only_spec_doc() -> None:

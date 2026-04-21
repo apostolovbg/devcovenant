@@ -235,6 +235,7 @@ class PackageDocSyncCheck(PolicyCheck):
             repository_url,
             blob_base,
             raw_base,
+            raw_image_base,
             error,
         ) = self._resolve_repository_link_bases(repo_root)
         if error and (has_repo_relative_links or has_repo_relative_images):
@@ -285,7 +286,7 @@ class PackageDocSyncCheck(PolicyCheck):
             )
             if normalized is None:
                 return match.group(0)
-            return f"![{label}]({raw_base}{normalized})"
+            return f"![{label}]({raw_image_base}{normalized})"
 
         # Keep document links on the blob base so package docs stay browsable.
         def _replace(match: re.Match[str]) -> str:
@@ -308,11 +309,12 @@ class PackageDocSyncCheck(PolicyCheck):
     def _resolve_repository_link_bases(
         self,
         repo_root: Path,
-    ) -> tuple[str | None, str | None, str | None, str | None]:
-        """Resolve release-stable repo link bases from `pyproject.toml`."""
+    ) -> tuple[str | None, str | None, str | None, str | None, str | None]:
+        """Resolve repo link bases from `pyproject.toml`."""
         pyproject_path = repo_root / "pyproject.toml"
         if not pyproject_path.exists():
             return (
+                None,
                 None,
                 None,
                 None,
@@ -323,11 +325,18 @@ class PackageDocSyncCheck(PolicyCheck):
             with pyproject_path.open("rb") as handle:
                 payload = tomllib.load(handle)
         except OSError as exc:
-            return None, None, None, f"Failed to read `pyproject.toml`: {exc}."
+            return (
+                None,
+                None,
+                None,
+                None,
+                f"Failed to read `pyproject.toml`: {exc}.",
+            )
 
         project = payload.get("project")
         if not isinstance(project, dict):
             return (
+                None,
                 None,
                 None,
                 None,
@@ -337,6 +346,7 @@ class PackageDocSyncCheck(PolicyCheck):
         version = str(project.get("version") or "").strip()
         if not version:
             return (
+                None,
                 None,
                 None,
                 None,
@@ -354,6 +364,7 @@ class PackageDocSyncCheck(PolicyCheck):
                 None,
                 None,
                 None,
+                None,
                 "Package-doc sync found repo-relative public links, but "
                 "`pyproject.toml` is missing `project.urls.Repository` "
                 "or `project.urls.Homepage`.",
@@ -364,12 +375,16 @@ class PackageDocSyncCheck(PolicyCheck):
         if normalized.startswith("https://github.com/"):
             owner_repo = normalized.removeprefix("https://github.com/")
             raw_base = (
-                f"https://raw.githubusercontent.com/{owner_repo}/"
-                f"{version_tag}/"
+                f"https://raw.githubusercontent.com/"
+                f"{owner_repo}/{version_tag}/"
+            )
+            raw_image_base = (
+                f"https://raw.githubusercontent.com/{owner_repo}/main/"
             )
         else:
             raw_base = f"{normalized}/raw/{version_tag}/"
-        return normalized, blob_base, raw_base, None
+            raw_image_base = f"{normalized}/raw/main/"
+        return normalized, blob_base, raw_base, raw_image_base, None
 
     def _normalize_packaged_target(
         self,
