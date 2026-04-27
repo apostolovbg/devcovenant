@@ -1,13 +1,13 @@
 # Project Specification
 **Doc ID:** SPEC
 **Doc Type:** specification
-**Project Version:** 1.0.1b4
+**Project Version:** 1.0.1b5
 **Project Stage:** stable
 **Maintenance Stance:** active
 **Compatibility Policy:** forward-only
 **Versioning Mode:** versioned
-**Last Updated:** 2026-04-17
-**DevCovenant Version:** 1.0.1b4
+**Last Updated:** 2026-04-27
+**DevCovenant Version:** 1.0.1b5
 
 <!-- DEVCOV:BEGIN -->
 This opening section is managed by DevCovenant.

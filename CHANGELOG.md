@@ -1,13 +1,13 @@
 # Changelog
 **Doc ID:** CHANGELOG
 **Doc Type:** changelog
-**Project Version:** 1.0.1b4
+**Project Version:** 1.0.1b5
 **Project Stage:** stable
 **Maintenance Stance:** active
 **Compatibility Policy:** forward-only
 **Versioning Mode:** versioned
-**Last Updated:** 2026-04-21
-**DevCovenant Version:** 1.0.1b4
+**Last Updated:** 2026-04-27
+**DevCovenant Version:** 1.0.1b5
 
 <!-- DEVCOV:BEGIN -->
 ## DevCovenant Change Logging Rules
@@ -59,7 +59,104 @@ Example:
 
 ## Log changes here
 
+## Version 1.0.1b5
+
+- 2026-04-27:
+  Change: Bumped DevCovenant to 1.0.1b5 and refreshed the versioned
+  manifest, package README links, and version-bearing docs to establish
+  the new baseline.
+  Why: Align the version source, package metadata, and managed-doc headers
+  before starting the next plan slice.
+  Impact: Updated the canonical version file, package manifest, package
+  README links, and refreshed the repository docs that carry version or
+  date markers.
+  Files:
+  CHANGELOG.md
+  devcovenant/VERSION
+  pyproject.toml
+  devcovenant/README.md
+  AGENTS.md
+  CONTRIBUTING.md
+  PLAN.md
+  POLICY_MAP.md
+  PRIVACY.md
+  PROFILE_MAP.md
+  README.md
+  SECURITY.md
+  SPEC.md
+  SUPPORT.md
+  devcovenant/builtin/policies/README.md
+  devcovenant/builtin/profiles/README.md
+  devcovenant/core/README.md
+  devcovenant/custom/README.md
+  devcovenant/custom/policies/README.md
+  devcovenant/custom/profiles/README.md
+  devcovenant/docs/architecture.md
+  devcovenant/docs/config.md
+  devcovenant/docs/contracts.md
+  devcovenant/docs/customization.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/project_governance.md
+  devcovenant/docs/refresh.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/troubleshooting.md
+  devcovenant/docs/workflow.md
+  devcovenant/registry/README.md
+  devcovenant/licenses/THIRD_PARTY_LICENSES.md
+  devcovenant/licenses/packaging-26.1.txt
+  devcovenant/licenses/packaging-26.2.txt
+  devcovenant/licenses/pre-commit-4.5.1.txt
+  devcovenant/licenses/pre-commit-4.6.0.txt
+  devcovenant/runtime-requirements.lock
+  licenses/THIRD_PARTY_LICENSES.md
+  licenses/build-1.4.3.txt
+  licenses/build-1.4.4.txt
+  licenses/click-8.3.2.txt
+  licenses/click-8.3.3.txt
+  licenses/filelock-3.28.0.txt
+  licenses/filelock-3.29.0.txt
+  licenses/identify-2.6.18.txt
+  licenses/identify-2.6.19.txt
+  licenses/packaging-26.1.txt
+  licenses/packaging-26.2.txt
+  licenses/pip-26.0.1.txt
+  licenses/pip-26.1.txt
+  licenses/pre_commit-4.5.1.txt
+  licenses/pre_commit-4.6.0.txt
+  licenses/wheel-0.46.3.txt
+  licenses/wheel-0.47.0.txt
+  requirements.lock
+  tests/devcovenant/test_install.py
+
 ## Version 1.0.1b4
+
+- 2026-04-27:
+  Change: Rewrote `PLAN.md` to lock the b5 roadmap onto the corrected
+  profile taxonomy, the main-branch link policy, the UTC-safe demo proof,
+  and the SPEC-aligned public surface.
+  Why: Keep the active roadmap consistent with the audit findings and the
+  clarified meaning of `devcovuser`, `userproject`, and the repo-facing
+  documentation links.
+  Impact: Updated the b5 plan baseline so the next execution slice can fix
+  the docs, demo, quickstart, and link surfaces in the intended order.
+  Files:
+  CHANGELOG.md
+  PLAN.md
+
+- 2026-04-26:
+  Change: Rewrote `PLAN.md` to define the b5 roadmap around a technical
+  README, a meaningful demo, a demoted quickstart, and clearer
+  custom-governance docs.
+  Why: Aligned the active plan with the product direction that evaluation
+  should show real governance and the custom surface should be explained
+  through the docs users actually need.
+  Impact: Updated `PLAN.md` as the next execution baseline and recorded the
+  changed path for the b5 documentation and demo workstream.
+  Files:
+  CHANGELOG.md
+  PLAN.md
 
 - 2026-04-21:
   Change: Updated package-doc image rewriting so the package README banner

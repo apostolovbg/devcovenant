@@ -1,7 +1,7 @@
-# build 1.4.3
+# build 1.4.4
 
 This file aggregates the upstream license texts resolved for
-`build==1.4.3`.
+`build==1.4.4`.
 
 Resolved from: installed distribution metadata
 

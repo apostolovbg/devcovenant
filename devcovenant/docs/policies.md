@@ -1,7 +1,7 @@
 # Policies
-**Last Updated:** 2026-04-21
+**Last Updated:** 2026-04-27
 
-**Project Version:** 1.0.1b4
+**Project Version:** 1.0.1b5
 
 ## Overview
 Policies are the named rule units in DevCovenant.

@@ -1,7 +1,7 @@
 # Customization
-**Last Updated:** 2026-04-17
+**Last Updated:** 2026-04-27
 
-**Project Version:** 1.0.1b4
+**Project Version:** 1.0.1b5
 
 ## Overview
 This page is the guided first custom-governance path.

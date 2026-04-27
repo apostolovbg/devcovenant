@@ -10,9 +10,9 @@ texts stored under `devcovenant/licenses/`.
 
 ## Dependency License Inventory
 - `bandit==1.9.4`: `devcovenant/licenses/bandit-1.9.4.txt`
-- `packaging==26.1`: `devcovenant/licenses/packaging-26.1.txt`
+- `packaging==26.2`: `devcovenant/licenses/packaging-26.2.txt`
 - `pip-tools==7.5.3`: `devcovenant/licenses/pip-tools-7.5.3.txt`
-- `pre-commit==4.5.1`: `devcovenant/licenses/pre-commit-4.5.1.txt`
+- `pre-commit==4.6.0`: `devcovenant/licenses/pre-commit-4.6.0.txt`
 - `pytest==9.0.3`: `devcovenant/licenses/pytest-9.0.3.txt`
 - `PyYAML==6.0.3`: `devcovenant/licenses/PyYAML-6.0.3.txt`
 - `semver==3.0.4`: `devcovenant/licenses/semver-3.0.4.txt`

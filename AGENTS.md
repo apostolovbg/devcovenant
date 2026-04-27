@@ -1,13 +1,13 @@
 # DevCovenant Development Guide
 **Doc ID:** AGENTS
 **Doc Type:** policy-source
-**Project Version:** 1.0.1b4
+**Project Version:** 1.0.1b5
 **Project Stage:** stable
 **Maintenance Stance:** active
 **Compatibility Policy:** forward-only
 **Versioning Mode:** versioned
-**Last Updated:** 2026-04-21
-**DevCovenant Version:** 1.0.1b4
+**Last Updated:** 2026-04-27
+**DevCovenant Version:** 1.0.1b5
 
 <!-- DEVCOV:BEGIN -->
 # Message from DevCovenant's Human (Read First)
@@ -210,7 +210,7 @@ directly.
 <!-- DEVCOV:BEGIN -->
 ## Project Governance
 This block reflects the repository's active project-governance state.
-- Project Version: 1.0.1b4
+- Project Version: 1.0.1b5
 - Project Stage: stable
 - Maintenance Stance: active
 - Compatibility Policy: forward-only

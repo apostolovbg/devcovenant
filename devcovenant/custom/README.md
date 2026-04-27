@@ -1,6 +1,6 @@
 # Custom Extensions
-**Last Updated:** 2026-04-17
-**Project Version:** 1.0.1b4
+**Last Updated:** 2026-04-27
+**Project Version:** 1.0.1b5
 
 ## Table of Contents
 - [Overview](#overview)

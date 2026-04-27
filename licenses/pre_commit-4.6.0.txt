@@ -1,7 +1,7 @@
-# pre_commit 4.5.1
+# pre_commit 4.6.0
 
 This file aggregates the upstream license texts resolved for
-`pre_commit==4.5.1`.
+`pre_commit==4.6.0`.
 
 Resolved from: installed distribution metadata
 

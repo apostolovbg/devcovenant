@@ -1,6 +1,6 @@
 # Custom Profiles
-**Last Updated:** 2026-04-16
-**Project Version:** 1.0.1b4
+**Last Updated:** 2026-04-27
+**Project Version:** 1.0.1b5
 
 ## Table of Contents
 - [Overview](#overview)

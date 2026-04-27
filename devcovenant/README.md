@@ -1,9 +1,9 @@
 # devcovenant
 **Doc ID:** README
 **Doc Type:** repo-readme
-**Project Version:** 1.0.1b4
-**Last Updated:** 2026-04-21
-**DevCovenant Version:** 1.0.1b4
+**Project Version:** 1.0.1b5
+**Last Updated:** 2026-04-27
+**DevCovenant Version:** 1.0.1b5
 
 <!-- DEVCOV:BEGIN -->
 
@@ -224,40 +224,40 @@ Use the shorter map below instead of treating the README as the whole manual.
 
 - "How do I install it and get through first setup?"
 
-  Read [installation.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b4/devcovenant/docs/installation.md).
+  Read [installation.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b5/devcovenant/docs/installation.md).
 
 - "What does the daily workflow look like?"
 
-  Read [workflow.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b4/devcovenant/docs/workflow.md).
+  Read [workflow.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b5/devcovenant/docs/workflow.md).
 
 - "How does config and metadata actually work?"
 
-  Read [config.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b4/devcovenant/docs/config.md).
+  Read [config.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b5/devcovenant/docs/config.md).
 
 - "How do I create or tune repository governance?"
 
-  Read [policies.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b4/devcovenant/docs/policies.md) and
-  [profiles.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b4/devcovenant/docs/profiles.md).
+  Read [policies.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b5/devcovenant/docs/policies.md) and
+  [profiles.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b5/devcovenant/docs/profiles.md).
 
 - "How do I make my first custom profile or policy?"
 
-  Read [customization.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b4/devcovenant/docs/customization.md).
+  Read [customization.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b5/devcovenant/docs/customization.md).
 
 - "What does refresh own?"
 
-  Read [refresh.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b4/devcovenant/docs/refresh.md).
+  Read [refresh.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b5/devcovenant/docs/refresh.md).
 
 - "How is the system structured internally?"
 
-  Read [architecture.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b4/devcovenant/docs/architecture.md).
+  Read [architecture.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b5/devcovenant/docs/architecture.md).
 
 - "What registry and runtime state does DevCovenant track?"
 
-  Read [registry.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b4/devcovenant/docs/registry.md).
+  Read [registry.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b5/devcovenant/docs/registry.md).
 
 - "What do I do when something fails?"
 
-  Read [troubleshooting.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b4/devcovenant/docs/troubleshooting.md).
+  Read [troubleshooting.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b5/devcovenant/docs/troubleshooting.md).
 
 ## Workflow
 The standard repository workflow is:
@@ -314,7 +314,7 @@ is deliberate: builtin layers stay generic while repository-owned metadata
 holds the real project law.
 
 If you want the guided first custom path, read
-[customization.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b4/devcovenant/docs/customization.md).
+[customization.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b5/devcovenant/docs/customization.md).
 It walks through the first custom profile path, the first custom policy path,
 shadowing and materialization, and which layer to edit and why.
 
@@ -343,13 +343,13 @@ Customization is override-based by design:
 - when a custom entry shadows a builtin one, the builtin entry is ignored
 
 For the deeper authoring model, go straight to
-[policies.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b4/devcovenant/docs/policies.md),
-[profiles.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b4/devcovenant/docs/profiles.md), and
-[config.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b4/devcovenant/docs/config.md).
+[policies.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b5/devcovenant/docs/policies.md),
+[profiles.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b5/devcovenant/docs/profiles.md), and
+[config.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b5/devcovenant/docs/config.md).
 
 ## License
 DevCovenant is released under the MIT License.
-See [LICENSE](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b4/LICENSE) and
-[licenses/THIRD_PARTY_LICENSES.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b4/licenses/THIRD_PARTY_LICENSES.md).
+See [LICENSE](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b5/LICENSE) and
+[licenses/THIRD_PARTY_LICENSES.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b5/licenses/THIRD_PARTY_LICENSES.md).
 The published package includes the same license and compliance files under
 `devcovenant/licenses/`.

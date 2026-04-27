@@ -659,7 +659,7 @@ def _unit_test_pyproject_uses_pep639_license_metadata() -> None:
     build_requires = build_system.get("requires")
     assert isinstance(build_requires, list)
     assert "setuptools==82.0.1" in build_requires
-    assert "wheel==0.46.3" in build_requires
+    assert "wheel==0.47.0" in build_requires
     project_data = pyproject_data.get("project", {})
     assert project_data.get("license") == "MIT"
     readme_value = project_data.get("readme")

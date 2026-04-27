@@ -1,7 +1,7 @@
-# identify 2.6.18
+# pre-commit 4.6.0
 
 This file aggregates the upstream license texts resolved for
-`identify==2.6.18`.
+`pre-commit==4.6.0`.
 
 Resolved from: installed distribution metadata
 
@@ -10,7 +10,7 @@ Included upstream files:
 
 ===== LICENSE =====
 
-Copyright (c) 2017 Chris Kuehl, Anthony Sottile
+Copyright (c) 2014 pre-commit dev team: Anthony Sottile, Ken Struys
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
