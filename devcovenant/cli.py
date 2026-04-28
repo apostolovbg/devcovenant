@@ -42,7 +42,7 @@ _COMMAND_SUMMARIES = {
         "Remove disposable build, cache, runtime-registry, or log artifacts."
     ),
     "custom": (
-        "Promote or retract builtin policy/profile custom copies and "
+        "Promote or retract builtin policy/profile custom copies and any "
         "mirrored tests."
     ),
     "deploy": "Deploy managed docs/assets in the current repository.",
@@ -52,7 +52,7 @@ _COMMAND_SUMMARIES = {
     "policy": (
         "Run one explicit policy-born command declared by an enabled policy."
     ),
-    "quickstart": "Print the canonical first-use guide.",
+    "quickstart": "Print a terse static reminder.",
     "refresh": "Run a full refresh.",
     "run": "Run all declared DevCovenant workflow runs.",
     "undeploy": "Remove deployed managed artifacts and keep core files.",
@@ -103,7 +103,7 @@ def _runtime_errors() -> ModuleType:
 def _build_parser() -> argparse.ArgumentParser:
     """Build the root dispatcher parser."""
     parser = cli_args_module.DevCovenantArgumentParser(
-        description="DevCovenant - Self-enforcing policy system",
+        description="DevCovenant - repository governance framework",
         epilog=_render_command_help_epilog(),
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )

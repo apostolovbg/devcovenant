@@ -153,16 +153,18 @@ DevCovenant is worth your attention if most of the following sound familiar:
 - you want repo-specific governance, not just a fixed builtin rule bundle
 - you need evidence and logs for workflow steps, not only pass/fail signals
 
-If that sounds right, read the quick start next.
+If that sounds right, use the route map below.
 If you are specifically evaluating extensibility, skim
-[Custom Governance](#custom-governance) and then jump to the docs map.
+[Custom Governance](#custom-governance) and then run `devcovenant demo`.
 
 ## Quick Start
 For most users, the right first path is an isolated machine install with
 `pipx`, followed by activation inside the repository you want to govern.
-If you want the canonical first-use path in one fixed terminal command, run
+If you want a terse static reminder of that sequence, run
 `devcovenant quickstart`.
 If you want a disposable guided evaluation repo, run `devcovenant demo`.
+The README and the demo are the primary onboarding path; quickstart is
+only a reminder.
 
 ```bash
 pipx install devcovenant
@@ -192,10 +194,12 @@ What those steps mean:
 3. The config review is the human decision point.
 
    Start with `project-governance`, `developer_mode`, and `profiles.active`.
-   Builtin `devcovuser` is intentionally thin.
-   In most downstream repositories, the normal path is to customize
-   `devcovuser` with repo-owned values and, when needed, customize the
-   `python` profile too.
+   Builtin `devcovuser` is the always-active baseline for every DevCovenant
+   user repo.
+   In most downstream repositories, keep `devcovuser` active and add a
+   repo-owned `userproject` custom profile when the repository needs its own
+   starter layer; Python repositories often add a custom `python` profile
+   too.
    The copy-ready bootstrap template starts at
    `devcovenant/builtin/profiles/userproject/` and becomes repo-owned when
    copied to `devcovenant/custom/profiles/userproject/`.
@@ -224,40 +228,40 @@ Use the shorter map below instead of treating the README as the whole manual.
 
 - "How do I install it and get through first setup?"
 
-  Read [installation.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b5/devcovenant/docs/installation.md).
+  Read [installation.md](https://github.com/apostolovbg/devcovenant/blob/main/devcovenant/docs/installation.md).
 
 - "What does the daily workflow look like?"
 
-  Read [workflow.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b5/devcovenant/docs/workflow.md).
+  Read [workflow.md](https://github.com/apostolovbg/devcovenant/blob/main/devcovenant/docs/workflow.md).
 
 - "How does config and metadata actually work?"
 
-  Read [config.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b5/devcovenant/docs/config.md).
+  Read [config.md](https://github.com/apostolovbg/devcovenant/blob/main/devcovenant/docs/config.md).
 
 - "How do I create or tune repository governance?"
 
-  Read [policies.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b5/devcovenant/docs/policies.md) and
-  [profiles.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b5/devcovenant/docs/profiles.md).
+  Read [policies.md](https://github.com/apostolovbg/devcovenant/blob/main/devcovenant/docs/policies.md) and
+  [profiles.md](https://github.com/apostolovbg/devcovenant/blob/main/devcovenant/docs/profiles.md).
 
 - "How do I make my first custom profile or policy?"
 
-  Read [customization.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b5/devcovenant/docs/customization.md).
+  Read [customization.md](https://github.com/apostolovbg/devcovenant/blob/main/devcovenant/docs/customization.md).
 
 - "What does refresh own?"
 
-  Read [refresh.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b5/devcovenant/docs/refresh.md).
+  Read [refresh.md](https://github.com/apostolovbg/devcovenant/blob/main/devcovenant/docs/refresh.md).
 
 - "How is the system structured internally?"
 
-  Read [architecture.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b5/devcovenant/docs/architecture.md).
+  Read [architecture.md](https://github.com/apostolovbg/devcovenant/blob/main/devcovenant/docs/architecture.md).
 
 - "What registry and runtime state does DevCovenant track?"
 
-  Read [registry.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b5/devcovenant/docs/registry.md).
+  Read [registry.md](https://github.com/apostolovbg/devcovenant/blob/main/devcovenant/docs/registry.md).
 
 - "What do I do when something fails?"
 
-  Read [troubleshooting.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b5/devcovenant/docs/troubleshooting.md).
+  Read [troubleshooting.md](https://github.com/apostolovbg/devcovenant/blob/main/devcovenant/docs/troubleshooting.md).
 
 ## Workflow
 The standard repository workflow is:
@@ -307,14 +311,16 @@ Custom governance is one of DevCovenant's main differentiators.
 The framework is built so a repository can define and own its own law instead
 of waiting for the core project to ship one more builtin.
 
-The normal downstream shape is a thin builtin `devcovuser` layer, a
-repo-owned `userproject` layer for repository-specific values, and often a
-custom `python` or `python_venv` profile for environment ownership. That split
-is deliberate: builtin layers stay generic while repository-owned metadata
-holds the real project law.
+The normal downstream shape keeps builtin `devcovuser` active and adds
+repo-owned custom profiles when the repository needs its own reusable
+behavior. `userproject` is the copy-ready bootstrap template for that first
+repo-owned custom profile, and Python repositories often add a custom
+`python` or `python_venv` profile for environment ownership. That split keeps
+builtin layers generic and puts the real project law in
+repository-owned metadata.
 
 If you want the guided first custom path, read
-[customization.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b5/devcovenant/docs/customization.md).
+[customization.md](https://github.com/apostolovbg/devcovenant/blob/main/devcovenant/docs/customization.md).
 It walks through the first custom profile path, the first custom policy path,
 shadowing and materialization, and which layer to edit and why.
 
@@ -343,13 +349,14 @@ Customization is override-based by design:
 - when a custom entry shadows a builtin one, the builtin entry is ignored
 
 For the deeper authoring model, go straight to
-[policies.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b5/devcovenant/docs/policies.md),
-[profiles.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b5/devcovenant/docs/profiles.md), and
-[config.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b5/devcovenant/docs/config.md).
+[policies.md](https://github.com/apostolovbg/devcovenant/blob/main/devcovenant/docs/policies.md),
+[profiles.md](https://github.com/apostolovbg/devcovenant/blob/main/devcovenant/docs/profiles.md), and
+[config.md](https://github.com/apostolovbg/devcovenant/blob/main/devcovenant/docs/config.md).
 
 ## License
 DevCovenant is released under the MIT License.
-See [LICENSE](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b5/LICENSE) and
-[licenses/THIRD_PARTY_LICENSES.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b5/licenses/THIRD_PARTY_LICENSES.md).
+See [LICENSE](https://github.com/apostolovbg/devcovenant/blob/main/LICENSE)
+and
+[licenses/THIRD_PARTY_LICENSES.md](https://github.com/apostolovbg/devcovenant/blob/main/licenses/THIRD_PARTY_LICENSES.md).
 The published package includes the same license and compliance files under
 `devcovenant/licenses/`.

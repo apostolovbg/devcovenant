@@ -20,9 +20,9 @@ devcovenant gate --close
 That sequence is the workflow.
 It is how DevCovenant proves that hooks, checks, runs, and closing state all
 happened in the right order.
-If you want the same lifecycle story summarized as one fixed terminal guide,
-run `devcovenant quickstart`.
-If you want the same lifecycle story as a disposable evaluation repo, run
+If you want a terse static reminder of the lifecycle, run
+`devcovenant quickstart`.
+If you want the lifecycle shown as a disposable evaluation proof, run
 `devcovenant demo`.
 
 ## What Each Command Is For

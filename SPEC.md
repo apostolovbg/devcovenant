@@ -85,13 +85,14 @@ state, and release proof that can be audited afterward.
   sync.
 - Preserve a clear boundary between engine-owned runtime checks and
   repository-configurable policies.
-- Let ordinary repositories start from the shared base plus `devcovuser`,
-  then promote builtin policies and profiles into repo-owned custom copies
-  with explicit test materialization when they need their own reusable
-  behavior.
-- Give ordinary repositories a thin `devcovuser` baseline and a guided path
-  to their first repo-owned custom layer, usually `userproject` and often a
-  custom `python` or `python_venv` profile.
+- Let ordinary repositories start from the shared base plus the always-active
+  `devcovuser` baseline, then promote builtin policies and profiles into
+  repo-owned custom copies with explicit test materialization when they need
+  their own reusable behavior.
+- Give ordinary repositories an always-active `devcovuser` baseline and a
+  guided path to their first repo-owned custom layer, usually the copy-ready
+  `userproject` starter profile and often a custom `python` or `python_venv`
+  profile.
 - Keep operator-facing commands inspectable through stable run-log artifacts,
   concise summaries, and clear local state files.
 - Keep shipped package docs package-generic while leaving
@@ -199,14 +200,18 @@ intentionally not trying to do.
 ## Functional Requirements
 ### Command Surface And Lifecycle
 - DevCovenant shall expose the public top-level commands `asset`, `check`,
-  `clean`, `custom`, `deploy`, `gate`, `install`, `policy`, `refresh`, `run`,
-  `undeploy`, `uninstall`, and `upgrade`.
+  `clean`, `custom`, `deploy`, `demo`, `gate`, `install`, `policy`,
+  `quickstart`, `refresh`, `run`, `undeploy`, `uninstall`, and `upgrade`.
 - Every public command shall accept `--quiet`, `--normal`, or `--verbose` as
   per-invocation output overrides.
 - `install` shall seed repository-local DevCovenant runtime files and a
   review-required starting config without activating the managed outputs.
 - `deploy` shall require reviewed config and shall activate the governed
   setup by running the full refresh path.
+- `demo` shall run a disposable evaluation repo that proves repository-owned
+  governance end to end and removes its temporary repository afterward.
+- `quickstart` shall print a terse static reminder of the first-use
+  sequence without competing with the demo as the primary evaluation path.
 - `refresh` shall regenerate tracked registry state, managed docs, generated
   config sections, generated workflow files, and other refresh-owned files.
 - `custom` shall run from the interpreter or environment it is launched

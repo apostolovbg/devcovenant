@@ -130,8 +130,8 @@ def _unit_test_fix_rewrites_toml_manifest_version() -> None:
         assert result.success is True
         content = target.read_text(encoding="utf-8")
         assert 'version = "2.3.4"' in content
-        assert "/tree/v2.3.4/docs" in content
-        assert "/blob/v2.3.4/CHANGELOG.md" in content
+        assert "/tree/main/docs" in content
+        assert "/blob/main/CHANGELOG.md" in content
 
 
 class GeneratedUnittestCases(unittest.TestCase):

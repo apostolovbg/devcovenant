@@ -343,16 +343,6 @@ class PackageDocSyncCheck(PolicyCheck):
                 "Package-doc sync found repo-relative public links, but "
                 "`pyproject.toml` is missing `[project]` metadata.",
             )
-        version = str(project.get("version") or "").strip()
-        if not version:
-            return (
-                None,
-                None,
-                None,
-                None,
-                "Package-doc sync found repo-relative public links, but "
-                "`pyproject.toml` is missing `project.version`.",
-            )
         urls = project.get("urls")
         if not isinstance(urls, dict):
             urls = {}
@@ -370,19 +360,15 @@ class PackageDocSyncCheck(PolicyCheck):
                 "or `project.urls.Homepage`.",
             )
         normalized = repository_url.removesuffix(".git").rstrip("/")
-        version_tag = f"v{version}"
-        blob_base = f"{normalized}/blob/{version_tag}/"
+        blob_base = f"{normalized}/blob/main/"
         if normalized.startswith("https://github.com/"):
             owner_repo = normalized.removeprefix("https://github.com/")
-            raw_base = (
-                f"https://raw.githubusercontent.com/"
-                f"{owner_repo}/{version_tag}/"
-            )
+            raw_base = f"https://raw.githubusercontent.com/{owner_repo}/main/"
             raw_image_base = (
                 f"https://raw.githubusercontent.com/{owner_repo}/main/"
             )
         else:
-            raw_base = f"{normalized}/raw/{version_tag}/"
+            raw_base = f"{normalized}/raw/main/"
             raw_image_base = f"{normalized}/raw/main/"
         return normalized, blob_base, raw_base, raw_image_base, None
 
@@ -395,7 +381,7 @@ class PackageDocSyncCheck(PolicyCheck):
         raw_base: str,
     ) -> str | None:
         """Normalize one target path for
-        release-stable package-doc rewriting."""
+        main-branch package-doc rewriting."""
         stripped = target.strip()
         if self._is_repo_relative_target(stripped):
             return stripped[2:] if stripped.startswith("./") else stripped

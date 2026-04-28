@@ -8,12 +8,12 @@ This page is the guided first custom-governance path.
 Use it after the front-door README when you want to move from "what is
 DevCovenant?" to "how do I make it fit my repository?"
 
-The builtin `devcovuser` layer is intentionally thin. In practice, most
-downstream repositories end up with a repo-owned `userproject` layer carrying
-repository-specific values, and Python repositories often add a custom
-`python` or `python_venv` profile too. That split is deliberate: builtin
-layers stay generic while repository-owned metadata holds the real project
-law.
+The builtin `devcovuser` layer is the always-active baseline. In practice,
+most downstream repositories keep it active, then add a repo-owned
+`userproject` starter profile carrying repository-specific values, and Python
+repositories often add a custom `python` or `python_venv` profile too. That
+split is deliberate: builtin layers stay generic while repository-owned
+metadata holds the real project law.
 
 There are two first custom paths:
 - profile-first when the repository shape changes
@@ -26,7 +26,7 @@ or a shadow of builtin rule logic.
 
 ## First Custom Profile Path
 Use a custom profile when the repository needs reusable behavior of its own.
-The concrete bootstrap example is `userproject`.
+The concrete bootstrap example is the copy-ready `userproject` template.
 
 Run:
 
@@ -35,8 +35,9 @@ devcovenant custom --profile userproject --do
 ```
 
 That command copies the builtin `userproject` template into
-`devcovenant/custom/profiles/userproject/` and materializes the mirrored tests
-under `tests/devcovenant/custom/profiles/userproject/`.
+`devcovenant/custom/profiles/userproject/`. Because the template does not
+ship test blueprints, it does not materialize mirrored tests. The command
+still refreshes the repository afterward.
 
 Edit the copied manifest and assets there.
 Put repository-specific values in the copied profile, not in the builtin
@@ -95,9 +96,10 @@ devcovenant custom --policy security-scanner --undo
 `devcovenant custom --profile ... --do` and `devcovenant custom --policy ...
 --do` are the materialization commands.
 They promote a builtin tree into repository-owned custom files and mirror the
-shipped builtin tests into `tests/devcovenant/custom/**`.
+shipped builtin tests into `tests/devcovenant/custom/**` when the builtin
+ships blueprints.
 
-The inverse `--undo` commands retract the repository-owned copy and its test
+The inverse `--undo` commands retract the repository-owned copy and any test
 mirror.
 
 The shadowing rules are strict:
@@ -133,8 +135,11 @@ repository-specific governance system.
 
 ## Next Steps
 Read the deeper authoring pages once you know which layer you want to own:
-- [policies.md](policies.md) for policy logic, selectors, and shadowing
-- [profiles.md](profiles.md) for reusable repository shape and assets
-- [config.md](config.md) for activation, overlays, and repository instance
-  choices
-- [custom/README.md](../custom/README.md) for the extension-surface overview
+- [policies.md](https://github.com/apostolovbg/devcovenant/blob/main/devcovenant/docs/policies.md)
+  for policy logic, selectors, and shadowing
+- [profiles.md](https://github.com/apostolovbg/devcovenant/blob/main/devcovenant/docs/profiles.md)
+  for reusable repository shape and assets
+- [config.md](https://github.com/apostolovbg/devcovenant/blob/main/devcovenant/docs/config.md)
+  for activation, overlays, and repository instance choices
+- [custom/README.md](https://github.com/apostolovbg/devcovenant/blob/main/devcovenant/custom/README.md)
+  for the extension-surface overview

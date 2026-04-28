@@ -15,9 +15,11 @@ DevCovenant separates setup from activation:
 The important human decision happens between those two commands.
 Review `devcovenant/config.yaml`, decide how the repository should work, and
 only then run `deploy`.
-If you want the canonical first-use path in one fixed terminal command, run
+If you want a terse static reminder of that sequence, run
 `devcovenant quickstart`.
 If you want a disposable guided evaluation repo, run `devcovenant demo`.
+That demo proves a repo-owned custom security policy shadow copy, a
+changelog-safe legacy drift example, and the normal gate/run/close flow.
 
 ## Before You Start
 You need:
@@ -68,6 +70,9 @@ follow that canonical project version during the normal workflow.
 Managed docs render `DevCovenant Version` headers from the same canonical
 version value during refresh, so package and repository-facing headers stay
 in step without a separate bump path.
+The repository manifest in `pyproject.toml` keeps package metadata and
+repository URLs together. `version-sync` owns the version field and changelog
+headers; repo-facing `project.urls` entries stay on the `main` branch.
 
 That machine install is separate from repository activation.
 Installing the CLI makes `devcovenant` available on the machine.
@@ -90,9 +95,10 @@ The shortest accurate model is:
    The seeded `devcovenant/config.yaml` should keep explanatory comments for
    that review, so treat those comments as the first checklist instead of
    guessing from memory.
-   For most repositories, keep `devcovuser` active and add a
-   custom profile on top when the repository needs its own rules, assets,
-   workflow additions, or dependency-surface overrides.
+   For most repositories, keep `devcovuser` active as the always-on baseline
+   and add a repo-owned `userproject` starter profile when the repository
+   needs its own rules, assets, workflow additions, or dependency-surface
+   overrides.
    A good starting point is copying
    `devcovenant/builtin/profiles/userproject/` to
    `devcovenant/custom/profiles/userproject/`, then editing only the

@@ -93,6 +93,11 @@ When a custom and builtin profile share a profile name, the custom profile is
 loaded, fully shadows the builtin profile, and the builtin profile with that
 name is ignored.
 
+If the repository needs the first custom profile or the first custom policy
+path explained end to end, start with
+[customization.md](https://github.com/apostolovbg/devcovenant/blob/main/devcovenant/docs/customization.md).
+That page describes the copy, shadow, and mirror rules in one place.
+
 Use direct overlays for small one-off tweaks.
 Use a custom profile when the repository has real repeatable behavior of its
 own.

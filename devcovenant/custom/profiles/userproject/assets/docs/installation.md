@@ -67,7 +67,7 @@ The shortest accurate model is:
 
 2. config review is the checkpoint.
    Start with `project-governance`, `developer_mode`, and `profiles.active`.
-   For most repositories, keep `devcovuser` active and add a
+   For most repositories, keep `devcovuser` active and add a repo-owned
    custom profile on top when the repository needs its own rules, assets,
    workflow additions, or dependency-surface overrides.
    Keep `github` active when the repository wants the generic generated
@@ -75,8 +75,8 @@ The shortest accurate model is:
    when the repository does not want that workflow.
    Use an optional GitHub-specific custom profile when the
    repository needs reusable GitHub-only CI fragments beyond the builtin base.
-   A good bootstrap starting point is copying
-   `devcovenant/builtin/profiles/userproject/` to
+   A good bootstrap starting point is copying the built-in
+   `devcovenant/builtin/profiles/userproject/` template to
    `devcovenant/custom/profiles/userproject/`, then editing only the
    repo-specific facts there.
    When a custom profile and builtin profile share the same name, the custom

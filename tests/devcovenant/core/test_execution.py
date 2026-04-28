@@ -699,7 +699,8 @@ def _unit_test_ci_workflow_split_docs_are_consistent() -> None:
     assert ".github/workflows/publish.yml" not in installation
     assert "repo-specific `Build` job" not in installation
     assert "Repository Release And Assurance" in readme
-    assert "`Governance` and `Build`" in readme
+    assert "`Governance`" in readme
+    assert "`Build`" in readme
     assert ".github/workflows/publish.yml" in readme
 
 

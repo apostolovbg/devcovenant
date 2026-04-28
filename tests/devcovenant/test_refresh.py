@@ -504,7 +504,6 @@ def _unit_test_release_metadata_keeps_support_floor_and_docs_truthful() -> (
         (REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8")
     )
     project = pyproject_payload["project"]
-    version = str(project["version"])
     dependencies = [str(item) for item in project["dependencies"]]
     urls = project["urls"]
 
@@ -560,19 +559,17 @@ def _unit_test_release_metadata_keeps_support_floor_and_docs_truthful() -> (
         "- `devcovenant/runtime-requirements.lock`" in packaged_license_report
     )
 
-    assert urls["Documentation"].endswith(f"/tree/v{version}/devcovenant/docs")
-    assert urls["Changelog"].endswith(f"/blob/v{version}/CHANGELOG.md")
+    assert urls["Documentation"].endswith("/tree/main/devcovenant/docs")
+    assert urls["Changelog"].endswith("/blob/main/CHANGELOG.md")
 
     packaged_readme = (REPO_ROOT / "devcovenant" / "README.md").read_text(
         encoding="utf-8"
     )
-    assert f"/blob/v{version}/devcovenant/docs/workflow.md" in packaged_readme
+    assert "/blob/main/devcovenant/docs/workflow.md" in packaged_readme
     assert (
         "https://raw.githubusercontent.com/apostolovbg/devcovenant/"
         "main/devcovenant/docs/banner.png"
     ) in packaged_readme
-    assert "blob/main" not in packaged_readme
-    assert f"v{version}/devcovenant/docs/banner.png" not in packaged_readme
 
 
 def _unit_test_refresh_imports_same_version_header_only_spec_doc() -> None:

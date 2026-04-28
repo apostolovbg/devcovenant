@@ -24,7 +24,9 @@ Policy activation still lives in `policy_state`.
 ## Profile Types
 The common profile categories are:
 - `global` and `defaults` as the shared base
-- `devcovuser` as the normal user-repository layer
+- `devcovuser` as the always-active core user baseline
+- `userproject` as the copy-ready bootstrap template for the first
+  repo-owned custom profile
 - `github` as the optional but default-enabled GitHub Actions layer
 - language profiles
 - optional tooling profiles such as `python_venv`
@@ -52,6 +54,8 @@ that first custom layer.
 Copy `devcovenant/builtin/profiles/userproject/` to
 `devcovenant/custom/profiles/userproject/`, then edit the copied manifest.
 It is not meant to be activated directly.
+It does not ship test blueprints, so copying it into the custom tree
+refreshes the manifest without creating a mirror.
 Keep inherited values inherited.
 Do not restate builtin values in the copied profile.
 Here, "inherited" means values from other active profiles.
@@ -82,11 +86,12 @@ That blueprint stores repo-relative paths and serialized file contents for
 the shipped tests.
 The repository keeps the actual builtin test tree under
 `tests/devcovenant/builtin/profiles/<name>/` for verification.
-When a repository shadows a builtin profile, `devcovenant custom --profile
-<name> --do` copies the builtin tree into
+When a repository shadows a builtin profile that ships `test_blueprints.yaml`,
+`devcovenant custom --profile <name> --do` copies the builtin tree into
 `devcovenant/custom/profiles/<name>/` and materializes the mirrored tests
-under `tests/devcovenant/custom/profiles/<name>/`.
-`--undo` removes the repo-owned copy and mirror again.
+under `tests/devcovenant/custom/profiles/<name>/`. If the builtin profile
+does not ship blueprints, the command copies the tree and refreshes without
+creating a mirror. `--undo` removes the repo-owned copy and any mirror again.
 The command follows the normal managed-environment resolution path, so it
 works from the repository's declared interpreter layout instead of assuming a
 repo-local `.venv`.
@@ -100,9 +105,10 @@ family so it travels as one coherent stack instead of a pile of one-off
 config edits.
 
 For a guided first custom profile path, start with
-[customization.md](customization.md). That page shows when the repo-owned
-`userproject` layer is the right place to put repository-specific values and
-when to add a custom `python` or `python_venv` layer.
+[customization.md](https://github.com/apostolovbg/devcovenant/blob/main/devcovenant/docs/customization.md).
+That page shows when the repo-owned `userproject` starter profile is the
+right place to put repository-specific values and when to add a custom
+`python` or `python_venv` layer.
 
 A custom profile can contribute:
 - metadata overlays for builtin or custom policies
@@ -170,7 +176,7 @@ If the managed environment keeps commands in extra PATH locations, declare
 `command_search_paths` alongside the environment root so `required_commands`
 resolve from the managed stack instead of the host shell PATH.
 
-The built-in `devcovuser` profile is the normal user-repository layer.
+The built-in `devcovuser` profile is the always-active core user baseline.
 It keeps DevCovenant's own shipped runtime files out of ordinary app-code
 checks while still keeping `devcovenant/custom/**` in scope for
 repository-owned extensions.
@@ -183,8 +189,8 @@ That same narrowing applies to mirrored test expectations and assertion
 coverage, so normal repositories keep DevCovenant internals out of scope
 while still enforcing `devcovenant/custom/**` and
 `tests/devcovenant/custom/**`.
-In this repository, the repo-owned `userproject` profile widens the same
-code-style policies, including `line-length-limit`, `name-clarity`,
+In this repository, the repo-owned `userproject` starter profile widens the
+same code-style policies, including `line-length-limit`, `name-clarity`,
 `docstring-and-comment-coverage`, `security-scanner`, and `no-raw-errors`,
 so they cover the full `devcovenant/**` tree and `tests/**` mirror instead of
 stopping at the custom shadow layer. The generated registry, bundled license

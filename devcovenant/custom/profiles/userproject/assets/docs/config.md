@@ -71,7 +71,7 @@ and workflow additions.
 
 For most repositories, the normal pattern is:
 - keep the shared base profiles
-- keep `devcovuser` active
+- keep `devcovuser` active as the always-on user baseline
 - keep `github` active when the repository wants the generic generated GitHub
   Actions workflow; remove it when the repository does not want that workflow
 - add language or framework profiles as needed
@@ -295,7 +295,8 @@ For a new repository, this is the shortest useful config review:
 1. set `project-governance`
 2. confirm `developer_mode`
 3. review `profiles.active`
-4. keep `devcovuser` active for a normal repository
+4. keep `devcovuser` active for a normal repository as the always-on user
+   baseline
 5. keep `github` if the repository wants the generated GitHub Actions workflow
    that ships in the default stack, or remove it if the repository does not
    want that workflow

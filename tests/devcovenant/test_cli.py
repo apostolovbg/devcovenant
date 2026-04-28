@@ -499,10 +499,10 @@ def _unit_test_root_help_lists_command_summaries() -> None:
     )
     assert (
         "Promote or retract builtin policy/profile custom copies and "
-        "mirrored tests." in result.stdout
+        "any mirrored tests." in result.stdout
     )
     assert "Run a disposable evaluation demo." in result.stdout
-    assert "Print the canonical first-use guide." in result.stdout
+    assert "Print a terse static reminder." in result.stdout
     assert (
         "Run `devcovenant <command> --help` for command-specific options."
         in result.stdout
@@ -1138,7 +1138,7 @@ class GeneratedUnittestCases(unittest.TestCase):
         )
         self.assertEqual(result.returncode, 0)
         self.assertIn(
-            "DevCovenant - Self-enforcing policy system",
+            "DevCovenant - repository governance framework",
             result.stdout,
         )
 

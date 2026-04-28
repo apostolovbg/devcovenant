@@ -311,7 +311,7 @@ class TestVersionSyncPolicy(unittest.TestCase):
             self.assertEqual(mismatch[0].context["tracked_version"], "1.0.0")
 
     def test_detects_manifest_release_url_version_mismatch(self):
-        """Tagged manifest URLs should stay synchronized with the version."""
+        """Tagged manifest URLs should stay on the main branch."""
         with tempfile.TemporaryDirectory() as tmpdir:
             repo_root = Path(tmpdir)
             version_dir = repo_root / "project_lib"
@@ -362,13 +362,14 @@ class TestVersionSyncPolicy(unittest.TestCase):
             messages = [violation.message for violation in violations]
             self.assertTrue(
                 any(
-                    "Documentation URL version 2.0.0 does not match" in msg
+                    "Documentation URL branch v2.0.0 does not match main"
+                    in msg
                     for msg in messages
                 )
             )
             self.assertTrue(
                 any(
-                    "Changelog URL version 2.0.0 does not match" in msg
+                    "Changelog URL branch v2.0.0 does not match main" in msg
                     for msg in messages
                 )
             )

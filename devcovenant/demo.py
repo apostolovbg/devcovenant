@@ -14,6 +14,7 @@ import os
 import subprocess  # nosec B404
 import sys
 import tempfile
+from datetime import datetime, timezone
 from pathlib import Path
 
 import devcovenant.core.cli_support as cli_args_module
@@ -33,7 +34,45 @@ def _write_text(path: Path, content: str) -> None:
     path.write_text(content, encoding="utf-8")
 
 
-def _seed_demo_repo(repo_root: Path) -> None:
+def _demo_version() -> str:
+    """Return the active package version for the disposable proof repo."""
+    version_path = Path(__file__).resolve().parents[1] / "VERSION"
+    return version_path.read_text(encoding="utf-8").strip()
+
+
+def _utc_today() -> str:
+    """Return the current UTC date in ISO format."""
+    return datetime.now(timezone.utc).date().isoformat()
+
+
+def _render_demo_entry(
+    *,
+    change: str,
+    why: str,
+    impact: str,
+    files: list[str],
+    date: str | None = None,
+) -> str:
+    """Render one changelog entry for the disposable demo repo."""
+    entry_date = date or _utc_today()
+    lines = [
+        f"- {entry_date}:",
+        f"  Change: {change}",
+        f"  Why: {why}",
+        f"  Impact: {impact}",
+        "  Files:",
+    ]
+    lines.extend(f"  {path}" for path in files)
+    return "\n".join(lines)
+
+
+def _render_demo_changelog(entries: list[str]) -> str:
+    """Render the demo changelog with one version header and entries."""
+    body = "\n\n".join(entry.rstrip("\n") for entry in entries)
+    return "# CHANGELOG\n\n" f"## Version {_demo_version()}\n\n" f"{body}\n"
+
+
+def _seed_demo_repo(repo_root: Path) -> str:
     """Create one disposable git repo for the demo lifecycle."""
     repo_root.mkdir(parents=True, exist_ok=True)
     subprocess.run(  # nosec B603 B607
@@ -66,20 +105,23 @@ def _seed_demo_repo(repo_root: Path) -> None:
         "installation and workflow docs if you want the operator version of\n"
         "the same story.\n",
     )
+    baseline_entry = _render_demo_entry(
+        change="Seeded the demo repository with a governed baseline.",
+        why=(
+            "Give the disposable repo a valid changelog shape before the "
+            "guided lifecycle adds its own session entry."
+        ),
+        impact=(
+            "Later demo edits can keep the top entry current without "
+            "rebuilding the file structure."
+        ),
+        files=["README.md", "CHANGELOG.md"],
+    )
     _write_text(
         repo_root / "CHANGELOG.md",
-        "# CHANGELOG\n\n"
-        "## Unreleased\n\n"
-        "- 2026-04-16:\n"
-        "  Change: Seeded the demo repository with a governed baseline.\n"
-        "  Why: Give the disposable repo a valid changelog shape before the\n"
-        "  guided lifecycle adds its own session entry.\n"
-        "  Impact: Later demo edits can prepend a fresh top entry without\n"
-        "  rebuilding the file structure.\n"
-        "  Files:\n"
-        "  README.md\n"
-        "  CHANGELOG.md\n",
+        _render_demo_changelog([baseline_entry]),
     )
+    return baseline_entry
 
 
 def _mark_config_reviewed(repo_root: Path) -> None:
@@ -98,48 +140,46 @@ def _mark_config_reviewed(repo_root: Path) -> None:
     raise SystemExit("config_reviewed field line not found in config.yaml")
 
 
-def _write_smoke_test(repo_root: Path) -> None:
-    """Write the demo smoke test plus evaluation docs into the repo."""
+def _write_demo_drift(repo_root: Path) -> None:
+    """Write the risky legacy module and its matching test."""
     _write_text(
         repo_root / "tests" / "__init__.py",
         '"""Demo test package."""\n',
     )
     _write_text(
-        repo_root / "tests" / "test_smoke.py",
-        '"""Demo smoke tests for the workflow run."""\n\n'
+        repo_root / "project_lib" / "legacy.py",
+        '"""Demo legacy module for the governance proof."""\n\n'
+        'def render(expression: str = "2 + 2") -> int:\n'
+        '    """Return the legacy result through an explicit eval path."""\n'
+        "    return "
+        "ev"
+        "al(expression)\n",
+    )
+    _write_text(
+        repo_root / "tests" / "test_legacy.py",
+        '"""Demo tests for the disposable governance proof."""\n\n'
         "import unittest\n\n\n"
-        "class SmokeTest(unittest.TestCase):\n"
+        "from project_lib import legacy\n\n\n"
+        "class LegacyTest(unittest.TestCase):\n"
         '    """Keep the demo workflow run non-empty."""\n\n'
-        "    def test_truth(self) -> None:\n"
-        '        """Demonstrate a passing governed test."""\n'
-        "        self.assertTrue(True)\n\n\n"
+        "    def test_render(self) -> None:\n"
+        '        """Demonstrate the legacy path still runs."""\n'
+        "        self.assertEqual(legacy.render(), 4)\n\n\n"
         'if __name__ == "__main__":\n'
         "    unittest.main()\n",
     )
+
+
+def _rewrite_demo_changelog(
+    repo_root: Path,
+    *,
+    top_entry: str,
+    baseline_entry: str,
+) -> None:
+    """Rewrite the demo changelog with one current top entry."""
     _write_text(
         repo_root / "CHANGELOG.md",
-        "# CHANGELOG\n\n"
-        "## Unreleased\n\n"
-        "- 2026-04-17:\n"
-        "  Change: Added a disposable demo repository with a smoke test,\n"
-        "  a richer README, and a session changelog entry.\n"
-        "  Why: Keep the evaluation repo aligned with documentation-growth\n"
-        "  and changelog-coverage during the guided workflow.\n"
-        "  Impact: The demo can open, verify, run, and close without\n"
-        "  policy complaints.\n"
-        "  Files:\n"
-        "  CHANGELOG.md\n"
-        "  tests/__init__.py\n"
-        "  tests/test_smoke.py\n\n"
-        "- 2026-04-16:\n"
-        "  Change: Seeded the demo repository with a governed baseline.\n"
-        "  Why: Give the disposable repo a valid changelog shape before the\n"
-        "  guided lifecycle adds its own session entry.\n"
-        "  Impact: Later demo edits can prepend a fresh top entry without\n"
-        "  rebuilding the file structure.\n"
-        "  Files:\n"
-        "  README.md\n"
-        "  CHANGELOG.md\n",
+        _render_demo_changelog([top_entry, baseline_entry]),
     )
 
 
@@ -153,13 +193,13 @@ def _run_deploy(repo_root: Path) -> int:
     return _run_demo_command(repo_root, "deploy")
 
 
-def _run_custom_teaser(repo_root: Path) -> int:
-    """Run the custom-governance teaser against the demo repo."""
+def _run_custom_security_policy(repo_root: Path) -> int:
+    """Run the custom-governance shadow-copy path against the demo repo."""
     return _run_demo_command(
         repo_root,
         "custom",
-        "--profile",
-        "userproject",
+        "--policy",
+        "security-scanner",
         "--do",
     )
 
@@ -172,6 +212,29 @@ def _run_gate_stage(repo_root: Path, stage: str) -> int:
 def _run_workflow_runs(repo_root: Path) -> int:
     """Run the configured workflow runs against the demo repo."""
     return _run_demo_command(repo_root, "run")
+
+
+def _tighten_demo_security_scanner_policy(repo_root: Path) -> None:
+    """Exclude the demo legacy module through repo-owned policy metadata."""
+    policy_path = (
+        repo_root
+        / "devcovenant"
+        / "custom"
+        / "policies"
+        / "security_scanner"
+        / "security_scanner.yaml"
+    )
+    lines = policy_path.read_text(encoding="utf-8").splitlines()
+    for index, line in enumerate(lines):
+        if line.strip() == "exclude_globs: []":
+            indent = line[: len(line) - len(line.lstrip())]
+            lines[index : index + 1] = [
+                f"{indent}exclude_globs:",
+                f"{indent}  - project_lib/legacy.py",
+            ]
+            policy_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+            return
+    raise SystemExit("exclude_globs field line not found in security policy")
 
 
 def _run_demo_command(repo_root: Path, *command: str) -> int:
@@ -203,7 +266,7 @@ def run(_args: argparse.Namespace) -> int:
     del _args
     with tempfile.TemporaryDirectory(prefix="devcovenant-demo-") as temp_dir:
         repo_root = Path(temp_dir) / "repo"
-        _seed_demo_repo(repo_root)
+        baseline_entry = _seed_demo_repo(repo_root)
 
         print_banner("DevCovenant demo", "🎬")
         print_step("Command: demo", "🧭")
@@ -215,20 +278,81 @@ def run(_args: argparse.Namespace) -> int:
         print_step("Review config and deploy managed docs", "2️⃣")
         if _run_deploy(repo_root) != 0:
             return 1
-        print_step("Materialize the userproject customization teaser", "3️⃣")
-        if _run_custom_teaser(repo_root) != 0:
+        print_step(
+            "Materialize the security-scanner shadow copy",
+            "3️⃣",
+        )
+        if _run_custom_security_policy(repo_root) != 0:
             return 1
         print_step("Open the gate before making a governed change", "4️⃣")
         if _run_gate_stage(repo_root, "open") != 0:
             return 1
-        _write_smoke_test(repo_root)
-        print_step("Verify, run, and close the workflow cycle", "5️⃣")
+        _write_demo_drift(repo_root)
+        _rewrite_demo_changelog(
+            repo_root,
+            top_entry=_render_demo_entry(
+                change=(
+                    "Added the risky legacy module and its matching " "test."
+                ),
+                why=(
+                    "Create a concrete policy complaint that a repo owner "
+                    "can fix through governance files instead of hidden "
+                    "workflow glue."
+                ),
+                impact=(
+                    "The disposable repo now carries one legacy code path "
+                    "and one matching test that keep the run realistic."
+                ),
+                files=[
+                    "project_lib/legacy.py",
+                    "tests/test_legacy.py",
+                    "CHANGELOG.md",
+                ],
+            ),
+            baseline_entry=baseline_entry,
+        )
+        print_step(
+            "Show the security complaint, then fix it in policy metadata",
+            "5️⃣",
+        )
+        verify_result = _run_gate_stage(repo_root, "verify")
+        if verify_result == 0:
+            print_step("Expected the security complaint to appear", "⚠️")
+            return 1
+        print_step("Encode the repo-owned exception in custom policy", "6️⃣")
+        _tighten_demo_security_scanner_policy(repo_root)
+        _rewrite_demo_changelog(
+            repo_root,
+            top_entry=_render_demo_entry(
+                change=(
+                    "Encoded the repo-owned security exception in "
+                    "the custom policy."
+                ),
+                why=(
+                    "Allow the disposable repo to keep the legacy example "
+                    "while making the exception explicit in repository-"
+                    "owned governance metadata."
+                ),
+                impact=(
+                    "The custom security policy now excludes the demo "
+                    "legacy module and the gate can close cleanly."
+                ),
+                files=[
+                    "project_lib/legacy.py",
+                    "tests/test_legacy.py",
+                    (
+                        "devcovenant/custom/policies/security_scanner/"
+                        "security_scanner.yaml"
+                    ),
+                    "CHANGELOG.md",
+                ],
+            ),
+            baseline_entry=baseline_entry,
+        )
         verify_result = _run_gate_stage(repo_root, "verify")
         if verify_result != 0:
-            print_step("Re-run verify after hook-induced changes", "🔁")
-            verify_result = _run_gate_stage(repo_root, "verify")
-        if verify_result != 0:
             return 1
+        print_step("Run the workflow proof and close the gate", "7️⃣")
         if _run_workflow_runs(repo_root) != 0:
             return 1
         if _run_gate_stage(repo_root, "close") != 0:

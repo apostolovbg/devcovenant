@@ -1,12 +1,12 @@
 metadata:
   schema_version: 1
   registry_layout: single-root
-  policy_registry_input_hash: 8b6bbf02e96557809506c7e36f0b199b8fb5e4d9d46be3422b8b6d7e73d75834
+  policy_registry_input_hash: 1dc0697c3d4ad438b7c340d7ea3ac1b5a9c7db8efa73763ebd94dd16f9633726
 project-governance:
   project_name: devcovenant
   project_description: devcovenant is a repository governance framework.
   copyright_notice: 2026 Black Epsilon Ltd. and Apostol Apostolov
-  project_version: 1.0.1b4
+  project_version: 1.0.1b5
   stage: stable
   maintenance_stance: active
   compatibility_policy: forward-only
@@ -10567,7 +10567,7 @@ policies:
     - docs=>devcovenant/registry/README.md
     origin: builtin
     script_exists: true
-    hash: 448aa4815b6e01825b9efe0c91417bf8a3d7535c6011a53ead3f23165f1f5a90
+    hash: 71c0dacd56a276ac347155fbfedd104d762795075a892725e0e2851f94b81748
     script_path: builtin/version_sync.py
   version-governance:
     enabled: true
@@ -12742,7 +12742,7 @@ policies:
     runtime_state:
       surfaces:
         devcovenant_runtime:
-          input_fingerprint: 91050dcd01366bbab829a2e478da07925fa875ab15a22b11e66c24d32eb013f2
+          input_fingerprint: b0c3fd3c4823d1237b0260c8b9e56f2eaccc2c89f66e55f7ad56ebfb8bf81520
           output_fingerprints:
             lock_file: 829394c2fbc978fd6250202d80ce69f2bff51441a58ccfdd2c255b7d78dfacd0
             third_party_file: 8006231dfc5375381c9e5711adcce40cc70edb19a3fec1a783b875203c1f601a
@@ -12944,7 +12944,7 @@ policies:
       `source=>target` doc paths. Configured `omit_block_pairs` remove
       repo-only sections between paired begin/end markers before comparison.
       When `rewrite_repo_relative_links` is true, repo-relative Markdown links are
-      rewritten to release-stable repository URLs resolved from `pyproject.toml`,
+      rewritten to `main`-branch repository URLs resolved from `pyproject.toml`,
       and repo-relative images are rewritten to the repository's `main`-branch raw
       URLs so PyPI renders them. Auto-fix rewrites the configured package docs from
       their source docs after those transforms.
@@ -13129,7 +13129,7 @@ policies:
     - README.md=>devcovenant/README.md
     origin: builtin
     script_exists: true
-    hash: cefc4713a40986ac8b9b9ecd38b665039078bd74ace161b0078a0db28e567b61
+    hash: a56d8f2b5edc6ab7d3f71deaff0f0a99a16300f29b7310683e015428d5ff6cc6
     script_path: builtin/package_doc_sync.py
   builtin-test-blueprint-sync:
     enabled: true

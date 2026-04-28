@@ -13,18 +13,18 @@
 Custom policies live under `devcovenant/custom/policies/<policy-id>/`.
 They are repository-owned extensions and can fully replace builtin policies
 with matching IDs.
-When a builtin policy is being shadowed, `devcovenant custom --policy
-<policy-id> --do` copies the builtin tree into this directory and
-materializes the mirror tests under
+When a builtin policy is being shadowed and it ships `test_blueprints.yaml`,
+`devcovenant custom --policy <policy-id> --do` copies the builtin tree into
+this directory and materializes the mirror tests under
 `tests/devcovenant/custom/policies/<policy-id>/`.
-`--undo` removes that repo-owned copy and mirror again.
+`--undo` removes that repo-owned copy and any mirror again.
 
 ## Directory Layout
 Expected files mirror builtin policy structure:
 - `<policy-id>.yaml` descriptor
 - `<policy-id>.py` check script
 - optional `test_blueprints.yaml` when the directory is a copied builtin
-  policy shadow and needs a packaged shipped-test descriptor
+  policy shadow and ships packaged test descriptors
 - optional `autofix/*.py`
 - optional `assets/` templates
 

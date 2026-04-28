@@ -17,17 +17,19 @@ Custom profile payloads are repository-owned and should not be documented as
 packaged builtin inventory.
 Package builds keep custom-folder scaffolding (`README.md`, `__init__.py`) but
 do not ship repository-specific custom profile payload directories.
-When a builtin profile is being shadowed, `devcovenant custom --profile
-<profile-name> --do` copies the builtin tree into this directory and
-materializes its mirrored tests under
-`tests/devcovenant/custom/profiles/<profile-name>/`.
-`--undo` removes that repo-owned copy and mirror again.
+When a builtin profile is being shadowed and it ships `test_blueprints.yaml`,
+`devcovenant custom --profile <profile-name> --do` copies the builtin tree
+into this directory and materializes its mirrored tests under
+`tests/devcovenant/custom/profiles/<profile-name>/`. Starter templates such as
+`userproject` do not ship blueprints, so they refresh the custom copy without
+creating a mirror.
+`--undo` removes that repo-owned copy and any mirror again.
 
 ## Directory Layout
 A custom profile typically contains:
 - `<profile-name>.yaml` manifest
 - optional `test_blueprints.yaml` when the directory is a copied builtin
-  profile shadow and needs a packaged shipped-test descriptor
+  profile shadow and ships packaged test descriptors
 - optional `assets/` templates
 - optional `<profile-name>_translator.py` for language profiles
 

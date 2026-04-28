@@ -20,7 +20,7 @@ def _build_parser() -> argparse.ArgumentParser:
         "custom",
         (
             "Promote or retract builtin policy/profile custom copies and "
-            "mirrored tests."
+            "any mirrored tests."
         ),
     )
     target_group = parser.add_mutually_exclusive_group(required=True)
@@ -38,12 +38,15 @@ def _build_parser() -> argparse.ArgumentParser:
     action_group.add_argument(
         "--do",
         action="store_true",
-        help="Copy the builtin source tree and materialize its test mirrors.",
+        help=(
+            "Copy the builtin source tree and materialize any shipped test "
+            "mirrors."
+        ),
     )
     action_group.add_argument(
         "--undo",
         action="store_true",
-        help="Remove the repo-owned copy and its mirrored tests.",
+        help="Remove the repo-owned copy and any mirrored tests.",
     )
     return parser
 

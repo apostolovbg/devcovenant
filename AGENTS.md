@@ -1886,7 +1886,7 @@ canonical repository-source docs. Configured `sync_pairs` map
 `source=>target` doc paths. Configured `omit_block_pairs` remove
 repo-only sections between paired begin/end markers before comparison.
 When `rewrite_repo_relative_links` is true, repo-relative Markdown links are
-rewritten to release-stable repository URLs resolved from `pyproject.toml`,
+rewritten to `main`-branch repository URLs resolved from `pyproject.toml`,
 and repo-relative images are rewritten to the repository's `main`-branch raw
 URLs so PyPI renders them. Auto-fix rewrites the configured package docs from
 their source docs after those transforms.

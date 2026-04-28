@@ -32,8 +32,9 @@ Built-in policies are the shipped baseline and a library of reference patterns.
 They are not the limit of what DevCovenant can govern.
 
 For a guided first custom policy path, start with
-[customization.md](customization.md). That page shows when to shadow a
-builtin policy and when to create a new one.
+[customization.md](https://github.com/apostolovbg/devcovenant/blob/main/devcovenant/docs/customization.md).
+That page shows when to shadow a builtin policy and when to create a new
+one.
 
 A repository can define brand-new policy ids or replace builtin policies with
 custom ones under `devcovenant/custom/policies/<policy-id>/`.
@@ -232,7 +233,7 @@ rules.
 The package-facing builtin sync policies follow the same contract.
 `package-doc-sync` can synchronize one or more configured `source=>target`
 doc pairs, strip configured repo-only marker blocks, rewrite repo-relative
-public links for packaged docs into release-stable tagged URLs, and keep
+public links for packaged docs into `main`-branch absolute URLs, and keep
 package banner images on the repository `main` raw URL so PyPI can render
 them without depending on a version tag.
 `package-artifact-mirror` can keep configured file and directory mirrors
@@ -525,7 +526,7 @@ Custom policies that inspect managed docs should expect the generated header
 model for docs that opt into those headers.
 Custom policies that sync package-facing docs should also keep release targets
 truthful. If a packaged README rewrites repo-relative links or images, those
-links should point at release-stable tagged URLs instead of a moving branch.
+links should point at `main`-branch absolute URLs instead of a moving tag.
 
 ## Practical Rule
 When policy behavior changes, update all of these together:

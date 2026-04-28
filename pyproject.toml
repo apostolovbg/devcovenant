@@ -51,10 +51,10 @@ dependencies = [
 ]
 [project.urls]
 Homepage = "https://github.com/apostolovbg/devcovenant"
-Documentation = "https://github.com/apostolovbg/devcovenant/tree/v1.0.1b5/devcovenant/docs"
+Documentation = "https://github.com/apostolovbg/devcovenant/tree/main/devcovenant/docs"
 Repository = "https://github.com/apostolovbg/devcovenant"
 Issues = "https://github.com/apostolovbg/devcovenant/issues"
-Changelog = "https://github.com/apostolovbg/devcovenant/blob/v1.0.1b5/CHANGELOG.md"
+Changelog = "https://github.com/apostolovbg/devcovenant/blob/main/CHANGELOG.md"
 
 [tool.setuptools]
 include-package-data = false

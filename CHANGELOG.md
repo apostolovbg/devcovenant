@@ -62,6 +62,176 @@ Example:
 ## Version 1.0.1b5
 
 - 2026-04-27:
+  Change: Added `demo` and `quickstart` to the public command contract in
+  `SPEC.md`.
+  Why: Align the specification with the shipped CLI surface after the b5
+  onboarding split.
+  Impact: Updated `SPEC.md` so the formal command list and command behavior
+  now cover the disposable evaluation demo and the static quickstart
+  reminder.
+  Files:
+  SPEC.md
+  CHANGELOG.md
+
+- 2026-04-27:
+  Change: Normalized repo-facing documentation links to main-branch
+  absolute URLs.
+  Why: Preserve the installed docs, customization guides, and root README on
+  one branch-safe link policy.
+  Impact: Updated `README.md`, `devcovenant/README.md`, `PLAN.md`,
+  `devcovenant/docs/config.md`, `devcovenant/docs/policies.md`,
+  `devcovenant/docs/customization.md`, `devcovenant/docs/profiles.md`, and
+  `devcovenant/custom/README.md` so repo-facing links no longer rely on
+  relative paths.
+  Files:
+  README.md
+  devcovenant/README.md
+  PLAN.md
+  devcovenant/docs/config.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/customization.md
+  devcovenant/docs/profiles.md
+  devcovenant/custom/README.md
+  CHANGELOG.md
+
+- 2026-04-27:
+  Change: Updated `quickstart` to a terse reminder and kept `demo` as the
+  primary evaluation path.
+  Why: Preserve the technical front door while making the CLI, README, and
+  lifecycle docs honest about `quickstart` being secondary.
+  Impact: Updated `quickstart.py`, `cli.py`, both READMEs, installation and
+  workflow docs, quickstart and CLI tests, and `PLAN.md` so onboarding no
+  longer competes with the demo.
+  Files:
+  README.md
+  devcovenant/README.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/workflow.md
+  devcovenant/cli.py
+  devcovenant/quickstart.py
+  tests/devcovenant/test_quickstart.py
+  tests/devcovenant/test_cli.py
+  PLAN.md
+  CHANGELOG.md
+
+- 2026-04-27:
+  Change: Normalized version-sync manifest links and kept package versioning
+  on the governed release line.
+  Why: Preserve the `main`-branch link policy in package metadata and restore
+  the real `1.0.1b5` version field after the link rewrite sweep.
+  Impact: Updated version-sync code, its tests and blueprint,
+  `pyproject.toml`, the installation docs, the front door README surfaces,
+  the package-doc sync surface, the policy and registry docs, and the
+  generated registry/AGENTS outputs so version fields stay governed while
+  repository links point at `main`.
+  Files:
+  README.md
+  devcovenant/README.md
+  PLAN.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/registry.md
+  devcovenant/builtin/policies/package_doc_sync/package_doc_sync.py
+  devcovenant/builtin/policies/package_doc_sync/package_doc_sync.yaml
+  devcovenant/builtin/policies/package_doc_sync/test_blueprints.yaml
+  tests/devcovenant/builtin/policies/package_doc_sync/test_package_doc_sync.py
+  devcovenant/builtin/policies/version_sync/version_sync.py
+  devcovenant/builtin/policies/version_sync/test_blueprints.yaml
+  tests/devcovenant/builtin/policies/version_sync/autofix/test_global.py
+  tests/devcovenant/builtin/policies/version_sync/test_version_sync.py
+  tests/devcovenant/test_refresh.py
+  devcovenant/docs/installation.md
+  pyproject.toml
+  AGENTS.md
+  devcovenant/registry/registry.yaml
+  CHANGELOG.md
+
+- 2026-04-27:
+  Change: Updated the front door route map and package-doc sync to use
+  `main` branch links.
+  Why: Keep the technical introduction honest, route readers to
+  `devcovenant demo`, and stop package README sync from rewriting links to
+  version tags.
+  Impact: Updated `README.md`, `devcovenant/README.md`,
+  `devcovenant/builtin/policies/package_doc_sync/package_doc_sync.py`,
+  `devcovenant/builtin/policies/package_doc_sync/package_doc_sync.yaml`,
+  `devcovenant/builtin/policies/package_doc_sync/test_blueprints.yaml`,
+  `devcovenant/docs/policies.md`, `devcovenant/docs/registry.md`,
+  `PLAN.md`, and `CHANGELOG.md` so the front door and generated package docs
+  stay consistent with the current b5 roadmap.
+  Files:
+  README.md
+  devcovenant/README.md
+  devcovenant/builtin/policies/package_doc_sync/package_doc_sync.py
+  devcovenant/builtin/policies/package_doc_sync/package_doc_sync.yaml
+  devcovenant/builtin/policies/package_doc_sync/test_blueprints.yaml
+  tests/devcovenant/builtin/policies/package_doc_sync/test_package_doc_sync.py
+  devcovenant/docs/policies.md
+  devcovenant/docs/registry.md
+  PLAN.md
+  CHANGELOG.md
+
+- 2026-04-27:
+  Change: Updated the demo into a custom security-policy governance proof
+  and added the installation note.
+  Why: Clarified a real mirrored custom policy path, a UTC-safe legacy drift
+  example, and the demo flow.
+  Impact: Updated `devcovenant/demo.py`, `tests/devcovenant/test_demo.py`,
+  `devcovenant/docs/installation.md`, `PLAN.md`, and `CHANGELOG.md` to
+  reflect the new proof path.
+  Files:
+  devcovenant/demo.py
+  tests/devcovenant/test_demo.py
+  devcovenant/docs/installation.md
+  PLAN.md
+  CHANGELOG.md
+
+- 2026-04-27:
+  Change: Expanded the custom-governance entry points and marked the
+  completed taxonomy and custom-doc slices in the plan.
+  Why: Keep the b5 roadmap executable while documenting the new first-stop
+  custom-doc routing and the finished profile/custom-governance work.
+  Impact: Updated `PLAN.md`, `devcovenant/custom/README.md`, and
+  `devcovenant/docs/config.md` so the next slice starts from the current item
+  status and the current custom-doc guidance.
+  Files:
+  PLAN.md
+  CHANGELOG.md
+  devcovenant/custom/README.md
+  devcovenant/docs/config.md
+
+- 2026-04-27:
+  Change: Normalized the public profile taxonomy and quickstart/help wording
+  so `devcovuser` is the always-active baseline, `userproject` is the
+  copy-ready starter profile, and conditional test mirrors are described
+  correctly.
+  Why: Align the front-door docs, command help, managed-doc sources, and
+  quickstart output with the corrected profile model before the next workflow
+  slice.
+  Impact: Updated the README surfaces, profile docs, customization docs,
+  command help, quickstart text, quickstart tests, the repo-owned
+  `userproject` asset docs, and the installation page to match the real
+  `devcovuser`/`userproject` split.
+  Files:
+  README.md
+  SPEC.md
+  devcovenant/README.md
+  devcovenant/cli.py
+  devcovenant/custom/README.md
+  devcovenant/custom/__init__.py
+  devcovenant/custom/policies/README.md
+  devcovenant/custom/profiles/README.md
+  devcovenant/custom/profiles/userproject/assets/docs/config.md
+  devcovenant/custom/profiles/userproject/assets/docs/installation.md
+  devcovenant/custom/profiles/userproject/assets/docs/profiles.md
+  devcovenant/docs/customization.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/profiles.md
+  devcovenant/quickstart.py
+  tests/devcovenant/core/test_execution.py
+  tests/devcovenant/test_quickstart.py
+  tests/devcovenant/test_cli.py
+
+- 2026-04-27:
   Change: Bumped DevCovenant to 1.0.1b5 and refreshed the versioned
   manifest, package README links, and version-bearing docs to establish
   the new baseline.

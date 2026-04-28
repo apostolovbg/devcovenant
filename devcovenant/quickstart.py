@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Print the canonical DevCovenant first-use guide."""
+"""Print the fixed DevCovenant quickstart reminder."""
 
 from __future__ import annotations
 
@@ -18,14 +18,14 @@ def _build_parser() -> argparse.ArgumentParser:
     """Build parser for the quickstart command."""
     return cli_args_module.build_command_parser(
         "quickstart",
-        "Print the canonical first-use guide.",
+        "Print a terse static reminder.",
     )
 
 
 def _render_quickstart() -> str:
-    """Return the fixed quickstart guide text."""
+    """Return the fixed quickstart reminder text."""
     lines = [
-        "DevCovenant quickstart",
+        "DevCovenant quickstart reminder",
         "",
         "1. Install the CLI in an isolated machine environment.",
         "   pipx install devcovenant",
@@ -35,40 +35,33 @@ def _render_quickstart() -> str:
         "   cd your-repo",
         "   devcovenant install",
         "",
-        "3. Review devcovenant/config.yaml before you deploy.",
-        "   Start with project-governance, developer_mode,",
-        "   and profiles.active.",
-        "   Builtin devcovuser is intentionally thin.",
-        "   In most downstream repositories, customize devcovuser with",
-        "   repo-owned values and, when needed, customize the python",
-        "   profile too.",
-        "   The copy-ready bootstrap template starts at",
-        "   devcovenant/builtin/profiles/userproject/ and becomes repo-owned",
-        "   when copied to devcovenant/custom/profiles/userproject/.",
-        "",
-        "4. Activate the reviewed setup.",
+        "3. Review devcovenant/config.yaml, then deploy the reviewed setup.",
+        "   Start with project-governance, developer_mode, and",
+        "   profiles.active.",
+        "   Builtin devcovuser is the always-active baseline for every",
+        "   DevCovenant user repo.",
+        "   In most downstream repositories, keep devcovuser active and add",
+        "   a repo-owned userproject custom profile when the repository needs",
+        "   its own starter layer.",
         "   devcovenant deploy",
         "",
-        "5. Prepare the environment declared by the active profile stack.",
-        "   That might be a local .venv, a system interpreter, a container-",
-        "   managed environment, or another declared layout.",
+        "4. If you want the real evaluation path, run the demo instead.",
+        "   devcovenant demo",
         "",
-        "6. Run the first gate cycle.",
+        "5. If you are already in a governed repository, run the normal",
+        "   gate cycle.",
         "   devcovenant gate --open",
-        "   # make your edits",
         "   devcovenant gate --verify",
         "   devcovenant run",
         "   devcovenant gate --close",
         "",
-        "7. Read the deeper docs next.",
-        "   installation.md, workflow.md, config.md, policies.md, profiles.md",
-        "   For a disposable guided evaluation repo, run `devcovenant demo`.",
+        "This is a reminder, not the primary onboarding path.",
     ]
     return "\n".join(lines) + "\n"
 
 
 def run(_args: argparse.Namespace) -> int:
-    """Print the fixed quickstart guide."""
+    """Print the fixed quickstart reminder."""
     from devcovenant.core.cli_support import write_console_text
 
     del _args

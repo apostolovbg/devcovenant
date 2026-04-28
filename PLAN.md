@@ -97,7 +97,7 @@ onboarding path.
    documentation, and test surfaces.
 
 ## Active Work
-1. [todo] Normalize the profile taxonomy and public vocabulary
+1. [done] Normalize the profile taxonomy and public vocabulary
    Goal:
    - Make the always-active `devcovuser` baseline, the repo-specific
      `userproject` starter layer, and the language/tooling profiles distinct
@@ -131,7 +131,7 @@ onboarding path.
      language profiles, and tooling profiles do.
    - The public command and doc vocabulary no longer contradict `SPEC.md`.
 
-2. [todo] Expand the custom-governance docs into the real operator guide
+2. [done] Expand the custom-governance docs into the real operator guide
    Goal:
    - Make the extension surface understandable on its own so custom policy
      and profile work is a guided path instead of an architecture puzzle.
@@ -178,7 +178,7 @@ onboarding path.
      descriptors or YAML-managed metadata and materialize into custom test
      mirrors only when the repo opts into the shadow copy.
 
-3. [todo] Replace the demo with a real governance proof
+3. [done] Replace the demo with a real governance proof
    Goal:
    - Show DevCovenant doing actual governance work in a short, repeatable
      scenario that a skeptic can follow.
@@ -213,7 +213,7 @@ onboarding path.
    - `tests/devcovenant/test_demo.py` exercises the governance story instead
      of only asserting helper call order.
 
-4. [todo] Recast the front door as a technical introduction plus route map
+4. [done] Recast the front door as a technical introduction plus route map
    Goal:
    - Keep the README useful to someone who has never heard the phrase
      "repository governance framework" without making it read like a pitch
@@ -247,7 +247,7 @@ onboarding path.
    - The README still feels like a technical repository guide, not a
      marketing landing page.
 
-5. [todo] Demote `quickstart` to a secondary reminder or remove it from the
+5. [done] Demote `quickstart` to a secondary reminder or remove it from the
    onboarding story
    Goal:
    - Stop treating `quickstart` as the thing that teaches people DevCovenant
@@ -273,7 +273,7 @@ onboarding path.
    - The command, if kept, is obviously secondary to the README and demo.
    - The docs no longer imply that `quickstart` is the main evaluation path.
 
-6. [todo] Normalize repo-facing links to `main` and reconcile the installed,
+6. [done] Normalize repo-facing links to `main` and reconcile the installed,
    documentation, and test surfaces
    Goal:
    - Keep every repository-facing link on the `main` branch absolute URL and

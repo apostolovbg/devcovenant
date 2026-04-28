@@ -65,7 +65,7 @@ def _unit_test_reports_missing_packaged_doc() -> None:
         assert violations[0].can_auto_fix is True
         assert (
             "[Docs]("
-            "https://example.com/team/devcovenant-fork/blob/v0.0.0/"
+            "https://example.com/team/devcovenant-fork/blob/main/"
             "devcovenant/docs/workflow.md)"
         ) in str(violations[0].context.get("expected_text"))
 
@@ -96,7 +96,7 @@ def _unit_test_strips_repo_only_blocks_for_match() -> None:
             "# Root\n\n"
             "Line A\n\n"
             "[Docs]("
-            "https://example.com/team/devcovenant-fork/blob/v0.0.0/"
+            "https://example.com/team/devcovenant-fork/blob/main/"
             "devcovenant/docs/workflow.md)\n\n"
             "Line B\n",
             encoding="utf-8",

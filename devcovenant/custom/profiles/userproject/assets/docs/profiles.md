@@ -22,7 +22,9 @@ Policy activation still lives in `policy_state`.
 ## Profile Types
 The common profile categories are:
 - `global` and `defaults` as the shared base
-- `devcovuser` as the normal user-repository layer
+- `devcovuser` as the always-active core user baseline
+- `userproject` as the copy-ready bootstrap template for the first
+  repo-owned custom profile
 - `github` as the optional but default-enabled GitHub Actions layer
 - language profiles
 - optional tooling profiles such as `python_venv`
@@ -122,7 +124,7 @@ The important contract is that DevCovenant can run from that declared managed
 context or resolve the interpreter path or environment root it should use.
 Builtin profiles such as `defaults` do not try to guess hidden launcher hops.
 
-The built-in `devcovuser` profile is the normal user-repository layer.
+The built-in `devcovuser` profile is the always-active core user baseline.
 It keeps DevCovenant's own shipped runtime files out of ordinary app-code
 checks while still keeping `devcovenant/custom/**` in scope for
 repository-owned extensions.

@@ -75,10 +75,10 @@ The same tracked policy metadata also records sync-policy script hashes, so a
 source fix in `package-doc-sync` is expected to refresh
 `devcovenant/registry/registry.yaml` even when the visible doc set changes
 only in one packaged mirror such as `devcovenant/README.md`.
-That same package-doc sync path now keeps banner images on the repository
-`main` raw URL while leaving the rest of the package-doc links release-stable,
-so registry diffs can reflect image rewrite policy changes even when the
-package README text itself looks mostly unchanged.
+That same package-doc sync path now keeps banner images and package-doc links
+on the repository `main` branch URLs, so registry diffs can reflect package
+doc rewrite policy changes even when the package README text itself looks
+mostly unchanged.
 Those dependency selectors stay repo-relative and exact in the tracked
 registry; DevCovenant does not silently widen a declared `requirements.in`
 entry into a basename match for profile asset templates or other same-name
