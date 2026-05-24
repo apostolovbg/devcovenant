@@ -1,5 +1,6 @@
 """Tests for the dependency-management policy."""
 
+import importlib
 import importlib.metadata as importlib_metadata
 import io
 import tarfile
@@ -1006,9 +1007,46 @@ def _unit_test_policy_symbol_contract_is_stable():
     assert hasattr(module, "refresh_license_artifacts")
     assert hasattr(module, "resolve_dependency_surfaces")
     assert hasattr(module, "resolve_dependency_roles")
+    assert hasattr(module, "RUNTIME_ACTION_REFRESH_FORCE")
+    assert hasattr(dependency_lock_runtime, "refresh_force")
 
     checker = module.DependencyManagementCheck()
     assert hasattr(checker, "run_runtime_action")
+
+
+def _unit_test_runtime_action_dispatch_supports_force_refresh() -> None:
+    """Runtime-action dispatch should accept `refresh-force`."""
+
+    module_name = (
+        "devcovenant.builtin.policies.dependency_management."
+        "dependency_management"
+    )
+    module = importlib.import_module(module_name)
+    captured: dict[str, object] = {}
+    checker = module.DependencyManagementCheck()
+    original_refresh_force = dependency_lock_runtime.refresh_force
+
+    def _fake_refresh_force(repo_root, *, payload=None):
+        """Capture the forced refresh payload for assertions."""
+
+        captured["repo_root"] = repo_root
+        captured["payload"] = payload
+        return {"message": "forced"}
+
+    dependency_lock_runtime.refresh_force = _fake_refresh_force
+    try:
+        result = checker.run_runtime_action(
+            module.RUNTIME_ACTION_REFRESH_FORCE,
+            repo_root=Path("/tmp/devcovenant"),
+            payload={"changed_dependency_files": ["requirements.in"]},
+        )
+    finally:
+        dependency_lock_runtime.refresh_force = original_refresh_force
+
+    assert result == {"message": "forced"}
+    assert captured["payload"] == {
+        "changed_dependency_files": ["requirements.in"]
+    }
 
 
 class GeneratedUnittestCases(unittest.TestCase):
@@ -1173,6 +1211,10 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_policy_symbol_contract_is_stable(self):
         """Run dependency-management symbol contract assertions."""
         _unit_test_policy_symbol_contract_is_stable()
+
+    def test_runtime_action_dispatch_supports_force_refresh(self):
+        """Run force-refresh runtime-action dispatch assertions."""
+        _unit_test_runtime_action_dispatch_supports_force_refresh()
 
     def test_display_names_expand_requirement_includes(self):
         """Run included-manifest display-name expansion assertions."""

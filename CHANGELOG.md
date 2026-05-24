@@ -1,13 +1,13 @@
 # Changelog
 **Doc ID:** CHANGELOG
 **Doc Type:** changelog
-**Project Version:** 1.0.1b5
+**Project Version:** 1.0.1b6
 **Project Stage:** stable
 **Maintenance Stance:** active
 **Compatibility Policy:** forward-only
 **Versioning Mode:** versioned
-**Last Updated:** 2026-04-27
-**DevCovenant Version:** 1.0.1b5
+**Last Updated:** 2026-05-24
+**DevCovenant Version:** 1.0.1b6
 
 <!-- DEVCOV:BEGIN -->
 ## DevCovenant Change Logging Rules
@@ -58,6 +58,87 @@ Example:
 <!-- DEVCOV:END -->
 
 ## Log changes here
+
+## Version 1.0.1b6
+
+- 2026-05-24:
+  Change: Implemented explicit `refresh-all` and `refresh-force` runtime
+  actions for dependency-management and bumped DevCovenant to `1.0.1b6`.
+  Why: Preserve normal dependency refresh idempotence while also providing a
+  force-refresh path that rewrites managed dependency outputs after
+  surface-definition changes.
+  Impact: Updated `refresh-all` to keep the current-state short-circuit when
+  state is truly current, added `refresh-force` to rewrite the affected
+  lockfiles and license artifacts on demand, and resynced the versioned
+  documentation to the new release line.
+  Files:
+  CHANGELOG.md
+  devcovenant/VERSION
+  pyproject.toml
+  devcovenant/builtin/policies/dependency_management/dependency_lock_runtime.py
+  devcovenant/builtin/policies/dependency_management/dependency_management.py
+  devcovenant/builtin/policies/dependency_management/dependency_management.yaml
+  devcovenant/builtin/policies/dependency_management/autofix/global.py
+  tests/devcovenant/builtin/policies/dependency_management/
+    test_dependency_lock_runtime.py
+  tests/devcovenant/builtin/policies/dependency_management/
+    test_dependency_management.py
+  tests/devcovenant/builtin/policies/dependency_management/
+    autofix/test_global.py
+  README.md
+  CONTRIBUTING.md
+  SPEC.md
+  PLAN.md
+  AGENTS.md
+  POLICY_MAP.md
+  PROFILE_MAP.md
+  PRIVACY.md
+  SECURITY.md
+  SUPPORT.md
+  devcovenant/README.md
+  devcovenant/registry/registry.yaml
+  devcovenant/builtin/policies/README.md
+  devcovenant/builtin/profiles/README.md
+  devcovenant/core/README.md
+  devcovenant/custom/README.md
+  devcovenant/custom/policies/README.md
+  devcovenant/custom/profiles/README.md
+  devcovenant/docs/architecture.md
+  devcovenant/docs/config.md
+  devcovenant/docs/contracts.md
+  devcovenant/docs/customization.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/project_governance.md
+  devcovenant/docs/refresh.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/troubleshooting.md
+  devcovenant/docs/workflow.md
+  devcovenant/registry/README.md
+  devcovenant/builtin/policies/dependency_management/
+    test_blueprints.yaml
+  devcovenant/runtime-requirements.lock
+  requirements.lock
+  licenses/THIRD_PARTY_LICENSES.md
+  licenses/build-1.5.0.txt
+  licenses/click-8.4.1.txt
+  licenses/markdown-it-py-4.2.0.txt
+  licenses/pip-26.1.1.txt
+  licenses/python-discovery-1.3.1.txt
+  licenses/stevedore-5.8.0.txt
+  licenses/virtualenv-21.3.3.txt
+  licenses/build-1.4.4.txt
+  licenses/click-8.3.3.txt
+  licenses/markdown-it-py-4.0.0.txt
+  licenses/pip-26.1.txt
+  licenses/python-discovery-1.2.2.txt
+  licenses/stevedore-5.7.0.txt
+  licenses/virtualenv-21.2.4.txt
+  devcovenant/builtin/policies/package_artifact_mirror/__init__.py
+  devcovenant/builtin/policies/package_artifact_mirror/autofix/__init__.py
+  devcovenant/builtin/policies/package_doc_sync/__init__.py
+  devcovenant/builtin/policies/package_doc_sync/autofix/__init__.py
 
 ## Version 1.0.1b5
 

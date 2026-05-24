@@ -1,12 +1,12 @@
 metadata:
   schema_version: 1
   registry_layout: single-root
-  policy_registry_input_hash: 1dc0697c3d4ad438b7c340d7ea3ac1b5a9c7db8efa73763ebd94dd16f9633726
+  policy_registry_input_hash: c3dc2a715acd7a454f072301e2a1435e8b42e17a8887a4179c40a649d8437a44
 project-governance:
   project_name: devcovenant
   project_description: devcovenant is a repository governance framework.
   copyright_notice: 2026 Black Epsilon Ltd. and Apostol Apostolov
-  project_version: 1.0.1b5
+  project_version: 1.0.1b6
   stage: stable
   maintenance_stance: active
   compatibility_policy: forward-only
@@ -11358,7 +11358,13 @@ policies:
             implementation: cp
             python_version: '3.14'
             abi: cp314
-      license_source_overrides: []
+      license_source_overrides:
+      - id: click
+        kind: archive_url
+        url: https://files.pythonhosted.org/packages/source/c/click/click-{version}.tar.gz
+        member_globs:
+        - click-{version}/LICENSE.txt
+        - click-{version}/docs/license.md
       selector_roles: dependency
       dependency_globs: []
       dependency_files: []
@@ -12338,13 +12344,25 @@ policies:
       license_source_overrides:
         descriptor:
           values:
-          - '[]'
+          - |-
+            - id: click
+              kind: archive_url
+              url: https://files.pythonhosted.org/packages/source/c/click/click-{version}.tar.gz
+              member_globs:
+              - click-{version}/LICENSE.txt
+              - click-{version}/docs/license.md
           behavior: base
           replaced_inherited_values:
           - ()
         effective:
           values:
-          - '[]'
+          - |-
+            - id: click
+              kind: archive_url
+              url: https://files.pythonhosted.org/packages/source/c/click/click-{version}.tar.gz
+              member_globs:
+              - click-{version}/LICENSE.txt
+              - click-{version}/docs/license.md
       selector_roles:
         descriptor:
           values:
@@ -12398,10 +12416,17 @@ policies:
     - id: refresh-all
       description: Refresh configured dependency lockfiles and compliance artifacts.
       mutates_repo: true
+    - id: refresh-force
+      description: Force refresh configured dependency lockfiles and compliance artifacts.
+      mutates_repo: true
     commands:
     - name: refresh-all
       help: Refresh configured dependency lockfiles and compliance artifacts.
       runtime_action: refresh-all
+      mutates_repo: true
+    - name: refresh-force
+      help: Force refresh dependency lockfiles and compliance artifacts.
+      runtime_action: refresh-force
       mutates_repo: true
     runtime_metadata_options:
       id: dependency-management
@@ -12712,7 +12737,13 @@ policies:
             implementation: cp
             python_version: 3.14
             abi: cp314
-      license_source_overrides: []
+      license_source_overrides: &id110
+      - id: click
+        kind: archive_url
+        url: https://files.pythonhosted.org/packages/source/c/click/click-{version}.tar.gz
+        member_globs:
+        - click-{version}/LICENSE.txt
+        - click-{version}/docs/license.md
       selector_roles: dependency
       dependency_globs: []
       dependency_files: []
@@ -12726,33 +12757,37 @@ policies:
       enabled: true
       custom: false
       surfaces: *id109
+      license_source_overrides: *id110
       selector_roles: dependency
     assets:
+    - click-{version}/LICENSE.txt
+    - click-{version}/docs/license.md
     - devcovenant/licenses
     - devcovenant/licenses/THIRD_PARTY_LICENSES.md
     - devcovenant/runtime-requirements.lock
+    - https://files.pythonhosted.org/packages/source/c/click/click-{version}.tar.gz
     - licenses/THIRD_PARTY_LICENSES.md
     - '{{ PROJECT_NAME_PATH }}/licenses'
     - '{{ PROJECT_NAME_PATH }}/licenses/THIRD_PARTY_LICENSES.md'
     - '{{ PROJECT_NAME_PATH }}/runtime-requirements.lock'
     origin: builtin
     script_exists: true
-    hash: 77d4b93515f2a078b92958f7f6f8176bd8105c240889896ebc7d4ea50738e49d
+    hash: de65cfff475e8a24794d62734c0ea39dd6015407c7ac6781650534b641f06dd1
     script_path: builtin/dependency_management.py
     runtime_state:
       surfaces:
         devcovenant_runtime:
-          input_fingerprint: b0c3fd3c4823d1237b0260c8b9e56f2eaccc2c89f66e55f7ad56ebfb8bf81520
+          input_fingerprint: 029ad3c1b98eeaa5ce9486d3e882ffa99b5cbd55243dbabf01afe3f104732588
           output_fingerprints:
-            lock_file: 829394c2fbc978fd6250202d80ce69f2bff51441a58ccfdd2c255b7d78dfacd0
+            lock_file: 46a25a7232a06e3f7d8708353e9953aab16ae4b15c1d277e842a61c72fa2cde2
             third_party_file: 8006231dfc5375381c9e5711adcce40cc70edb19a3fec1a783b875203c1f601a
             licenses_dir: ee46dd11a85eac977cc1d04d05a42f13188bcb64b5d9db5ba759960c2dc24b0a
         root_workspace:
-          input_fingerprint: 07dda35f7fd13c6489afbc1487931d907993a6c27118aea6346a2dde4ff1b820
+          input_fingerprint: 3b6d29f8fbe364be77920413641ef70612e5c8daa03849c45703bc7520de943a
           output_fingerprints:
-            lock_file: 29c949d3aa55f60782e898e4cfc040844ddfe7b3b8d349631ec2342989a21350
-            third_party_file: 195b0a3f7e644d7bfac60cc09ee2ce6670c61cfa06b40068b8cf224da08cf0d2
-            licenses_dir: 8340b88b334f684bc02d9efb430b7b42cdd973bae050aae130c906aa3b404ea2
+            lock_file: c2ec86df9c9ac56040c372c81e2e721f039295a1e6ff548f97c048e2b9bada83
+            third_party_file: defd38a8e3e26083d63515b0a5b43ba97ca653d70343ce6607fe1ca284771e5e
+            licenses_dir: 4bce66e9bd6ca8274be15c050258df925ee68eef79cd3ac90c88f36b61793143
   package-artifact-mirror:
     enabled: true
     custom: false
@@ -12915,7 +12950,7 @@ policies:
       enforcement: active
       enabled: true
       custom: false
-      file_mirrors: &id110
+      file_mirrors: &id111
       - LICENSE=>devcovenant/licenses/LICENSE
       dir_mirrors: []
       dir_skip_paths: []
@@ -12927,7 +12962,7 @@ policies:
       enforcement: active
       enabled: true
       custom: false
-      file_mirrors: *id110
+      file_mirrors: *id111
     assets:
     - LICENSE=>devcovenant/licenses/LICENSE
     origin: builtin
@@ -13109,9 +13144,9 @@ policies:
       enforcement: active
       enabled: true
       custom: false
-      sync_pairs: &id111
+      sync_pairs: &id112
       - README.md=>devcovenant/README.md
-      omit_block_pairs: &id112
+      omit_block_pairs: &id113
       - <!-- REPO-ONLY:BEGIN -->=><!-- REPO-ONLY:END -->
       rewrite_repo_relative_links: true
     runtime_config_overrides: {}
@@ -13122,8 +13157,8 @@ policies:
       enforcement: active
       enabled: true
       custom: false
-      sync_pairs: *id111
-      omit_block_pairs: *id112
+      sync_pairs: *id112
+      omit_block_pairs: *id113
       rewrite_repo_relative_links: true
     assets:
     - README.md=>devcovenant/README.md
@@ -13370,10 +13405,10 @@ policies:
       enabled: true
       custom: true
       blueprint_name: test_blueprints.yaml
-      mirror_roots: &id113
+      mirror_roots: &id114
       - devcovenant/builtin=>tests/devcovenant/builtin
       - devcovenant/custom=>tests/devcovenant/custom
-      blueprint_directories: &id114
+      blueprint_directories: &id115
       - policies/changelog_coverage
       - policies/dependency_management
       - policies/docstring_and_comment_coverage
@@ -13417,8 +13452,8 @@ policies:
       enabled: true
       custom: true
       blueprint_name: test_blueprints.yaml
-      mirror_roots: *id113
-      blueprint_directories: *id114
+      mirror_roots: *id114
+      blueprint_directories: *id115
     assets:
     - devcovenant/builtin=>tests/devcovenant/builtin
     - devcovenant/custom=>tests/devcovenant/custom

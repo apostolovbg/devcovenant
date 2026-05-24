@@ -1,13 +1,13 @@
 # Development Plan
 **Doc ID:** PLAN
 **Doc Type:** plan
-**Project Version:** 1.0.1b5
+**Project Version:** 1.0.1b6
 **Project Stage:** stable
 **Maintenance Stance:** active
 **Compatibility Policy:** forward-only
 **Versioning Mode:** versioned
-**Last Updated:** 2026-04-27
-**DevCovenant Version:** 1.0.1b5
+**Last Updated:** 2026-05-24
+**DevCovenant Version:** 1.0.1b6
 
 <!-- DEVCOV:BEGIN -->
 This opening section is managed by DevCovenant.

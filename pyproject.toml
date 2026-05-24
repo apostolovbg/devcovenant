@@ -7,7 +7,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "devcovenant"
-version = "1.0.1b5"
+version = "1.0.1b6"
 description = "devcovenant is a repository governance framework."
 readme = {file = "devcovenant/README.md", content-type = "text/markdown"}
 requires-python = ">=3.11"

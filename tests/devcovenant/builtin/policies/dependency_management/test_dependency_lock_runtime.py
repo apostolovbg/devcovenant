@@ -68,7 +68,13 @@ def _unit_test_runtime_resolves_structured_surfaces_from_repo_metadata() -> (
     assert isinstance(surfaces, list)
     assert surfaces
     assert isinstance(overrides, dict)
-    assert overrides == {}
+    assert "click" in overrides
+    click_override = overrides["click"]
+    assert click_override.kind == "archive_url"
+    assert click_override.member_globs == [
+        "click-{version}/LICENSE.txt",
+        "click-{version}/docs/license.md",
+    ]
     assert all(
         isinstance(
             surface,
@@ -91,6 +97,7 @@ def _unit_test_runtime_symbol_contract_is_stable() -> None:
     assert hasattr(module, "DependencySurfaceVulnerability")
     assert hasattr(module, "audit_surface_vulnerabilities")
     assert hasattr(module, "refresh_all")
+    assert hasattr(module, "refresh_force")
 
 
 def _unit_test_audit_surface_vulnerabilities_uses_declared_targets() -> None:
@@ -604,6 +611,8 @@ def _unit_test_refresh_runtime_skips_current_surface_state() -> None:
         licenses_dir.mkdir(parents=True, exist_ok=True)
         packaging_version = importlib_metadata.version("packaging")
         surface = _surface(module)
+        surface_definitions = [dict(surface.__dict__)]
+        license_source_overrides_definitions: list[dict[str, object]] = []
         (repo_root / "requirements.in").write_text(
             "packaging>=26.0\n",
             encoding="utf-8",
@@ -646,6 +655,10 @@ def _unit_test_refresh_runtime_skips_current_surface_state() -> None:
                     surface.surface_id: module._build_surface_runtime_state(
                         repo_root,
                         surface=surface,
+                        surface_definitions=surface_definitions,
+                        license_source_overrides_definitions=(
+                            license_source_overrides_definitions
+                        ),
                     )
                 }
             },
@@ -656,6 +669,10 @@ def _unit_test_refresh_runtime_skips_current_surface_state() -> None:
             module.dependency_management.refresh_license_artifacts
         )
         module._resolve_dependency_metadata = lambda _repo_root: {
+            "surface_definitions": surface_definitions,
+            "license_source_overrides_definitions": (
+                license_source_overrides_definitions
+            ),
             "surfaces": [surface],
         }
 
@@ -691,6 +708,129 @@ def _unit_test_refresh_runtime_skips_current_surface_state() -> None:
             }
         ]
         assert payload["refreshed_artifacts"] == []
+
+
+def _unit_test_refresh_runtime_force_refreshes_current_surface_state() -> None:
+    """Forced refresh should rebuild current surface artifacts anyway."""
+
+    module = importlib.import_module(MODULE)
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        licenses_dir = repo_root / "licenses"
+        licenses_dir.mkdir(parents=True, exist_ok=True)
+        packaging_version = importlib_metadata.version("packaging")
+        surface = _surface(module)
+        surface_definitions = [dict(surface.__dict__)]
+        license_source_overrides_definitions: list[dict[str, object]] = []
+        (repo_root / "requirements.in").write_text(
+            "packaging>=26.0\n",
+            encoding="utf-8",
+        )
+        (repo_root / "requirements.lock").write_text(
+            f"packaging=={packaging_version}\n",
+            encoding="utf-8",
+        )
+        (repo_root / "pyproject.toml").write_text(
+            "[project]\n"
+            "name = 'demo'\n"
+            "dependencies = ['packaging>=26.0']\n",
+            encoding="utf-8",
+        )
+        (licenses_dir / "THIRD_PARTY_LICENSES.md").write_text(
+            "# Third-Party Licenses\n\n"
+            "## License Report\n"
+            "- `requirements.lock`\n\n"
+            "## Dependency License Inventory\n"
+            f"- `packaging=={packaging_version}`: "
+            f"`licenses/packaging-{packaging_version}.txt`\n",
+            encoding="utf-8",
+        )
+        (licenses_dir / f"packaging-{packaging_version}.txt").write_text(
+            "license\n",
+            encoding="utf-8",
+        )
+        (licenses_dir / "README.md").write_text(
+            "runtime license readme\n",
+            encoding="utf-8",
+        )
+        registry_path = (
+            repo_root / "devcovenant" / "registry" / "registry.yaml"
+        )
+        registry = module.PolicyRegistry(registry_path, repo_root)
+        registry.update_policy_runtime_state(
+            module.POLICY_ID,
+            {
+                "surfaces": {
+                    surface.surface_id: module._build_surface_runtime_state(
+                        repo_root,
+                        surface=surface,
+                        surface_definitions=surface_definitions,
+                        license_source_overrides_definitions=(
+                            license_source_overrides_definitions
+                        ),
+                    )
+                }
+            },
+        )
+        original_resolver = module._resolve_dependency_metadata
+        original_compile = module._compile_requirements_lock
+        original_refresh_licenses = (
+            module.dependency_management.refresh_license_artifacts
+        )
+        compile_called = {"value": False}
+        refresh_called = {"force_refresh": False}
+        module._resolve_dependency_metadata = lambda _repo_root: {
+            "surface_definitions": surface_definitions,
+            "license_source_overrides_definitions": (
+                license_source_overrides_definitions
+            ),
+            "surfaces": [surface],
+        }
+
+        def _fake_compile(_repo_root, _requirements_in, **_kwargs):
+            """Capture forced lock refreshes and return current content."""
+
+            compile_called["value"] = True
+            return module.LockFilePieces([f"packaging=={packaging_version}"])
+
+        def _fake_refresh_license_artifacts(*_args, **kwargs):
+            """Capture forced license refreshes and return modified files."""
+
+            refresh_called["force_refresh"] = bool(kwargs.get("force_refresh"))
+            return [
+                Path("licenses/THIRD_PARTY_LICENSES.md"),
+                Path(f"licenses/packaging-{packaging_version}.txt"),
+                Path("licenses/README.md"),
+            ]
+
+        module._compile_requirements_lock = _fake_compile
+        module.dependency_management.refresh_license_artifacts = (
+            _fake_refresh_license_artifacts
+        )
+        try:
+            payload = module.refresh_force(repo_root)
+        finally:
+            module._resolve_dependency_metadata = original_resolver
+            module._compile_requirements_lock = original_compile
+            module.dependency_management.refresh_license_artifacts = (
+                original_refresh_licenses
+            )
+
+        assert compile_called["value"] is True
+        assert refresh_called["force_refresh"] is True
+        assert payload["lock_results"] == [
+            {
+                "lock_file": "requirements.lock",
+                "changed": True,
+                "attempted": True,
+                "message": "Refreshed requirements.lock.",
+            }
+        ]
+        assert payload["refreshed_artifacts"] == [
+            "licenses/THIRD_PARTY_LICENSES.md",
+            f"licenses/packaging-{packaging_version}.txt",
+            "licenses/README.md",
+        ]
 
 
 def _unit_test_refresh_runtime_preserves_direct_conditional_requirements() -> (
@@ -977,10 +1117,16 @@ def _unit_test_refresh_runtime_passes_hash_mode_from_metadata() -> None:
             ],
         }
 
-        def _fake_refresh(_repo_root, *, surface, all_surfaces=None):
+        def _fake_refresh(
+            _repo_root,
+            *,
+            surface,
+            all_surfaces=None,
+            force_refresh=False,
+        ):
             """Capture the selected hash mode from refresh_all."""
 
-            del all_surfaces
+            del all_surfaces, force_refresh
             captured["generate_hashes"] = surface.generate_hashes
             return module.LockHandlerResult(
                 "requirements.lock",

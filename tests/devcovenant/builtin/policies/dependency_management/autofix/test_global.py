@@ -85,6 +85,44 @@ def _unit_test_fix_materializes_report_and_licenses_readme() -> None:
         }
 
 
+def _unit_test_fix_uses_force_refresh_for_surface_definition_drift() -> None:
+    """Fix should choose the forced runtime action when requested."""
+
+    fixer = DependencyManagementFixer()
+    captured: dict[str, object] = {}
+    with TemporaryDirectory() as tmp_dir:
+        fixer.repo_root = Path(tmp_dir).resolve()
+        violation = Violation(
+            policy_id="dependency-management",
+            severity="error",
+            message="sync",
+            context={
+                "changed_dependency_files": ["requirements.lock"],
+                "force_refresh": True,
+                "issue": "third_party",
+            },
+        )
+        original_runner = _AUTOFIX_MODULE.run_policy_runtime_action
+        try:
+
+            def _fake_runner(*_args, **_kwargs):
+                """Capture the selected runtime action for assertions."""
+
+                captured.update(_kwargs)
+                return {"refreshed_artifacts": []}
+
+            _AUTOFIX_MODULE.run_policy_runtime_action = _fake_runner
+            result = fixer.fix(violation)
+        finally:
+            _AUTOFIX_MODULE.run_policy_runtime_action = original_runner
+
+        assert result.success is True
+        assert captured["action"] == "refresh-force"
+        assert captured["payload"] == {
+            "changed_dependency_files": ["requirements.lock"]
+        }
+
+
 def _unit_test_fix_noop_when_artifacts_are_already_synced() -> None:
     """Fix should be a no-op when all managed artifacts are synchronized."""
     fixer = DependencyManagementFixer()
@@ -159,6 +197,10 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_fix_materializes_report_and_licenses_readme(self):
         """Run test_fix_materializes_report_and_licenses_readme."""
         _unit_test_fix_materializes_report_and_licenses_readme()
+
+    def test_fix_uses_force_refresh_for_surface_definition_drift(self):
+        """Run force-refresh runtime-action selection assertions."""
+        _unit_test_fix_uses_force_refresh_for_surface_definition_drift()
 
     def test_fix_noop_when_artifacts_are_already_synced(self):
         """Run test_fix_noop_when_artifacts_are_already_synced."""

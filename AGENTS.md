@@ -1,13 +1,13 @@
 # DevCovenant Development Guide
 **Doc ID:** AGENTS
 **Doc Type:** policy-source
-**Project Version:** 1.0.1b5
+**Project Version:** 1.0.1b6
 **Project Stage:** stable
 **Maintenance Stance:** active
 **Compatibility Policy:** forward-only
 **Versioning Mode:** versioned
-**Last Updated:** 2026-04-27
-**DevCovenant Version:** 1.0.1b5
+**Last Updated:** 2026-05-24
+**DevCovenant Version:** 1.0.1b6
 
 <!-- DEVCOV:BEGIN -->
 # Message from DevCovenant's Human (Read First)
@@ -210,7 +210,7 @@ directly.
 <!-- DEVCOV:BEGIN -->
 ## Project Governance
 This block reflects the repository's active project-governance state.
-- Project Version: 1.0.1b5
+- Project Version: 1.0.1b6
 - Project Stage: stable
 - Maintenance Stance: active
 - Compatibility Policy: forward-only
@@ -922,7 +922,13 @@ surfaces:
       implementation: cp
       python_version: '3.14'
       abi: cp314
-license_source_overrides: []
+license_source_overrides:
+- id: click
+  kind: archive_url
+  url: https://files.pythonhosted.org/packages/source/c/click/click-{version}.tar.gz
+  member_globs:
+  - click-{version}/LICENSE.txt
+  - click-{version}/docs/license.md
 selector_roles: dependency
 dependency_globs: []
 dependency_files: []
